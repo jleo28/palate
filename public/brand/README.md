@@ -1,0 +1,1 @@
+Drop the final logo here as `logo.svg`. `Wordmark` (src/components/Wordmark.tsx) shows it automatically once it exists; until then it renders the text "8teSC" in the display face. `favicon.svg` is a placeholder tray mark, not the brand.
