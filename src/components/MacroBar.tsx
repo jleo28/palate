@@ -3,16 +3,16 @@ interface MacroBarProps {
   current: number;
   target: number;
   unit?: string;
-  colorVar: "cardinal" | "butter" | "slate" | "herb";
+  colorVar: "protein" | "carb" | "fat" | "veg";
 }
 
 export function MacroBar({ label, current, target, unit = "g", colorVar }: MacroBarProps) {
   const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
   const colorClass = {
-    cardinal: "bg-cardinal",
-    butter: "bg-butter",
-    slate: "bg-slate",
-    herb: "bg-herb",
+    protein: "bg-protein",
+    carb: "bg-carb",
+    fat: "bg-fat",
+    veg: "bg-veg",
   }[colorVar];
 
   return (

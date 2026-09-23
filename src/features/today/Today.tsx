@@ -13,6 +13,7 @@ import { BottomNav } from "../../components/BottomNav";
 import { formatDateHeading } from "../../lib/time";
 import { stationRank } from "../../lib/stations";
 import { useLongPress } from "../../lib/useLongPress";
+import { select, tap } from "../../lib/haptics";
 import { SwapSheet } from "./SwapSheet";
 import { DemoPanel } from "../demo/DemoPanel";
 
@@ -29,7 +30,7 @@ const MEALS: { value: MealPeriod; label: string }[] = [
 ];
 
 export function Today() {
-  const { profile, updateProfile } = useProfile();
+  const { profile, updateProfile, halls } = useProfile();
   const demo = useDemo();
   const [hall, setHall] = useState<HallId>(profile!.homeHall);
   const [meal, setMeal] = useState<MealPeriod>(demo.currentMeal);
@@ -40,6 +41,9 @@ export function Today() {
   const longPress = useLongPress(() => setDemoOpen(true));
 
   const profileValue = profile!;
+
+  // Chips show the halls they said they use, with the current one always present.
+  const preferredHalls = HALLS.filter((h) => halls.includes(h.value) || h.value === hall);
 
   const day = useMemo(
     () => planDay(profileValue, sampleMenu, demo.date, hall),
@@ -72,11 +76,13 @@ export function Today() {
   }, [demo.date, hall, profileValue.goal, profileValue.diet, profileValue.avoidAllergens, profileValue.activity]);
 
   const selectHall = (h: HallId) => {
+    tap();
     setHall(h);
     updateProfile({ homeHall: h });
   };
 
   const selectMeal = (m: MealPeriod) => {
+    tap();
     setMeal(m);
   };
 
@@ -87,6 +93,7 @@ export function Today() {
   const swapCurrentItem: MenuItem | null = swapTarget ? itemsById.get(swapTarget) ?? null : null;
 
   const applySwap = (option: SwapOption) => {
+    select();
     setManualPlates((prev) => ({ ...prev, [meal]: option.plate }));
     setSwapTarget(null);
   };
@@ -103,7 +110,7 @@ export function Today() {
       </header>
 
       <div className="mt-4 flex gap-2 overflow-x-auto px-5">
-        {HALLS.map((h) => (
+        {preferredHalls.map((h) => (
           <Chip key={h.value} active={hall === h.value} onClick={() => selectHall(h.value)}>
             {h.label}
           </Chip>
@@ -117,7 +124,7 @@ export function Today() {
             type="button"
             onClick={() => selectMeal(m.value)}
             className={`tap-target flex-1 border-b-2 text-sm ${
-              meal === m.value ? "border-cardinal font-bold text-ink" : "border-transparent text-ink-soft"
+              meal === m.value ? "border-accent font-bold text-ink" : "border-transparent text-ink-soft"
             }`}
           >
             {m.label}
@@ -173,7 +180,7 @@ export function Today() {
                         <button
                           type="button"
                           onClick={() => setSwapTarget(line.itemId)}
-                          className="tap-target rounded-chip border border-line px-3 text-sm text-ink"
+                          className="tap-target rounded-chip border border-line-strong px-3 text-sm text-ink"
                         >
                           Swap
                         </button>
@@ -187,9 +194,9 @@ export function Today() {
         )}
 
         <div className="mt-6 rounded-row border border-line bg-plate p-4">
-          <MacroBar label="Protein" current={activePlate.totals.protein} target={activePlate.target.protein} colorVar="cardinal" />
-          <MacroBar label="Carbs" current={activePlate.totals.carbs} target={activePlate.target.carbs} colorVar="butter" />
-          <MacroBar label="Fat" current={activePlate.totals.fat} target={activePlate.target.fat} colorVar="slate" />
+          <MacroBar label="Protein" current={activePlate.totals.protein} target={activePlate.target.protein} colorVar="protein" />
+          <MacroBar label="Carbs" current={activePlate.totals.carbs} target={activePlate.target.carbs} colorVar="carb" />
+          <MacroBar label="Fat" current={activePlate.totals.fat} target={activePlate.target.fat} colorVar="fat" />
         </div>
 
         <p className="mt-4 mb-2 text-center text-sm text-ink-soft">

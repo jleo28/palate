@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `tap-target flex flex-1 flex-col items-center justify-center gap-0.5 text-sm ${
-    isActive ? "font-bold text-cardinal" : "text-ink-soft"
+    isActive ? "font-bold text-accent" : "text-ink-soft"
   }`;
 
 export function BottomNav() {

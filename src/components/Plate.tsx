@@ -8,11 +8,11 @@ interface PlateProps {
 }
 
 const ROLE_COLOR: Record<Role, string> = {
-  protein: "var(--cardinal)",
-  carb: "var(--butter)",
-  veg: "var(--herb)",
-  extra: "var(--slate)",
-  dessert: "var(--slate)",
+  protein: "var(--protein)",
+  carb: "var(--carb)",
+  veg: "var(--veg)",
+  extra: "var(--fat)",
+  dessert: "var(--fat)",
 };
 
 const CX = 150;
@@ -93,7 +93,7 @@ export function Plate({ plate, itemsById, onWedgeClick }: PlateProps) {
               key={w.line.itemId}
               d={w.path}
               fill={w.color}
-              fillOpacity={0.28}
+              fillOpacity={0.5}
               stroke="var(--plate)"
               strokeWidth={2}
               className="cursor-pointer"

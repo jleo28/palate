@@ -17,3 +17,6 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Source brand asset sheet (extracted into public/brand/)
+Asset sheet for 8te branding.zip

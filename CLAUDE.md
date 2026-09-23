@@ -36,7 +36,8 @@ public/brand/  logo lands here later
 - All menu data is sample data until USC dining data is secured. Every item carries `source: "sample"` and the UI says so once, in Profile.
 - UI copy is US English and defaults to imperial units (ft/in, lb) with a metric toggle. These docs are written in UK English; do not "fix" either.
 - Follow the wellbeing guardrails in PRODUCT_SPEC.md. They are requirements, not suggestions.
-- The logo is not ready. Render the name through the single `<Wordmark />` component. If `public/brand/logo.svg` exists, Wordmark shows it; otherwise it renders the text "8teSC" in the display face. Swapping the logo must be a one-file change.
+- The logo lives at `public/brand/logo.png` and is rendered through the single `<Wordmark />` component, which falls back to the text "8teSC" in the display face if the file is ever missing. Swapping the logo must stay a one-file change.
+- The palette is derived from the logo's own colours and lives entirely in `src/styles/tokens.css`. `pnpm check:contrast` proves every text and UI pairing against WCAG AA in both light and dark mode; run it after touching a colour.
 - Conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).
 - No em dashes in UI copy.
 
@@ -47,6 +48,7 @@ pnpm test
 pnpm typecheck
 pnpm build
 pnpm validate:data   # runs the menu validator
+pnpm check:contrast  # proves the palette against WCAG AA in both modes
 ```
 
 ## Definition of done (every milestone)

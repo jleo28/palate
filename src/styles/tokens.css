@@ -1,13 +1,28 @@
+/*
+ * Palette derived from public/brand/logo.png. The logo uses exactly five
+ * colours; every token below is one of them or a tuned step from one:
+ *   #E8DCC8 oat   - the icon's outer field   -> --tray
+ *   #F2EAD9 cream - the tray/card surface    -> --plate
+ *   #312921 bark  - the "8te" mark and bar   -> --ink
+ *   #DCCDB4 clay  - the inset square         -> --line
+ *   #6F7A4E moss  - the circle               -> --accent, --veg
+ * Contrast is verified by `pnpm check:contrast` (scripts/checkContrast.ts).
+ */
 :root {
-  --tray: #e8ece6;
-  --plate: #ffffff;
-  --ink: #1c2230;
-  --ink-soft: #5a6272;
-  --cardinal: #9e1b32;
-  --butter: #e9b949;
-  --herb: #3f7a5a;
-  --slate: #6f86a8;
-  --line: #d3d9d0;
+  --tray: #e8dcc8;
+  --plate: #f2ead9;
+  --ink: #312921;
+  --ink-soft: #6a5e4e;
+  --line: #dccdb4;
+  --line-strong: #877963;
+
+  --accent: #566040;
+  --accent-tint: #dfe0cc;
+
+  --protein: #a65b3c;
+  --carb: #a1722a;
+  --fat: #6b6055;
+  --veg: #6f7a4e;
 
   --radius-plate: 999px;
   --radius-sheet: 24px;
@@ -24,19 +39,24 @@
   --text-xl: 30px;
   --text-2xl: 44px;
 
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--cardinal) 55%, transparent);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --tray: #161a20;
-    --plate: #20252d;
-    --ink: #eef0ec;
-    --ink-soft: #a7afc0;
-    --cardinal: #d6455f;
-    --butter: #eec46a;
-    --herb: #5fa982;
-    --slate: #8ea3c4;
-    --line: #333a45;
+    --tray: #1e1913;
+    --plate: #2a241c;
+    --ink: #f2ead9;
+    --ink-soft: #b0a28c;
+    --line: #3a3228;
+    --line-strong: #7e7362;
+
+    --accent: #9fb06f;
+    --accent-tint: #353a28;
+
+    --protein: #d08a6b;
+    --carb: #d8a652;
+    --fat: #ada192;
+    --veg: #9fb06f;
   }
 }

@@ -1,6 +1,15 @@
+const VOWELS = "aeiou";
+
 function pluralize(unit: string, servings: number): string {
   if (servings <= 1) return unit;
   if (unit.endsWith("s")) return unit;
+  // "patty" -> "patties", but "tray" -> "trays"
+  if (unit.endsWith("y") && !VOWELS.includes(unit[unit.length - 2])) {
+    return `${unit.slice(0, -1)}ies`;
+  }
+  if (unit.endsWith("ch") || unit.endsWith("sh") || unit.endsWith("x")) {
+    return `${unit}es`;
+  }
   return `${unit}s`;
 }
 

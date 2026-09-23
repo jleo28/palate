@@ -11,8 +11,8 @@ export function Chip({ active = false, className = "", ...props }: ChipProps) {
       aria-pressed={active}
       className={`tap-target rounded-chip border px-4 py-2 text-sm transition-colors ${
         active
-          ? "border-cardinal bg-cardinal text-plate"
-          : "border-line bg-plate text-ink hover:border-ink-soft"
+          ? "border-accent bg-accent text-plate"
+          : "border-line-strong bg-plate text-ink hover:border-ink-soft"
       } ${className}`.trim()}
       {...props}
     />

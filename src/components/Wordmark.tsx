@@ -1,40 +1,42 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface WordmarkProps {
   size?: "large" | "default";
   className?: string;
 }
 
-const LOGO_PATH = "/brand/logo.svg";
+const LOGO_PATH = "/brand/logo.png";
+
+const SIZE_CLASS: Record<"large" | "default", string> = {
+  large: "h-28 w-28",
+  default: "h-10 w-10",
+};
+
+const TEXT_SIZE_CLASS: Record<"large" | "default", string> = {
+  large: "text-2xl",
+  default: "text-lg",
+};
 
 /**
- * The logo is not ready yet. This checks once whether public/brand/logo.svg
- * exists; when it lands, dropping the file in is the only change needed.
+ * Single place the product name is rendered. Shows the logo, and falls back to
+ * the name set in the display face if the file is ever missing, so swapping the
+ * artwork stays a one-file change.
  */
 export function Wordmark({ size = "default", className = "" }: WordmarkProps) {
-  const [hasLogo, setHasLogo] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch(LOGO_PATH, { method: "HEAD" })
-      .then((res) => {
-        if (!cancelled) setHasLogo(res.ok);
-      })
-      .catch(() => {
-        if (!cancelled) setHasLogo(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const textSize = size === "large" ? "text-2xl" : "text-lg";
-
-  if (hasLogo) {
-    return <img src={LOGO_PATH} alt="8teSC" className={className} />;
+  if (failed) {
+    return (
+      <span className={`font-display font-bold text-ink ${TEXT_SIZE_CLASS[size]} ${className}`.trim()}>8teSC</span>
+    );
   }
 
   return (
-    <span className={`font-display font-bold text-ink ${textSize} ${className}`.trim()}>8teSC</span>
+    <img
+      src={LOGO_PATH}
+      alt="8teSC"
+      onError={() => setFailed(true)}
+      className={`${SIZE_CLASS[size]} rounded-[22%] object-contain ${className}`.trim()}
+    />
   );
 }

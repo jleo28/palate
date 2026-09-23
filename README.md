@@ -8,7 +8,7 @@ This is Audrey's individual prototype for a class group project. Every team memb
 
 ## 60-second demo script
 
-1. **Onboard.** Open the link, tap "Get started," fill in basics/activity/goal/preferences (imperial is the default; there's a metric toggle), tap "See today's plate." Under a minute start to finish.
+1. **Onboard.** Open the link, tap "Get started," and answer the ten questions, one per screen. Single-answer questions advance by themselves; the multi-answer ones (diet, allergens, halls, meals) have a Continue button. Imperial is the default with a metric toggle. On a phone with haptics, each selection gives a short tap. Under a minute start to finish.
 2. **Show a plate.** Today opens on the current meal period. Point out the plate (sized by calorie share per item), the one-line "why," the station-grouped rows below it, and the macro bars.
 3. **Switch hall.** Tap a different hall chip (EVK / Parkside / Village). The plate re-solves instantly and looks different, because each hall's menu has its own character (EVK leans grill and bowls, Parkside leans global dishes, Village leans plant-based).
 4. **Swap an item.** Tap "Swap" on any row. The sheet shows up to 4 alternatives with the calorie/protein change; tap one and the plate updates.
@@ -47,6 +47,7 @@ pnpm test           # run the core planner test suite
 pnpm typecheck
 pnpm build
 pnpm validate:data  # check the sample menu against the data rules
+pnpm check:contrast # prove the palette meets WCAG AA in light and dark mode
 ```
 
 ## Deploying

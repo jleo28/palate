@@ -36,7 +36,7 @@ export function DemoPanel({ open, onClose }: DemoPanelProps) {
             type="date"
             value={demo.date}
             onChange={(e) => demo.setDate(e.target.value)}
-            className="tap-target rounded-row border border-line bg-plate px-3 text-base text-ink"
+            className="tap-target rounded-row border border-line-strong bg-plate px-3 text-base text-ink"
           />
         </label>
 
@@ -46,7 +46,7 @@ export function DemoPanel({ open, onClose }: DemoPanelProps) {
             type="time"
             value={demo.time}
             onChange={(e) => demo.setTime(e.target.value)}
-            className="tap-target rounded-row border border-line bg-plate px-3 text-base text-ink"
+            className="tap-target rounded-row border border-line-strong bg-plate px-3 text-base text-ink"
           />
         </label>
 
@@ -59,7 +59,7 @@ export function DemoPanel({ open, onClose }: DemoPanelProps) {
             <button
               type="button"
               onClick={demo.clear}
-              className="tap-target rounded-chip border border-line bg-plate font-display text-base text-ink"
+              className="tap-target rounded-chip border border-line-strong bg-plate font-display text-base text-ink"
             >
               Use real date and time
             </button>
@@ -67,7 +67,7 @@ export function DemoPanel({ open, onClose }: DemoPanelProps) {
           <button
             type="button"
             onClick={handleReset}
-            className="tap-target rounded-chip border border-cardinal bg-plate font-display text-base text-cardinal"
+            className="tap-target rounded-chip border border-accent bg-plate font-display text-base text-accent"
           >
             Reset profile
           </button>

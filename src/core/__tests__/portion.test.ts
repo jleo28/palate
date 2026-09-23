@@ -22,4 +22,17 @@ describe("portionLabel", () => {
   it("does not double-pluralise a unit that already ends in s", () => {
     expect(portionLabel(2, "chips")).toBe("2 chips");
   });
+
+  it("pluralises a consonant-y unit correctly", () => {
+    expect(portionLabel(2, "patty")).toBe("2 patties");
+    expect(portionLabel(1, "patty")).toBe("1 patty");
+  });
+
+  it("keeps a vowel-y unit as a plain s", () => {
+    expect(portionLabel(2, "tray")).toBe("2 trays");
+  });
+
+  it("pluralises a sibilant unit with es", () => {
+    expect(portionLabel(2, "sandwich")).toBe("2 sandwiches");
+  });
 });
