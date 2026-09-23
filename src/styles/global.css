@@ -15,6 +15,9 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
 
+  --shadow-soft: var(--shadow-soft);
+  --shadow-card: var(--shadow-card);
+
   --radius-plate: var(--radius-plate);
   --radius-sheet: var(--radius-sheet);
   --radius-chip: var(--radius-chip);
@@ -38,7 +41,7 @@
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
@@ -50,6 +53,41 @@ body {
   line-height: 1.45;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * A soft paper grain over the whole surface. Fixed, so it does not swim while
+ * the page scrolls, and behind everything so it never intercepts a tap.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--texture-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+}
+
+/*
+ * The phone is the primary device. On anything wider, the app stays at phone
+ * width and sits centred on the textured ground rather than stretching.
+ */
+.app-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 430px;
+  margin-inline: auto;
+  min-height: 100dvh;
+}
+
+@media (min-width: 480px) {
+  .app-shell {
+    box-shadow: var(--shadow-card);
+  }
 }
 
 h1,
@@ -86,11 +124,103 @@ a {
   transition:
     transform 120ms ease,
     background-color 140ms ease,
-    border-color 140ms ease;
+    border-color 140ms ease,
+    opacity 180ms ease;
+}
+
+@media (hover: hover) {
+  .option-button:hover:not(:disabled) {
+    border-color: var(--ink-soft);
+  }
 }
 
 .option-button:active {
-  transform: scale(0.975);
+  transform: scale(0.985);
+}
+
+/*
+ * The confirmation bob. Press down, spring back past the resting position,
+ * settle. Paired with two quick blinks so the choice is unmistakable even on
+ * a bright screen outdoors.
+ */
+@keyframes confirm-bob {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  18% {
+    transform: scale(0.97) translateY(2px);
+  }
+  55% {
+    transform: scale(1.025) translateY(-3px);
+  }
+  78% {
+    transform: scale(0.995) translateY(1px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes confirm-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes check-pop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.is-confirming {
+  animation:
+    confirm-bob 250ms cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    confirm-blink 160ms steps(1, end) 2;
+}
+
+.is-dimmed {
+  opacity: 0.45;
+}
+
+.check-pop {
+  animation: check-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Inputs stay at 16px or more so iOS Safari does not zoom when they take focus. */
+input,
+select,
+textarea {
+  font-size: max(16px, var(--text-base));
+}
+
+/* A carousel that snaps, with the next card peeking in from the edge. */
+.snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.snap-x::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-item {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
 }
 
 /* One question slides in as the last one leaves; going back reverses the direction. */
@@ -147,5 +277,14 @@ a {
   .question-enter,
   .question-enter-back {
     animation: question-fade 180ms ease-out both !important;
+  }
+
+  /* No bob and no blink: the fill and the checkmark carry the confirmation. */
+  .is-confirming {
+    animation: none !important;
+  }
+
+  .check-pop {
+    animation: none !important;
   }
 }

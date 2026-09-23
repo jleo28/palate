@@ -10,7 +10,9 @@ Wellness-focused freshmen and sophomores on a USC meal plan: gym-goers, students
 Open the app, see today's plate for the hall you are heading to, walk in and take exactly that.
 
 ## In scope for this prototype
-- Onboarding that turns body stats, activity and goal into daily calorie and macro targets
+- A home dashboard that opens straight to today's recommended plates, one card per hall, with no sign-up and no survey in the way
+- Onboarding that turns body stats, activity and goal into daily calorie and macro targets, offered rather than required
+- Olive, a light companion who asks the onboarding questions and explains empty states
 - Hall and meal selection for today (Everybody's Kitchen, Parkside, USC Village)
 - A recommended plate per meal: specific items, the station they are at, and the portion
 - Swap any single item for the next best fit
@@ -28,12 +30,15 @@ Open the app, see today's plate for the hall you are heading to, walk in and tak
 - Monetisation
 
 ## Core flows
-1. **First run**: Welcome > Basics > Activity > Goal > Preferences > Today
-2. **Daily use**: Today opens on the current meal period and last used hall > review plate > optionally swap an item
-3. **Adjust**: Profile > edit stats, goal or preferences > targets recalculate > Today updates
+1. **First run**: the app opens on the dashboard with general balanced plates for the current meal period. Olive offers to personalise them. The student can browse all three halls and open any plate without answering a single question.
+2. **Personalising**: Personalize > ten questions, one per screen, with Olive asking > back to the dashboard, now showing plates sized to them. The survey can be left at any point and resumes exactly where it stopped.
+3. **Daily use**: the dashboard opens on whatever meal period it currently is > compare halls in the carousel > open a plate > optionally swap an item
+4. **Adjust**: Profile > edit stats, goal or preferences > targets recalculate > the dashboard updates
 
 ## Acceptance criteria
-- A new user reaches a filled-in plate in under 60 seconds of tapping.
+- A new user sees a filled-in plate immediately on opening the app, before answering anything.
+- A new user who chooses to personalise reaches their own plates in under 60 seconds of tapping.
+- The meal period shown always matches the device clock unless the student has chosen otherwise, and that choice lapses at the next period boundary.
 - Every plate shows item, station, portion in human units ("1½ scoops"), and per-item calories and protein.
 - Plate totals are within ±10% of the meal's calorie target and at least 90% of its protein target, or the plate shows an honest note explaining which constraint could not be met (for example a vegan filter with few protein options).
 - Changing hall, meal or date re-solves instantly (under 100 ms on a mid-range phone).

@@ -3,6 +3,7 @@ import { Sheet } from "../../components/Sheet";
 import { useDemo } from "../../context/DemoContext";
 import { useProfile } from "../../context/ProfileContext";
 import { rotationWeek } from "../../core/menu";
+import { labelFor } from "../../config/mealPeriods";
 import { sampleMenu } from "../../data/menu";
 
 interface DemoPanelProps {
@@ -50,8 +51,14 @@ export function DemoPanel({ open, onClose }: DemoPanelProps) {
           />
         </label>
 
-        <div className="rounded-row border border-line bg-tray px-3 py-2 text-sm text-ink-soft">
-          Rotation week {week} of {sampleMenu.rotationWeeks}. Current meal: {demo.currentMeal}.
+        <div className="flex flex-col gap-1 rounded-row border border-line bg-tray px-3 py-2 text-sm text-ink-soft">
+          <span>
+            Rotation week {week} of {sampleMenu.rotationWeeks}.
+          </span>
+          <span>
+            The clock says {labelFor(demo.clockMeal).toLowerCase()}
+            {demo.isManualMeal ? `, showing ${labelFor(demo.meal).toLowerCase()} by hand` : ""}.
+          </span>
         </div>
 
         <div className="flex flex-col gap-2">

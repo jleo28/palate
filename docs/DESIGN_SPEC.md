@@ -39,26 +39,110 @@ Radius has hierarchy, not one value everywhere: plate is a circle, sheets 24px t
 - Scale: 13 / 15 / 17 / 22 / 30 / 44. Body 17 with 1.45 line height. Numbers use tabular figures.
 - Sentence case everywhere. No all-caps labels.
 
-## The memorable thing: the plate
-On Today, the plate is a top-down circle, about 300px wide. Each item is a wedge sized by its share of the plate's calories, filled with its role colour at low opacity with a fine texture, and labelled around the rim. The centre reads the meal's calories, with protein beneath. Tapping a wedge scrolls to that item's row. When the plate re-solves (hall, meal or swap changes), wedges resize with a 250ms ease. That is the only ambient motion in the app; respect `prefers-reduced-motion`.
+## Warmth
+The app should feel like a warm place to eat, not a demo of a planner. Richer, not busier: every addition has to make the room feel more inviting, and anything that only adds noise comes back out.
 
-Everything else stays quiet so the plate carries the screen.
+- **Texture.** A soft paper grain sits over the whole surface at about 5% opacity, fixed so it does not swim while the page scrolls and behind everything so it never intercepts a tap. It is generated noise rather than an image, so it costs nothing to ship.
+- **Depth.** Cards and sheets sit on the ground with a warm, low shadow (`--shadow-soft`, `--shadow-card`) rather than being outlined onto it.
+- **Drawing.** Stations and goals each have a small hand-drawn icon: open shapes, round caps, slightly irregular, in the same manner as the logo. None of the goal icons depict bodies, scales or measurements.
+- **Olive.** A companion who appears where she is useful and nowhere else. See her own section below.
+
+## The memorable thing: the plate
+On the plate view the plate is a top-down circle about 270px wide, and a smaller version rides on each dashboard card. It is rendered as a real plate rather than a chart: a raised rim lit from the top left and falling away at the bottom right, a soft drop shadow underneath, and a shallow well for the food to sit in.
+
+Each item is a wedge sized by its share of the plate's calories and filled with **the colour of that food**, not a macro key: roast chicken is golden, black beans are dark brown, broccoli is green, berries are deep red. Colours come from `src/lib/foodColors.ts`, matched by keyword on the item name with a warm role-based fallback. Colour is never the only signal: every item is listed by name, station and portion under the plate, and the plate carries a text description for screen readers.
+
+The centre reads the meal's calories with protein beneath. Tapping a wedge scrolls to that item's row.
+
+**Serving the plate.** When a plate first appears its items land one at a time, about 90ms apart, each scaling up slightly as it settles. Under `prefers-reduced-motion` the whole plate is put down at once.
 
 ## Screens
 
-### Welcome
-Logo large, the name under it, then one line: "Know what to put on your plate before you walk in." One button: "Get started".
+### Home (the dashboard)
+The app opens here, always. There is no onboarding gate and no welcome screen: someone who has never used it before sees real plates immediately.
+
+```
++--------------------------------+
+| [logo] 8teSC        Tue Sep 22 |
+| ( Breakfast  Lunch  Dinner• )  |  segmented control, dot = now
+|                                |
+| [Olive] Make these plates      |  only before onboarding
+|         yours.  [Personalize]  |
+|                                |
+| Dinner today                   |
+| +----------------+ +--------   |
+| | EVK            | | Parks     |  snap carousel, next card peeks
+| | Grill and bowls| | Globa     |
+| |   ( plate )    | |  ( pl     |
+| | 690 cal  42 g  | | 710       |
+| | [on target]    | | [on t     |
+| | items...       | | item      |
+| +----------------+ +--------   |
+|                                |
+| Your day                       |
+| 2,150 of 2,200 cal             |
+| Protein ████████░  bars        |
++--------------------------------+
+| Home             Profile       |
++--------------------------------+
+```
+
+- **Header:** logo, today's date, and the meal switcher.
+- **Carousel:** one card per hall, horizontal snap-scroll with the next card peeking in so all three feel browsable with a thumb. The user's home hall comes first, then the halls they said they use. Each card shows a mini plate, the items with portions and calories, the totals, and an on-target state. Tapping a card opens the full plate view for that hall.
+- **Day summary** sits below the carousel.
+
+**Before a profile exists** the dashboard plans against a general balanced target (`src/lib/guestProfile.ts`) and says so. Olive offers a card at the top: "Make these plates yours" with a Personalize button. Dismissing it hides it for the rest of that day; the next day it returns as a single quiet line with a Personalize link rather than the full card. After onboarding the card is gone for good.
+
+### Meal period follows the clock
+Windows live in one file, `src/config/mealPeriods.ts`:
+
+| Period | From | To |
+|---|---|---|
+| Breakfast | 00:00 | 10:59 |
+| Lunch | 11:00 | 15:29 |
+| Dinner | 15:30 | 23:59 |
+
+They cover the whole day with no gaps, so every local time maps to exactly one period. The app reads the device's local time on load and again whenever it returns to the foreground (`visibilitychange` and `focus`), then selects the matching period.
+
+A manual choice from the switcher holds until the clock crosses the end of the period it was made in, after which the app goes back to following the clock. The period that matches the current time always carries a small "Now" dot, so a manual choice never hides what time it actually is. The demo panel's date and time override feeds this same logic rather than sitting beside it.
+
+### Plate view
+Reached by tapping a hall card. The hall name, the meal switcher, the plate, the why line, station-grouped rows with swap, macro bars and the day total. Rows are grouped by station in the order you would walk the hall, each with its drawn icon.
 
 ### Onboarding (one question per screen, Typeform style)
 Ten questions, each on its own screen: age, height, weight, sex used for the estimate, activity, goal, diet, allergens, halls you use, meals you eat in hall. Definitions live in `src/features/onboarding/questions.ts` and drive both this flow and the editable sections in Profile, so the wording cannot drift between them.
 
 - The question is large and left-aligned with generous space around it. A single progress bar sits at the top with an "n of 10" readout.
 - Options are full-width tap targets, each labelled A, B, C, D. On desktop the letter key picks that option and Enter continues.
-- Single-select questions auto-advance 350ms after a tap, once the selected state has visibly registered. Multi-select questions (diet, allergens, halls, meals) show a "Continue" button instead, and a checkmark on each selected option.
-- Pressing an option scales it in slightly and fills it with --accent-tint. Back is always one tap away and answers persist when going back.
+- Multi-select questions (diet, allergens, halls, meals) show a "Continue" button; single-select questions advance by themselves once the confirmation has played.
 - Numeric questions get one screen each with a large input and, for height and weight, a unit toggle.
 - Screens slide in vertically, downward going forward and upward going back. Under `prefers-reduced-motion` they cross-fade instead.
-- The last question's button reads "See today's plate".
+- Back is always one tap away and answers persist when going back. **Onboarding can be left at any point** with Close: progress is written to `localStorage` on every answer and resuming returns to the exact question they stopped on.
+- The last question's button reads "See my plates".
+
+### The confirmation bob
+All of it lives in one hook, `src/lib/useConfirmBob.ts`, so nothing drifts out of step. On selection by tap, letter key or Enter:
+
+1. The option fills with the accent colour and the haptic fires **at the start** of the bob, not after it.
+2. It presses down (scale 0.97, translateY 2px), springs back past its resting position, and settles. About 250ms on a springy curve.
+3. At the same time it blinks twice, about 2 x 80ms.
+4. A checkmark pops in, and the other options fade back to 45%.
+5. Only then, about 470ms after the tap, does the screen advance.
+
+Multi-select options bob on toggle but nothing advances. Continue and Back bob when pressed or when Enter is hit, then act. Further taps are ignored while a confirmation is in flight, so a double tap cannot skip a question. Under `prefers-reduced-motion` there is no bob and no blink: the fill and the checkmark carry the confirmation, and the screen advances after 140ms.
+
+### Olive
+A light companion, deliberately small. She appears in exactly three places:
+
+1. **Onboarding.** She asks each question in one short friendly line. She is the voice of the survey.
+2. **The dashboard, once.** On the first visit after onboarding she points at the meal switcher and explains why that meal is showing. Dismissed with a tap, and never shown again.
+3. **Empty and edge states.** When a filter leaves a hall with nothing to build from, Olive says what happened and what to do next, with the halls that do have something as buttons.
+
+Nowhere else. No chat, no floating persistent character, no multi-step tour.
+
+She lives in `src/components/Olive.tsx` and speaks through `src/components/OliveSays.tsx`. If `public/brand/olive.svg` or `.png` is dropped in she is used instead of the drawn version, so swapping her is one file. She is drawn from the palette in the same hand-drawn manner as the logo.
+
+Olive follows the wellbeing guardrails in PRODUCT_SPEC.md strictly: encouraging, never nagging, never moralising about food, and never commenting on the user's body or weight.
 
 ### Haptics
 `src/lib/haptics.ts` exposes `tap()`, `select()` and `success()`, used for advancing, option selection and finishing onboarding. It prefers `navigator.vibrate` (Android Chrome) with short patterns, about 10ms for a selection and a double pulse for success. iOS Safari has no Vibration API, so there is a best-effort fallback that toggles a hidden `<input type="checkbox" switch>` through its label, which plays a system haptic on recent iOS Safari. Both paths are feature-detected and fail silently, and the hidden switch is inert to focus, scrolling and screen readers.
@@ -112,6 +196,19 @@ Opened by long-pressing the wordmark (and a visible button in dev builds). Date 
 - Buttons say what happens: "See today's plate", "Swap", "Save changes".
 - Empty and error states give direction: "No vegan protein at Parkside for breakfast today. Village has three." Include a button to switch hall.
 - Never moralise about food. See the guardrails in PRODUCT_SPEC.md.
+
+## Phone first
+The phone is the primary device and the laptop is secondary, not the other way round.
+
+- Designed and checked at **375, 390 and 430** wide. Layout is fluid between them; nothing is pinned to one width.
+- Heights use `dvh`, not `vh`, so the mobile browser's collapsing toolbar cannot clip the bottom of a screen.
+- Safe-area insets are respected top and bottom: headers add `env(safe-area-inset-top)` and the bottom nav and sticky footers add `env(safe-area-inset-bottom)`, so nothing hides behind a notch or a home indicator.
+- **Primary actions sit in the thumb zone.** The bottom nav is fixed to the bottom, and onboarding's Back and Continue live in a sticky footer rather than at the top of a tall screen.
+- Touch targets are at least 44px and nothing depends on hover. Hover styling is wrapped in `@media (hover: hover)` so a phone never gets a stuck hover state.
+- Inputs render at 16px or larger, so iOS Safari does not zoom when one takes focus, and age, height and weight all use `inputmode="numeric"`.
+- The hall carousel is a native snap-scroll, so it swipes. Sheets can be **dragged down to close** as well as tapped away or dismissed with Escape.
+- `public/manifest.webmanifest` declares `display: standalone` with the logo as the icon and the palette's oat as the theme colour, so "Add to Home Screen" opens full screen like an app.
+- On a laptop the app stays at phone width, centred on the textured ground with a soft shadow, rather than stretching across the window.
 
 ## Accessibility
 - Contrast AA minimum for all text on tray and plate.

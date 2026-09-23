@@ -1,33 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../context/ProfileContext";
-import { Wordmark } from "../../components/Wordmark";
 import { QuestionScreen } from "./QuestionScreen";
 import { LETTERS, QUESTIONS } from "./questions";
 import { DEFAULT_DRAFT, draftToProfile, type Draft } from "./onboardingDraft";
-import { select, success, tap } from "../../lib/haptics";
+import { BobButton } from "../../components/BobButton";
+import { useConfirmBob } from "../../lib/useConfirmBob";
+import { success, tap } from "../../lib/haptics";
+import { loadJson, removeJson, saveJson } from "../../lib/storage";
 
-/** Long enough for the selected state to land before the screen moves. */
-const AUTO_ADVANCE_MS = 350;
+interface SavedProgress {
+  index: number;
+  draft: Draft;
+}
 
 export function Onboarding() {
-  const [index, setIndex] = useState(0);
+  const saved = loadJson<SavedProgress>("onboardingProgress");
+  const [index, setIndex] = useState(saved?.index ?? 0);
+  const [draft, setDraftState] = useState<Draft>(saved?.draft ?? DEFAULT_DRAFT);
   const [goingBack, setGoingBack] = useState(false);
-  const [draft, setDraftState] = useState<Draft>(DEFAULT_DRAFT);
   const { units, setUnits, setProfile, setHalls } = useProfile();
   const navigate = useNavigate();
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const question = QUESTIONS[index];
   const isLast = index === QUESTIONS.length - 1;
 
-  const setDraft = (patch: Partial<Draft>) => setDraftState((prev) => ({ ...prev, ...patch }));
-
+  // Every answer is written down as it is given, so leaving and coming back
+  // picks up exactly where they stopped.
   useEffect(() => {
-    return () => {
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    };
-  }, []);
+    saveJson("onboardingProgress", { index, draft });
+  }, [index, draft]);
+
+  const setDraft = (patch: Partial<Draft>) => setDraftState((prev) => ({ ...prev, ...patch }));
 
   const canContinue = useCallback(() => {
     if (question.kind === "multi" && question.required) {
@@ -41,24 +45,25 @@ export function Onboarding() {
       success();
       setHalls(finalDraft.halls);
       setProfile(draftToProfile(finalDraft));
-      navigate("/today");
+      removeJson("onboardingProgress");
+      navigate("/");
     },
     [navigate, setHalls, setProfile]
   );
 
-  const goNext = useCallback(() => {
-    if (!canContinue()) return;
+  const advance = useCallback(() => {
     if (isLast) {
       finish(draft);
       return;
     }
-    tap();
     setGoingBack(false);
     setIndex((i) => i + 1);
-  }, [canContinue, draft, finish, isLast]);
+  }, [draft, finish, isLast]);
 
-  const goBack = useCallback(() => {
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+  const { confirm, confirmingKey, isConfirming } = useConfirmBob({ onAdvance: advance });
+
+  const goBack = () => {
+    if (isConfirming) return;
     tap();
     setGoingBack(true);
     if (index === 0) {
@@ -66,30 +71,46 @@ export function Onboarding() {
       return;
     }
     setIndex((i) => i - 1);
-  }, [index, navigate]);
+  };
 
-  /** Single-select answers move on by themselves once the choice has visibly registered. */
-  const handleAnswered = useCallback(() => {
-    select();
+  const exit = () => {
+    tap();
+    navigate("/");
+  };
+
+  /** A single-select answer: set it, bob it, then move on. */
+  const pickSingle = (value: unknown) => {
     if (question.kind !== "single") return;
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    advanceTimer.current = setTimeout(() => {
-      if (isLast) finish(draft);
-      else {
-        setGoingBack(false);
-        setIndex((i) => i + 1);
-      }
-    }, AUTO_ADVANCE_MS);
-  }, [draft, finish, isLast, question.kind]);
+    confirm(String(value), () => setDraft({ [question.field]: value } as Partial<Draft>), true);
+  };
+
+  /** A multi-select toggle: bob, but stay put. */
+  const toggleMulti = (value: unknown) => {
+    if (question.kind !== "multi") return;
+    const current = draft[question.field] as unknown[];
+    const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+    confirm(String(value), () => setDraft({ [question.field]: next } as Partial<Draft>), false);
+  };
+
+  const pressContinue = () => {
+    if (!canContinue()) return;
+    confirm("__continue__", () => {}, true);
+  };
 
   // Desktop: the option letter picks an answer, Enter continues.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (isConfirming) return;
 
       if (e.key === "Enter") {
         e.preventDefault();
-        goNext();
+        if (question.kind === "single") {
+          // Enter on a single-select confirms whatever is already chosen.
+          confirm(String(draft[question.field]), () => {}, true);
+        } else {
+          pressContinue();
+        }
         return;
       }
 
@@ -103,29 +124,28 @@ export function Onboarding() {
 
       e.preventDefault();
       const option = question.options[letterIndex];
-      if (question.kind === "single") {
-        setDraft({ [question.field]: option.value } as Partial<Draft>);
-      } else {
-        const current = draft[question.field] as unknown[];
-        const next = current.includes(option.value)
-          ? current.filter((v) => v !== option.value)
-          : [...current, option.value];
-        setDraft({ [question.field]: next } as Partial<Draft>);
-      }
-      handleAnswered();
+      if (question.kind === "single") pickSingle(option.value);
+      else toggleMulti(option.value);
     };
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [draft, goNext, handleAnswered, question]);
+  }, [draft, isConfirming, question, confirm]);
 
   const progress = ((index + 1) / QUESTIONS.length) * 100;
 
   return (
-    <div className="flex min-h-screen flex-col bg-tray">
-      <header className="flex flex-col gap-4 px-5 pt-[calc(1rem+env(safe-area-inset-top,0px))]">
-        <div className="flex items-center justify-between">
-          <Wordmark />
+    <div className="app-shell flex flex-col bg-tray" style={{ minHeight: "100dvh" }}>
+      <header className="flex flex-col gap-3 px-4 pt-[calc(0.75rem+env(safe-area-inset-top,0px))]">
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={exit}
+            className="tap-target -ml-2 px-2 text-sm text-ink-soft"
+            aria-label="Save and close setup"
+          >
+            Close
+          </button>
           <span className="text-sm tabular-nums text-ink-soft">
             {index + 1} of {QUESTIONS.length}
           </span>
@@ -145,7 +165,7 @@ export function Onboarding() {
         </div>
       </header>
 
-      <main className="flex-1 px-5 pt-8 pb-4">
+      <main className="flex-1 px-4 pt-6 pb-4">
         <div key={question.id} className={goingBack ? "question-enter-back" : "question-enter"}>
           <QuestionScreen
             question={question}
@@ -153,33 +173,31 @@ export function Onboarding() {
             setDraft={setDraft}
             units={units}
             setUnits={setUnits}
-            onAnswered={handleAnswered}
+            onPickSingle={pickSingle}
+            onToggleMulti={toggleMulti}
+            confirmingKey={confirmingKey}
+            locked={isConfirming}
           />
         </div>
       </main>
 
-      <footer className="flex items-center gap-3 px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] pt-2">
-        <button
-          type="button"
-          onClick={goBack}
-          className="tap-target rounded-chip border-2 border-line-strong bg-plate px-5 font-display text-base text-ink"
-        >
+      {/* Controls sit at the bottom, in the thumb zone. */}
+      <footer className="sticky bottom-0 flex items-center gap-3 border-t border-line bg-tray px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-3">
+        <BobButton variant="secondary" onClick={goBack} disabled={isConfirming}>
           Back
-        </button>
+        </BobButton>
 
-        {question.kind !== "single" && (
-          <button
-            type="button"
-            onClick={goNext}
-            disabled={!canContinue()}
-            className="tap-target flex-1 rounded-chip bg-accent font-display text-base text-plate disabled:opacity-50"
-          >
-            {isLast ? "See today's plate" : "Continue"}
-          </button>
-        )}
-
-        {question.kind === "single" && (
+        {question.kind === "single" ? (
           <p className="flex-1 text-right text-sm text-ink-soft">Pick one to continue</p>
+        ) : (
+          <BobButton
+            onClick={pressContinue}
+            disabled={!canContinue() || isConfirming}
+            bobbing={confirmingKey === "__continue__"}
+            className="flex-1"
+          >
+            {isLast ? "See my plates" : "Continue"}
+          </BobButton>
         )}
       </footer>
     </div>

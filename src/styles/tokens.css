@@ -19,6 +19,14 @@
   --accent: #566040;
   --accent-tint: #dfe0cc;
 
+  /* the lit and shaded edges of the plate rim */
+  --plate-rim-high: #fbf6ec;
+  --plate-rim-low: #d9cbb2;
+
+  --shadow-soft: 0 1px 2px rgb(49 41 33 / 0.05), 0 6px 16px -6px rgb(49 41 33 / 0.14);
+  --shadow-card: 0 1px 2px rgb(49 41 33 / 0.06), 0 10px 24px -12px rgb(49 41 33 / 0.2);
+  --texture-opacity: 0.055;
+
   --protein: #a65b3c;
   --carb: #a1722a;
   --fat: #6b6055;
@@ -53,6 +61,13 @@
 
     --accent: #9fb06f;
     --accent-tint: #353a28;
+
+    --plate-rim-high: #3a3229;
+    --plate-rim-low: #191410;
+
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 16px -6px rgb(0 0 0 / 0.5);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 10px 24px -12px rgb(0 0 0 / 0.6);
+    --texture-opacity: 0.045;
 
     --protein: #d08a6b;
     --carb: #d8a652;

@@ -11,6 +11,7 @@ interface OptionDef<T> {
 
 interface BaseQuestion {
   id: string;
+  /** Olive asks this. One short, friendly line; she is the voice of the survey. */
   prompt: string;
   helper?: string;
 }
@@ -93,14 +94,20 @@ const MEAL_OPTIONS: OptionDef<MealPeriod>[] = [
 ];
 
 export const QUESTIONS: Question[] = [
-  { id: "age", kind: "number", field: "age", prompt: "How old are you?", helper: "Used for the calorie estimate only." },
-  { id: "height", kind: "number", field: "heightCm", prompt: "How tall are you?" },
-  { id: "weight", kind: "number", field: "weightKg", prompt: "What do you weigh?" },
+  {
+    id: "age",
+    kind: "number",
+    field: "age",
+    prompt: "First up, how old are you?",
+    helper: "Just for the calorie estimate.",
+  },
+  { id: "height", kind: "number", field: "heightCm", prompt: "And how tall are you?" },
+  { id: "weight", kind: "number", field: "weightKg", prompt: "Roughly what do you weigh?" },
   {
     id: "sex",
     kind: "single",
     field: "sex",
-    prompt: "Which estimate should we use?",
+    prompt: "Which estimate should I use?",
     helper: "This only changes the calorie maths, nothing else.",
     options: SEX_OPTIONS,
   } as SingleQuestion,
@@ -108,14 +115,14 @@ export const QUESTIONS: Question[] = [
     id: "activity",
     kind: "single",
     field: "activity",
-    prompt: "How much do you move in a typical week?",
+    prompt: "How much do you move in a normal week?",
     options: ACTIVITY_OPTIONS,
   } as SingleQuestion,
   {
     id: "goal",
     kind: "single",
     field: "goal",
-    prompt: "What do you want your meals to give you?",
+    prompt: "What would you like your meals to give you?",
     options: GOAL_OPTIONS,
   } as SingleQuestion,
   {
@@ -123,23 +130,23 @@ export const QUESTIONS: Question[] = [
     kind: "multi",
     field: "diet",
     prompt: "Anything you do not eat?",
-    helper: "Pick as many as you like, or none. Filtered items never appear, including in swaps.",
+    helper: "Pick as many as you like, or none. I will keep these off your plate, swaps included.",
     options: DIET_OPTIONS,
   } as MultiQuestion,
   {
     id: "allergens",
     kind: "multi",
     field: "avoidAllergens",
-    prompt: "Any allergens to avoid?",
-    helper: "These are excluded outright, never just flagged.",
+    prompt: "Anything you need me to leave out?",
+    helper: "Allergens are excluded outright, never just flagged.",
     options: ALLERGEN_OPTIONS,
   } as MultiQuestion,
   {
     id: "halls",
     kind: "multi",
     field: "halls",
-    prompt: "Which halls do you use?",
-    helper: "Today shows these first. You can still check the others any time.",
+    prompt: "Which halls do you actually go to?",
+    helper: "I will show these first. The others are still one tap away.",
     options: HALL_OPTIONS,
     required: true,
   } as MultiQuestion,
@@ -147,8 +154,8 @@ export const QUESTIONS: Question[] = [
     id: "meals",
     kind: "multi",
     field: "meals",
-    prompt: "Which meals do you eat in hall?",
-    helper: "Your daily targets are split across these.",
+    prompt: "And which meals do you eat in hall?",
+    helper: "I will split your day's targets across these.",
     options: MEAL_OPTIONS,
     required: true,
   } as MultiQuestion,

@@ -33,5 +33,11 @@ Deploying: push to GitHub, import the repo in Vercel, deploy. The Vercel URL is 
 
 Submission = Vercel link + README.md + docs/process-log.md + the repo link for code.
 
+## M9: Brand and warmth (v2)
+> The logo is in. Derive the whole palette from its actual colours, rename the colour-named tokens to role names, and prove every pairing against WCAG AA in both modes with a script rather than by eye. Then rebuild onboarding as a Typeform-style one-question-per-screen flow with haptics.
+
+## M10: Home first, warmth, and Olive (v2.1)
+> Drop the "everything stays quiet" rule. Add paper texture, a tactile plate with food-coloured wedges that assemble one by one, and hand-drawn station and goal icons. Open the app on a dashboard of per-hall combo cards instead of the survey, with a general balanced target until someone personalises. Put the meal windows in one config file and follow the device clock. Add the confirmation bob to onboarding. Audit everything phone-first at 375, 390 and 430. Introduce Olive in exactly three places: the survey, one dashboard tip, and empty states.
+
 ## When the logo arrives
-Drop it at `public/brand/logo.svg`. If Jasmine's palette differs, change values in tokens.css only.
+The logo landed in v2 at `public/brand/logo.png` and the palette is derived from it. A future replacement means re-deriving the tokens in `src/styles/tokens.css` and re-running `pnpm check:contrast`.

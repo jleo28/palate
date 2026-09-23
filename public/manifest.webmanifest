@@ -1,0 +1,29 @@
+{
+  "name": "8teSC",
+  "short_name": "8teSC",
+  "description": "Know what to put on your plate before you walk in.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E8DCC8",
+  "theme_color": "#E8DCC8",
+  "icons": [
+    {
+      "src": "/brand/favicon.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

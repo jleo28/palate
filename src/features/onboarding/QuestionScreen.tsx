@@ -1,5 +1,8 @@
 import type { UnitSystem } from "../../context/ProfileContext";
+import type { Goal } from "../../core/types";
 import { OptionList } from "../../components/OptionList";
+import { OliveSays } from "../../components/OliveSays";
+import { GoalIcon } from "../../components/icons/GoalIcon";
 import { cmToFtIn, ftInToCm, kgToLb, lbToKg } from "../../lib/units";
 import type { Draft } from "./onboardingDraft";
 import type { Question } from "./questions";
@@ -10,13 +13,12 @@ interface QuestionScreenProps {
   setDraft: (patch: Partial<Draft>) => void;
   units: UnitSystem;
   setUnits: (units: UnitSystem) => void;
-  /** Called when a single-select answer is chosen, so the flow can auto-advance. */
-  onAnswered?: () => void;
-  showLetters?: boolean;
-}
-
-function toggle<T>(list: T[], value: T): T[] {
-  return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+  onPickSingle?: (value: unknown) => void;
+  onToggleMulti?: (value: unknown) => void;
+  confirmingKey?: string | null;
+  locked?: boolean;
+  /** Profile reuses these as plain editable sections: no letters, no Olive. */
+  asSection?: boolean;
 }
 
 const numberFieldClass =
@@ -28,22 +30,33 @@ export function QuestionScreen({
   setDraft,
   units,
   setUnits,
-  onAnswered,
-  showLetters = true,
+  onPickSingle,
+  onToggleMulti,
+  confirmingKey = null,
+  locked = false,
+  asSection = false,
 }: QuestionScreenProps) {
   const body = () => {
     if (question.kind === "single") {
+      const options = question.options.map((opt) =>
+        question.field === "goal"
+          ? { ...opt, icon: <GoalIcon goal={opt.value as Goal} size={22} /> }
+          : opt
+      );
       return (
         <OptionList
           name={question.prompt}
           multi={false}
-          showLetters={showLetters}
-          options={question.options}
+          showLetters={!asSection}
+          options={options}
           selected={[draft[question.field]]}
-          onPick={(value) => {
-            setDraft({ [question.field]: value } as Partial<Draft>);
-            onAnswered?.();
-          }}
+          confirmingKey={confirmingKey}
+          disabled={locked}
+          onPick={(value) =>
+            onPickSingle
+              ? onPickSingle(value)
+              : setDraft({ [question.field]: value } as Partial<Draft>)
+          }
         />
       );
     }
@@ -54,12 +67,18 @@ export function QuestionScreen({
         <OptionList
           name={question.prompt}
           multi
-          showLetters={showLetters}
+          showLetters={!asSection}
           options={question.options}
           selected={current}
+          confirmingKey={confirmingKey}
+          disabled={locked}
           onPick={(value) => {
-            setDraft({ [question.field]: toggle(current, value) } as Partial<Draft>);
-            onAnswered?.();
+            if (onToggleMulti) {
+              onToggleMulti(value);
+              return;
+            }
+            const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+            setDraft({ [question.field]: next } as Partial<Draft>);
           }}
         />
       );
@@ -70,10 +89,20 @@ export function QuestionScreen({
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="font-display text-xl leading-tight text-ink">{question.prompt}</h1>
-        {question.helper && <p className="mt-2 text-sm text-ink-soft">{question.helper}</p>}
-      </div>
+      {asSection ? (
+        <div>
+          <h2 className="font-display text-lg leading-tight text-ink">{question.prompt}</h2>
+          {question.helper && <p className="mt-1 text-sm text-ink-soft">{question.helper}</p>}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {/* Olive asks. She is the voice of the survey. */}
+          <OliveSays size={44}>
+            <span className="font-display text-xl leading-snug text-ink">{question.prompt}</span>
+          </OliveSays>
+          {question.helper && <p className="text-sm text-ink-soft">{question.helper}</p>}
+        </div>
+      )}
       {body()}
     </div>
   );
@@ -100,7 +129,6 @@ function NumberField({ question, draft, setDraft, units, setUnits }: NumberField
           onChange={(e) => setDraft({ age: Number(e.target.value) })}
           className={numberFieldClass}
           aria-label="Age in years"
-          autoFocus
         />
         <span className="shrink-0 text-base text-ink-soft">years</span>
       </label>
@@ -130,7 +158,6 @@ function NumberField({ question, draft, setDraft, units, setUnits }: NumberField
                 onChange={(e) => setDraft({ heightCm: ftInToCm(Number(e.target.value), inches) })}
                 className={numberFieldClass}
                 aria-label="Height, feet"
-                autoFocus
               />
               <span className="shrink-0 text-base text-ink-soft">ft</span>
             </label>
@@ -157,7 +184,6 @@ function NumberField({ question, draft, setDraft, units, setUnits }: NumberField
               onChange={(e) => setDraft({ heightCm: Number(e.target.value) })}
               className={numberFieldClass}
               aria-label="Height in centimetres"
-              autoFocus
             />
             <span className="shrink-0 text-base text-ink-soft">cm</span>
           </label>
@@ -179,7 +205,6 @@ function NumberField({ question, draft, setDraft, units, setUnits }: NumberField
           }
           className={numberFieldClass}
           aria-label={units === "imperial" ? "Weight in pounds" : "Weight in kilograms"}
-          autoFocus
         />
         <span className="shrink-0 text-base text-ink-soft">{units === "imperial" ? "lb" : "kg"}</span>
       </label>
