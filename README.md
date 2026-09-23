@@ -4,7 +4,7 @@
 
 This is Audrey's individual prototype for a class group project. Every team member built their own version of the same product; the group compares them and carries one forward. See `docs/PRODUCT_SPEC.md` for the full brief.
 
-**Live prototype:** _add the Vercel URL here after deploying (see below)._
+**Live prototype:** https://8tesc.vercel.app
 
 ## 60-second demo script
 
