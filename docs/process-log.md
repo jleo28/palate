@@ -71,3 +71,8 @@ skip the browser chrome check thing
 - Live browser verification (Claude in Chrome) was unresponsive for the whole session; verification relied on `tsc -b`, `vitest run`, and `vite build` instead. A manual phone-width and keyboard-focus pass is still owed before the Week 5 demo.
 
 **Screenshot:** not captured this session (browser tooling was unavailable); to be added before Week 5.
+
+**Deployment:**
+- GitHub: `github.com/jleo28/8tesc` (private repo, so teammates can be added as collaborators later).
+- Vercel: linked to the GitHub repo (`jleo28's projects` team), Vercel Authentication disabled so the link is publicly viewable, production alias `https://8tesc.vercel.app`. Auto-deploy on push to `main` confirmed working (the README-link commit above triggered a build automatically).
+
