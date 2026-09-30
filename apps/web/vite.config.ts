@@ -18,7 +18,9 @@ export default defineConfig(({ command }) => ({
       },
     }),
     // Nitro picks the deploy preset from the environment (node-server locally, vercel on Vercel).
-    command === "build" && nitro(),
+    // On Vercel, write the Build Output API bundle to the repo root, where Vercel looks for it.
+    command === "build" &&
+      nitro(process.env["VERCEL"] ? { output: { dir: "../../.vercel/output" } } : {}),
     viteReact(),
   ],
   resolve: {
