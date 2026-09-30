@@ -1,9 +1,13 @@
-import { MENU } from "./menu";
 import type { MacroTargets } from "./macros";
 import type { DietTag, HallId, MealPeriod, MenuItem, PlateItem } from "./types";
 
-export function availableItems(hall: HallId, meal: MealPeriod, diets: DietTag[]) {
-  return MENU.filter(
+export function availableItems(
+  menu: readonly MenuItem[],
+  hall: HallId,
+  meal: MealPeriod,
+  diets: DietTag[],
+) {
+  return menu.filter(
     (i) => i.hall === hall && i.meals.includes(meal) && diets.every((d) => i.tags.includes(d)),
   );
 }
@@ -33,13 +37,14 @@ export function totals(plate: PlateItem[]): MacroTargets {
 
 /** Build a balanced plate: protein anchor, carb, veg, optional extra. */
 export function buildPlate(
+  menu: readonly MenuItem[],
   hall: HallId,
   meal: MealPeriod,
   diets: DietTag[],
   target: MacroTargets,
   seed = 0,
 ): PlateItem[] {
-  const pool = availableItems(hall, meal, diets);
+  const pool = availableItems(menu, hall, meal, diets);
   const proteins = pool.filter((i) => i.role === "protein").sort((a, b) => b.protein - a.protein);
   const carbs = pool.filter((i) => i.role === "carb");
   const vegs = pool.filter((i) => i.role === "veg");
@@ -77,12 +82,13 @@ export function buildPlate(
 
 /** Find a macro-equivalent alternative in the same hall/role. */
 export function swapItem(
+  menu: readonly MenuItem[],
   current: PlateItem,
   hall: HallId,
   meal: MealPeriod,
   diets: DietTag[],
 ): PlateItem {
-  const pool = availableItems(hall, meal, diets).filter(
+  const pool = availableItems(menu, hall, meal, diets).filter(
     (i) => i.role === current.item.role && i.id !== current.item.id,
   );
   if (!pool.length) return current;

@@ -1,4 +1,4 @@
-import type { HallId, MealPeriod } from "./types";
+import type { HallId, MealPeriod } from "@palate/core";
 
 export const HALLS: { id: HallId; name: string; short: string; blurb: string }[] = [
   {

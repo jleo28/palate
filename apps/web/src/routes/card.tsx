@@ -14,12 +14,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GOALS } from "@/lib/palate/macros";
+import {
+  GOALS,
+  type Allergen,
+  type DietTag,
+  type DislikeId,
+  type GoalId,
+  type HallId,
+  ALLERGENS,
+  allergenLabel,
+  DISLIKES,
+} from "@palate/core";
 import { HALLS, hallName } from "@/lib/palate/halls";
 import { useStore } from "@/lib/palate/store";
-import type { Allergen, DietTag, DislikeId, GoalId, HallId } from "@/lib/palate/types";
-import { ALLERGENS, allergenLabel } from "@/lib/palate/allergens";
-import { DISLIKES } from "@/lib/palate/preferences";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/card")({

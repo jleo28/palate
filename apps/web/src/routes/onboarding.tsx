@@ -3,11 +3,20 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { EightTeMark } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
-import { GOALS, dailyTargets, mealTargets } from "@/lib/palate/macros";
+import {
+  GOALS,
+  dailyTargets,
+  mealTargets,
+  ALLERGENS,
+  allergenLabel,
+  type Allergen,
+  type DietTag,
+  type GoalId,
+  type HallId,
+  type Profile,
+} from "@palate/core";
 import { HALLS } from "@/lib/palate/halls";
-import { ALLERGENS, allergenLabel } from "@/lib/palate/allergens";
 import { useStore } from "@/lib/palate/store";
-import type { Allergen, DietTag, GoalId, HallId, Profile } from "@/lib/palate/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding")({

@@ -13,10 +13,8 @@ import {
 } from "@/components/ui/sheet";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import { MENU } from "@/lib/palate/menu";
-import { allergenConflicts, allergenLabel } from "@/lib/palate/allergens";
-import { dislikedMatches } from "@/lib/palate/preferences";
+import { allergenConflicts, allergenLabel, dislikedMatches, type MenuItem } from "@palate/core";
 import { useStore } from "@/lib/palate/store";
-import type { MenuItem } from "@/lib/palate/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/menus")({
