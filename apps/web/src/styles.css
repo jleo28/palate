@@ -208,9 +208,16 @@
 }
 
 @keyframes pet-celebrate {
-  0%, 100% { transform: translateY(0) rotate(0); }
-  35% { transform: translateY(-7px) rotate(-3deg); }
-  70% { transform: translateY(-3px) rotate(3deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  35% {
+    transform: translateY(-7px) rotate(-3deg);
+  }
+  70% {
+    transform: translateY(-3px) rotate(3deg);
+  }
 }
 
 @utility pet-celebrate {

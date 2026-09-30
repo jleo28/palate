@@ -13,9 +13,9 @@ pnpm install
 pnpm dev
 ```
 
-| Path | What |
-| --- | --- |
-| `apps/web` | The TanStack Start web app |
-| `packages/*` | Shared packages |
+| Path         | What                       |
+| ------------ | -------------------------- |
+| `apps/web`   | The TanStack Start web app |
+| `packages/*` | Shared packages            |
 
 Root scripts run through Turborepo: `dev`, `build`, `lint`, `typecheck`, `test`.

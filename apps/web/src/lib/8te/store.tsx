@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { dailyTargets, mealTargets, type MacroTargets } from "./macros";
 import { currentMeal } from "./halls";
 import type { HallId, LoggedMeal, MealPeriod, Profile } from "./types";

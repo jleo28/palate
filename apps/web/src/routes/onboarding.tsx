@@ -16,7 +16,8 @@ export const Route = createFileRoute("/onboarding")({
       { title: "Set up your 8te Student Pass" },
       {
         name: "description",
-        content: "Three quick steps: your stats, your goal, your USC dining hall. 8te does the macro math.",
+        content:
+          "Three quick steps: your stats, your goal, your USC dining hall. 8te does the macro math.",
       },
       { property: "og:title", content: "Set up your 8te Student Pass" },
       {
@@ -38,13 +39,7 @@ const DIETS: { id: DietTag; label: string }[] = [
   { id: "dairy-free", label: "Dairy-Free" },
 ];
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
       <span className="label-caps text-muted-foreground">{label}</span>
@@ -149,11 +144,21 @@ function Onboarding() {
 
           <div className="card-edge space-y-4 rounded-2xl bg-card p-4">
             <Field label="Name on card">
-              <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Jasmine M." />
+              <input
+                className={inputCls}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Jasmine M."
+              />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Age">
-                <input className={inputCls} inputMode="numeric" value={age} onChange={(e) => setAge(e.target.value)} />
+                <input
+                  className={inputCls}
+                  inputMode="numeric"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                />
               </Field>
               <Field label="Gender">
                 <select
@@ -169,22 +174,32 @@ function Onboarding() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Height (ft)">
-                <input className={inputCls} inputMode="numeric" value={ft} onChange={(e) => setFt(e.target.value)} />
+                <input
+                  className={inputCls}
+                  inputMode="numeric"
+                  value={ft}
+                  onChange={(e) => setFt(e.target.value)}
+                />
               </Field>
               <Field label="Height (in)">
-                <input className={inputCls} inputMode="numeric" value={inch} onChange={(e) => setInch(e.target.value)} />
+                <input
+                  className={inputCls}
+                  inputMode="numeric"
+                  value={inch}
+                  onChange={(e) => setInch(e.target.value)}
+                />
               </Field>
             </div>
-          <div className="space-y-4">
-            <Field label="Weight (lb)">
-              <input
-                className={inputCls}
-                inputMode="numeric"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-              />
-            </Field>
-          </div>
+            <div className="space-y-4">
+              <Field label="Weight (lb)">
+                <input
+                  className={inputCls}
+                  inputMode="numeric"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                />
+              </Field>
+            </div>
           </div>
         </section>
       )}
@@ -193,7 +208,9 @@ function Onboarding() {
         <section className="space-y-4">
           <div>
             <h1 className="text-2xl font-extrabold">Goal & Preferences</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Pick a direction — targets update live.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pick a direction — targets update live.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
@@ -210,7 +227,9 @@ function Onboarding() {
                 )}
               >
                 <span className="font-display block text-base font-bold">{g.label}</span>
-                <span className="mt-0.5 block text-[0.72rem] leading-snug opacity-80">{g.note}</span>
+                <span className="mt-0.5 block text-[0.72rem] leading-snug opacity-80">
+                  {g.note}
+                </span>
               </button>
             ))}
           </div>
@@ -223,7 +242,9 @@ function Onboarding() {
                   key={d.id}
                   active={diets.includes(d.id)}
                   onClick={() =>
-                    setDiets((prev) => (prev.includes(d.id) ? prev.filter((x) => x !== d.id) : [...prev, d.id]))
+                    setDiets((prev) =>
+                      prev.includes(d.id) ? prev.filter((x) => x !== d.id) : [...prev, d.id],
+                    )
                   }
                 >
                   {d.label}
@@ -292,7 +313,9 @@ function Onboarding() {
                 onClick={() => setHall(h.id)}
                 className={cn(
                   "flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition-colors",
-                  hall === h.id ? "border-olive bg-olive text-primary-foreground" : "border-foreground/20 bg-card",
+                  hall === h.id
+                    ? "border-olive bg-olive text-primary-foreground"
+                    : "border-foreground/20 bg-card",
                 )}
               >
                 <span className="min-w-0">

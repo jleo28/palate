@@ -7,8 +7,18 @@ export const HALLS: { id: HallId; name: string; short: string; blurb: string }[]
     short: "Village",
     blurb: "Hogwarts hall energy, big grill + global stations",
   },
-  { id: "evk", name: "Everybody's Kitchen", short: "EVK", blurb: "Comfort food, Mongolian wok, deep salad bar" },
-  { id: "parkside", name: "Parkside Restaurant", short: "Parkside", blurb: "Lighter fare, fresh bowls, pizza oven" },
+  {
+    id: "evk",
+    name: "Everybody's Kitchen",
+    short: "EVK",
+    blurb: "Comfort food, Mongolian wok, deep salad bar",
+  },
+  {
+    id: "parkside",
+    name: "Parkside Restaurant",
+    short: "Parkside",
+    blurb: "Lighter fare, fresh bowls, pizza oven",
+  },
 ];
 
 export function hallName(id: HallId) {

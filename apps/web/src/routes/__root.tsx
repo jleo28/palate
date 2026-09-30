@@ -78,7 +78,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "8te — Eat right at USC dining halls" },
       {
         name: "description",
-        content: "Macro-matched dining hall plates with real cafeteria portions, built for USC students.",
+        content:
+          "Macro-matched dining hall plates with real cafeteria portions, built for USC students.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

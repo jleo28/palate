@@ -18,7 +18,11 @@ export interface MacroTargets {
 export function dailyTargets(p: Profile): MacroTargets {
   const kg = p.weightLb * 0.4536;
   const cm = p.heightIn * 2.54;
-  const base = 10 * kg + 6.25 * cm - 5 * p.age + (p.gender === "male" ? 5 : p.gender === "female" ? -161 : -78);
+  const base =
+    10 * kg +
+    6.25 * cm -
+    5 * p.age +
+    (p.gender === "male" ? 5 : p.gender === "female" ? -161 : -78);
   const tdee = base * 1.5;
 
   const adj: Record<GoalId, number> = {

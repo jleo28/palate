@@ -19,5 +19,7 @@ export const DISLIKES: { id: DislikeId; label: string; matches: RegExp }[] = [
 
 export function dislikedMatches(item: MenuItem, dislikes: DislikeId[] | undefined) {
   if (!dislikes?.length) return [];
-  return DISLIKES.filter((preference) => dislikes.includes(preference.id) && preference.matches.test(item.name));
+  return DISLIKES.filter(
+    (preference) => dislikes.includes(preference.id) && preference.matches.test(item.name),
+  );
 }
