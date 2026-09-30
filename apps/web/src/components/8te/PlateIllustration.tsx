@@ -10,8 +10,17 @@ function FoodDrawing({ entry, index, count }: { entry: PlateItem; index: number;
   const layouts = {
     1: ["translate(72 72) scale(1.7)"],
     2: ["translate(35 74) scale(1.6)", "translate(122 74) scale(1.6)"],
-    3: ["translate(35 43) scale(1.55)", "translate(121 43) scale(1.55)", "translate(78 121) scale(1.55)"],
-    4: ["translate(39 39) scale(1.42)", "translate(121 39) scale(1.42)", "translate(39 121) scale(1.42)", "translate(121 121) scale(1.42)"],
+    3: [
+      "translate(35 43) scale(1.55)",
+      "translate(121 43) scale(1.55)",
+      "translate(78 121) scale(1.55)",
+    ],
+    4: [
+      "translate(39 39) scale(1.42)",
+      "translate(121 39) scale(1.42)",
+      "translate(39 121) scale(1.42)",
+      "translate(121 121) scale(1.42)",
+    ],
   };
   const slots = layouts[Math.min(count, 4) as keyof typeof layouts] ?? layouts[4];
   const transform = slots[index % slots.length];
@@ -28,15 +37,32 @@ function FoodDrawing({ entry, index, count }: { entry: PlateItem; index: number;
   const isTofu = /tofu/.test(name);
   const isFish = /salmon|shrimp/.test(name);
 
-  const fillClass = item.role === "protein" ? "fill-food-protein" : item.role === "carb" ? "fill-food-carb" : item.role === "veg" ? "fill-food-veg" : "fill-food-fruit";
-  const strokeClass = item.role === "veg" ? "stroke-food-veg-ink" : item.role === "extra" ? "stroke-food-fruit-ink" : "stroke-foreground";
+  const fillClass =
+    item.role === "protein"
+      ? "fill-food-protein"
+      : item.role === "carb"
+        ? "fill-food-carb"
+        : item.role === "veg"
+          ? "fill-food-veg"
+          : "fill-food-fruit";
+  const strokeClass =
+    item.role === "veg"
+      ? "stroke-food-veg-ink"
+      : item.role === "extra"
+        ? "stroke-food-fruit-ink"
+        : "stroke-foreground";
 
   return (
     <g transform={transform} className={`${fillClass} ${strokeClass}`} strokeWidth="1.7">
       {isRound && (
         <>
           {Array.from({ length: Math.max(3, portionMarks + 2) }).map((_, i) => (
-            <circle key={i} cx={12 + (i % 3) * 17} cy={13 + Math.floor(i / 3) * 18} r={name.includes("berry") ? 7 : 9} />
+            <circle
+              key={i}
+              cx={12 + (i % 3) * 17}
+              cy={13 + Math.floor(i / 3) * 18}
+              r={name.includes("berry") ? 7 : 9}
+            />
           ))}
           <path fill="none" d="m10 38 10-7m17 8 9-8m-20-20 6 6" />
         </>
@@ -99,36 +125,94 @@ function FoodDrawing({ entry, index, count }: { entry: PlateItem; index: number;
           <path fill="none" d="m31 15 5 30m6-26 4 20" />
         </>
       )}
-      {!isRound && !isGrain && !isNoodle && !isLeafy && !isEgg && !isToast && !isFruit && !isDairy && !isTofu && !isFish && (
-        <>
-          <path d="M4 20C9 7 23 5 34 13l19 14c8 6 2 20-8 18L13 38C4 36 0 28 4 20Z" />
-          <path fill="none" d="m15 16 7 8m10-7 7 10m-24 4 8 4m10-5 8 6" />
-        </>
-      )}
+      {!isRound &&
+        !isGrain &&
+        !isNoodle &&
+        !isLeafy &&
+        !isEgg &&
+        !isToast &&
+        !isFruit &&
+        !isDairy &&
+        !isTofu &&
+        !isFish && (
+          <>
+            <path d="M4 20C9 7 23 5 34 13l19 14c8 6 2 20-8 18L13 38C4 36 0 28 4 20Z" />
+            <path fill="none" d="m15 16 7 8m10-7 7 10m-24 4 8 4m10-5 8 6" />
+          </>
+        )}
     </g>
   );
 }
 
 export function PlateIllustration({ items }: { items: PlateItem[] }) {
-  const description = items.map(({ item, qty }) => `${qty} ${qty === 1 ? item.unit : item.unitPlural} ${item.name}`).join(", ");
+  const description = items
+    .map(({ item, qty }) => `${qty} ${qty === 1 ? item.unit : item.unitPlural} ${item.name}`)
+    .join(", ");
 
   return (
-    <figure className="relative mb-5 overflow-hidden rounded-2xl bg-olive-soft py-3" aria-label={`Illustrated plate with ${description}`}>
-      <svg className="pointer-events-none absolute -left-1 top-5 h-36 w-10 text-olive/35" viewBox="0 0 40 150" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+    <figure
+      className="relative mb-5 overflow-hidden rounded-2xl bg-olive-soft py-3"
+      aria-label={`Illustrated plate with ${description}`}
+    >
+      <svg
+        className="pointer-events-none absolute -left-1 top-5 h-36 w-10 text-olive/35"
+        viewBox="0 0 40 150"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        aria-hidden="true"
+      >
         <path d="M20 142c-2-32-1-60 0-88M10 8v31c0 13 20 13 20 0V8M15 8v30M20 8v30M25 8v30" />
       </svg>
-      <svg className="pointer-events-none absolute -right-1 top-6 h-36 w-10 text-olive/35" viewBox="0 0 40 150" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <svg
+        className="pointer-events-none absolute -right-1 top-6 h-36 w-10 text-olive/35"
+        viewBox="0 0 40 150"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        aria-hidden="true"
+      >
         <path d="M20 142c2-32 1-60 0-87V10c11 11 12 33 0 45M16 142h8" />
       </svg>
 
-      <svg key={plateKey(items)} className="plate-sketch-in mx-auto block aspect-square w-[13.5rem] max-w-[68%]" viewBox="0 0 240 240" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path className="fill-card stroke-foreground" strokeWidth="2.5" d="M120 13c58 0 106 47 106 106s-46 108-105 108S14 179 14 120 61 13 120 13Z" />
-        <path className="stroke-foreground/20" strokeWidth="1.5" d="M120 28c51 0 92 41 92 92s-40 92-91 92-93-41-93-92 41-92 92-92Z" />
-        <path className="stroke-foreground/15" d="M119 36c47 0 85 38 85 84s-37 84-84 84-84-37-84-84 37-84 83-84Z" />
-        {items.slice(0, 4).map((entry, index) => <FoodDrawing key={entry.item.id} entry={entry} index={index} count={Math.min(items.length, 4)} />)}
+      <svg
+        key={plateKey(items)}
+        className="plate-sketch-in mx-auto block aspect-square w-[13.5rem] max-w-[68%]"
+        viewBox="0 0 240 240"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path
+          className="fill-card stroke-foreground"
+          strokeWidth="2.5"
+          d="M120 13c58 0 106 47 106 106s-46 108-105 108S14 179 14 120 61 13 120 13Z"
+        />
+        <path
+          className="stroke-foreground/20"
+          strokeWidth="1.5"
+          d="M120 28c51 0 92 41 92 92s-40 92-91 92-93-41-93-92 41-92 92-92Z"
+        />
+        <path
+          className="stroke-foreground/15"
+          d="M119 36c47 0 85 38 85 84s-37 84-84 84-84-37-84-84 37-84 83-84Z"
+        />
+        {items.slice(0, 4).map((entry, index) => (
+          <FoodDrawing
+            key={entry.item.id}
+            entry={entry}
+            index={index}
+            count={Math.min(items.length, 4)}
+          />
+        ))}
       </svg>
 
-      <figcaption className="label-caps absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-olive">Your plate</figcaption>
+      <figcaption className="label-caps absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-olive">
+        Your plate
+      </figcaption>
     </figure>
   );
 }

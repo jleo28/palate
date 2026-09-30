@@ -76,7 +76,12 @@ export function buildPlate(
 }
 
 /** Find a macro-equivalent alternative in the same hall/role. */
-export function swapItem(current: PlateItem, hall: HallId, meal: MealPeriod, diets: DietTag[]): PlateItem {
+export function swapItem(
+  current: PlateItem,
+  hall: HallId,
+  meal: MealPeriod,
+  diets: DietTag[],
+): PlateItem {
   const pool = availableItems(hall, meal, diets).filter(
     (i) => i.role === current.item.role && i.id !== current.item.id,
   );

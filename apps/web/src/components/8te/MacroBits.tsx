@@ -19,7 +19,9 @@ export function MacroPill({
         {Math.round(value)}
         {unit}
         {target !== undefined && (
-          <span className="text-[0.7rem] font-medium text-muted-foreground">/{Math.round(target)}</span>
+          <span className="text-[0.7rem] font-medium text-muted-foreground">
+            /{Math.round(target)}
+          </span>
         )}
       </p>
     </div>

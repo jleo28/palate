@@ -26,15 +26,7 @@ export type DislikeId =
 
 /** FDA "big 9" food allergens */
 export type Allergen =
-  | "milk"
-  | "egg"
-  | "peanut"
-  | "tree-nut"
-  | "soy"
-  | "wheat"
-  | "fish"
-  | "shellfish"
-  | "sesame";
+  "milk" | "egg" | "peanut" | "tree-nut" | "soy" | "wheat" | "fish" | "shellfish" | "sesame";
 
 export interface MenuItem {
   id: string;
