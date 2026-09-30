@@ -32,7 +32,7 @@ export function GoalPet({
     <section className="mt-5 overflow-hidden rounded-2xl border border-foreground/15 bg-card p-4">
       <div className="grid grid-cols-[1fr_8.5rem] items-center gap-3">
         <div>
-          <p className="label-caps text-olive">Your 8te pal</p>
+          <p className="label-caps text-olive">Your Palate pal</p>
           <h2 className="mt-1 font-display text-lg font-bold">{current.name}</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {metToday
@@ -49,7 +49,7 @@ export function GoalPet({
 
         <div
           className="relative grid h-32 place-items-center"
-          aria-label={`${current.name} 8te pal after ${completedDays} completed goal days, ${weeklyDays} this week`}
+          aria-label={`${current.name} Palate pal after ${completedDays} completed goal days, ${weeklyDays} this week`}
         >
           <div className="absolute bottom-1 h-3 w-24 rounded-full bg-foreground/10" />
           <div className={`origin-bottom ${sizeClass}`}>

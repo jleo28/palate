@@ -2,28 +2,28 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Check, RefreshCw, Shuffle } from "lucide-react";
 import { toast } from "sonner";
-import { AppShell, ScreenHeader } from "@/components/8te/AppShell";
-import { MacroRow } from "@/components/8te/MacroBits";
-import { PlateIllustration } from "@/components/8te/PlateIllustration";
-import { HALLS, MEALS } from "@/lib/8te/halls";
-import { buildPlate, swapItem, totals } from "@/lib/8te/plate";
-import { portionLabel } from "@/lib/8te/menu";
-import { allergenConflicts, allergenLabel } from "@/lib/8te/allergens";
-import { dislikedMatches } from "@/lib/8te/preferences";
-import { useStore } from "@/lib/8te/store";
-import type { PlateItem } from "@/lib/8te/types";
+import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
+import { MacroRow } from "@/components/palate/MacroBits";
+import { PlateIllustration } from "@/components/palate/PlateIllustration";
+import { HALLS, MEALS } from "@/lib/palate/halls";
+import { buildPlate, swapItem, totals } from "@/lib/palate/plate";
+import { portionLabel } from "@/lib/palate/menu";
+import { allergenConflicts, allergenLabel } from "@/lib/palate/allergens";
+import { dislikedMatches } from "@/lib/palate/preferences";
+import { useStore } from "@/lib/palate/store";
+import type { PlateItem } from "@/lib/palate/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "8te — What to eat at USC dining halls, portioned" },
+      { title: "Palate — What to eat at USC dining halls, portioned" },
       {
         name: "description",
         content:
-          "8te builds one balanced plate from today's USC dining hall menus, with real cafeteria portions like 2 tongs of grilled chicken.",
+          "Palate builds one balanced plate from today's USC dining hall menus, with real cafeteria portions like 2 tongs of grilled chicken.",
       },
-      { property: "og:title", content: "8te — What to eat at USC dining halls, portioned" },
+      { property: "og:title", content: "Palate — What to eat at USC dining halls, portioned" },
       {
         property: "og:description",
         content:

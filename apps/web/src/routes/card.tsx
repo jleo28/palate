@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { AppShell, ScreenHeader } from "@/components/8te/AppShell";
-import { MacroBar } from "@/components/8te/MacroBits";
-import { GoalPet } from "@/components/8te/GoalPet";
+import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
+import { MacroBar } from "@/components/palate/MacroBits";
+import { GoalPet } from "@/components/palate/GoalPet";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,24 +14,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GOALS } from "@/lib/8te/macros";
-import { HALLS, hallName } from "@/lib/8te/halls";
-import { useStore } from "@/lib/8te/store";
-import type { Allergen, DietTag, DislikeId, GoalId, HallId } from "@/lib/8te/types";
-import { ALLERGENS, allergenLabel } from "@/lib/8te/allergens";
-import { DISLIKES } from "@/lib/8te/preferences";
+import { GOALS } from "@/lib/palate/macros";
+import { HALLS, hallName } from "@/lib/palate/halls";
+import { useStore } from "@/lib/palate/store";
+import type { Allergen, DietTag, DislikeId, GoalId, HallId } from "@/lib/palate/types";
+import { ALLERGENS, allergenLabel } from "@/lib/palate/allergens";
+import { DISLIKES } from "@/lib/palate/preferences";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/card")({
   head: () => ({
     meta: [
-      { title: "My 8te Card — macro bank & goals" },
+      { title: "My Palate Card — macro bank & goals" },
       {
         name: "description",
         content:
-          "Your digital 8te student card: today's macro bank, meals logged at USC dining halls, and editable goals and dietary filters.",
+          "Your digital Palate student card: today's macro bank, meals logged at USC dining halls, and editable goals and dietary filters.",
       },
-      { property: "og:title", content: "My 8te Card — macro bank & goals" },
+      { property: "og:title", content: "My Palate Card — macro bank & goals" },
       {
         property: "og:description",
         content: "Track consumed vs remaining macros and edit your goal any time.",
@@ -111,13 +111,13 @@ function CardScreen() {
 
   return (
     <AppShell>
-      <ScreenHeader title="My 8te Card" sub="Profile & stats" />
+      <ScreenHeader title="My Palate Card" sub="Profile & stats" />
 
       {/* Student ID card */}
       <section className="card-edge relative overflow-hidden rounded-3xl bg-card p-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="font-display text-4xl font-extrabold tracking-tight">8te</p>
+            <p className="font-display text-4xl font-extrabold tracking-tight">Palate</p>
             <p className="label-caps mt-1 text-muted-foreground">USC · {hallName(profile.hall)}</p>
           </div>
           <span className="size-12 rounded-xl bg-olive" />

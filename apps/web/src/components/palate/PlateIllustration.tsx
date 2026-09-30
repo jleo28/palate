@@ -1,4 +1,4 @@
-import type { PlateItem } from "@/lib/8te/types";
+import type { PlateItem } from "@/lib/palate/types";
 
 function plateKey(items: PlateItem[]) {
   return items.map(({ item, qty }) => `${item.id}-${qty}`).join("|");

@@ -11,8 +11,23 @@ import { dailyTargets, mealTargets, type MacroTargets } from "./macros";
 import { currentMeal } from "./halls";
 import type { HallId, LoggedMeal, MealPeriod, Profile } from "./types";
 
-const KEY_PROFILE = "8te.profile.v1";
-const KEY_LOG = "8te.log.v1";
+const KEY_PROFILE = "palate.profile.v1";
+const KEY_LOG = "palate.log.v1";
+
+// Keys used before the rename to Palate. Copied forward once, then removed.
+const LEGACY_KEYS: [legacy: string, current: string][] = [
+  ["8te.profile.v1", KEY_PROFILE],
+  ["8te.log.v1", KEY_LOG],
+];
+
+export function migrateLegacyKeys(storage: Pick<Storage, "getItem" | "setItem" | "removeItem">) {
+  for (const [legacy, current] of LEGACY_KEYS) {
+    const value = storage.getItem(legacy);
+    if (value === null) continue;
+    if (storage.getItem(current) === null) storage.setItem(current, value);
+    storage.removeItem(legacy);
+  }
+}
 
 interface Ctx {
   ready: boolean;
@@ -45,6 +60,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
+      migrateLegacyKeys(localStorage);
       const p = localStorage.getItem(KEY_PROFILE);
       if (p) {
         const parsed = JSON.parse(p) as Profile;

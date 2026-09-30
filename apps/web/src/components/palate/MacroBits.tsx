@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { MacroTargets } from "@/lib/8te/macros";
+import type { MacroTargets } from "@/lib/palate/macros";
 
 export function MacroPill({
   label,
