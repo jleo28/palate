@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { to: "/", label: "The Plate", icon: UtensilsCrossed },
   { to: "/menus", label: "Hall Menus", icon: BookOpen },
-  { to: "/card", label: "My 8te", icon: IdCard },
+  { to: "/card", label: "My Palate", icon: IdCard },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function EightTeMark({ className }: { className?: string }) {
   return (
     <span className={cn("font-display text-2xl font-extrabold tracking-tight", className)}>
-      8te
+      Palate
       <span className="ml-1 inline-block size-2 translate-y-[-2px] rounded-full bg-olive" />
     </span>
   );

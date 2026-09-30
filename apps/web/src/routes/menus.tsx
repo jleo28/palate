@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { AppShell, ScreenHeader } from "@/components/8te/AppShell";
+import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -11,18 +11,18 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { HALLS, MEALS } from "@/lib/8te/halls";
-import { MENU } from "@/lib/8te/menu";
-import { allergenConflicts, allergenLabel } from "@/lib/8te/allergens";
-import { dislikedMatches } from "@/lib/8te/preferences";
-import { useStore } from "@/lib/8te/store";
-import type { MenuItem } from "@/lib/8te/types";
+import { HALLS, MEALS } from "@/lib/palate/halls";
+import { MENU } from "@/lib/palate/menu";
+import { allergenConflicts, allergenLabel } from "@/lib/palate/allergens";
+import { dislikedMatches } from "@/lib/palate/preferences";
+import { useStore } from "@/lib/palate/store";
+import type { MenuItem } from "@/lib/palate/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/menus")({
   head: () => ({
     meta: [
-      { title: "Hall Menus — Village, EVK & Parkside macros | 8te" },
+      { title: "Hall Menus — Village, EVK & Parkside macros | Palate" },
       {
         name: "description",
         content:

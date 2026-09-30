@@ -1,25 +1,25 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { EightTeMark } from "@/components/8te/AppShell";
-import { MacroRow } from "@/components/8te/MacroBits";
-import { GOALS, dailyTargets, mealTargets } from "@/lib/8te/macros";
-import { HALLS } from "@/lib/8te/halls";
-import { ALLERGENS, allergenLabel } from "@/lib/8te/allergens";
-import { useStore } from "@/lib/8te/store";
-import type { Allergen, DietTag, GoalId, HallId, Profile } from "@/lib/8te/types";
+import { EightTeMark } from "@/components/palate/AppShell";
+import { MacroRow } from "@/components/palate/MacroBits";
+import { GOALS, dailyTargets, mealTargets } from "@/lib/palate/macros";
+import { HALLS } from "@/lib/palate/halls";
+import { ALLERGENS, allergenLabel } from "@/lib/palate/allergens";
+import { useStore } from "@/lib/palate/store";
+import type { Allergen, DietTag, GoalId, HallId, Profile } from "@/lib/palate/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Set up your 8te Student Pass" },
+      { title: "Set up your Palate Student Pass" },
       {
         name: "description",
         content:
-          "Three quick steps: your stats, your goal, your USC dining hall. 8te does the macro math.",
+          "Three quick steps: your stats, your goal, your USC dining hall. Palate does the macro math.",
       },
-      { property: "og:title", content: "Set up your 8te Student Pass" },
+      { property: "og:title", content: "Set up your Palate Student Pass" },
       {
         property: "og:description",
         content: "Three quick steps: your stats, your goal, your USC dining hall.",
@@ -344,7 +344,7 @@ function Onboarding() {
           onClick={() => (step === 2 ? finish() : setStep((s) => s + 1))}
           className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px"
         >
-          {step === 2 ? "Make my 8te card" : "Continue"}
+          {step === 2 ? "Make my Palate card" : "Continue"}
           <ArrowRight className="size-5" />
         </button>
       </div>

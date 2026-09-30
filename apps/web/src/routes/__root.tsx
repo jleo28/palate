@@ -10,7 +10,7 @@ import {
 import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { StoreProvider } from "../lib/8te/store";
+import { StoreProvider } from "../lib/palate/store";
 import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
@@ -75,7 +75,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "8te — Eat right at USC dining halls" },
+      { title: "Palate — Eat right at USC dining halls" },
       {
         name: "description",
         content:

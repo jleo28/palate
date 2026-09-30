@@ -1,4 +1,4 @@
-# 8te
+# Palate
 
 Macro-matched dining hall plates for USC students.
 
