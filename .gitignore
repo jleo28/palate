@@ -30,3 +30,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Turborepo
+.turbo
+
+# Env
+.env
+.env.*
+!.env.example
