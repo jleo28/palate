@@ -1,0 +1,85 @@
+export type HallId = "village" | "evk" | "parkside";
+
+export type MealPeriod = "Breakfast" | "Lunch" | "Dinner";
+
+export type DietTag = "vegetarian" | "vegan" | "halal" | "gluten-free" | "dairy-free";
+
+export type GoalId = "cut" | "maintain" | "lean-bulk" | "high-protein";
+
+export type ItemRole = "protein" | "carb" | "veg" | "extra";
+
+export type DislikeId =
+  | "chicken"
+  | "beef"
+  | "turkey"
+  | "seafood"
+  | "tofu"
+  | "eggs"
+  | "beans"
+  | "rice"
+  | "pasta"
+  | "potatoes"
+  | "greens"
+  | "vegetables"
+  | "fruit"
+  | "dairy";
+
+/** FDA "big 9" food allergens */
+export type Allergen =
+  | "milk"
+  | "egg"
+  | "peanut"
+  | "tree-nut"
+  | "soy"
+  | "wheat"
+  | "fish"
+  | "shellfish"
+  | "sesame";
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  hall: HallId;
+  station: string;
+  role: ItemRole;
+  meals: MealPeriod[];
+  /** macros for one serving unit */
+  unit: string; // e.g. "tong", "ladle", "spoonful", "piece", "cup"
+  unitPlural: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  tags: DietTag[];
+}
+
+export interface PlateItem {
+  item: MenuItem;
+  qty: number;
+}
+
+export interface Profile {
+  age: number;
+  gender: "female" | "male" | "other";
+  heightIn: number;
+  weightLb: number;
+  goal: GoalId;
+  diets: DietTag[];
+  allergies: Allergen[];
+  dislikes: DislikeId[];
+  hall: HallId;
+  name: string;
+}
+
+export interface LoggedMeal {
+  id: string;
+  date: string;
+  hall: HallId;
+  meal: MealPeriod;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  items: { name: string; portion: string }[];
+  source?: "dining-hall" | "outside";
+}
