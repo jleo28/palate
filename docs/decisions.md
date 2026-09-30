@@ -14,3 +14,5 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 - 2026-09-30: Deploy to Vercel: a preview per PR, production from `main`.
 - 2026-09-30: iOS (Expo) is still the launch target; the web app ships first as the reference implementation.
 - 2026-09-30: Branch protection is unavailable because the repo is private on GitHub Free. CI is the merge gate until the repo gets GitHub Pro (free with the Student Developer Pack).
+- 2026-09-30: Ingest USC menus from the public `hsp-api` JSON endpoint without asking USC Hospitality first (robots.txt allows it and no terms forbid it). Keep it polite: about 24 requests a day, spaced out, with an identifying User-Agent. See `docs/spikes/usc-menus.md`.
+- 2026-09-30: Nutrition comes from a team-curated table for common items, with USDA FoodData Central matching and a confidence flag for the rest. The UI labels macros as estimates.
