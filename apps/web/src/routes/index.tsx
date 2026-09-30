@@ -6,12 +6,17 @@ import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
 import { HALLS, MEALS } from "@/lib/palate/halls";
-import { buildPlate, swapItem, totals } from "@/lib/palate/plate";
-import { portionLabel } from "@/lib/palate/menu";
-import { allergenConflicts, allergenLabel } from "@/lib/palate/allergens";
-import { dislikedMatches } from "@/lib/palate/preferences";
+import {
+  buildPlate,
+  swapItem,
+  totals,
+  allergenConflicts,
+  allergenLabel,
+  dislikedMatches,
+  type PlateItem,
+} from "@palate/core";
+import { MENU, portionLabel } from "@/lib/palate/menu";
 import { useStore } from "@/lib/palate/store";
-import type { PlateItem } from "@/lib/palate/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -51,7 +56,7 @@ function Plate() {
 
   useEffect(() => {
     if (!mealTarget) return;
-    setPlate(buildPlate(hall, meal, diets, mealTarget, seed));
+    setPlate(buildPlate(MENU, hall, meal, diets, mealTarget, seed));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hall, meal, dietKey, seed, mealTarget?.kcal]);
 
@@ -202,7 +207,7 @@ function Plate() {
                         onClick={() =>
                           setPlate((prev) =>
                             prev.map((x) =>
-                              x.item.id === p.item.id ? swapItem(x, hall, meal, diets) : x,
+                              x.item.id === p.item.id ? swapItem(MENU, x, hall, meal, diets) : x,
                             ),
                           )
                         }

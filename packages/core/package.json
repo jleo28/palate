@@ -1,0 +1,21 @@
+{
+  "name": "@palate/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Palate domain logic. Pure TypeScript: no DOM, Node or framework imports, so it runs in React Native too.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.2"
+  }
+}

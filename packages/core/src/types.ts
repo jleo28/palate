@@ -43,6 +43,8 @@ export interface MenuItem {
   carbs: number;
   fat: number;
   tags: DietTag[];
+  /** Known allergens. Absent means none listed. */
+  allergens?: Allergen[];
 }
 
 export interface PlateItem {

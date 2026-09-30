@@ -7,9 +7,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { dailyTargets, mealTargets, type MacroTargets } from "./macros";
+import {
+  dailyTargets,
+  mealTargets,
+  type MacroTargets,
+  type HallId,
+  type LoggedMeal,
+  type MealPeriod,
+  type Profile,
+} from "@palate/core";
 import { currentMeal } from "./halls";
-import type { HallId, LoggedMeal, MealPeriod, Profile } from "./types";
 
 const KEY_PROFILE = "palate.profile.v1";
 const KEY_LOG = "palate.log.v1";

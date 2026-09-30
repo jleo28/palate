@@ -1,11 +1,11 @@
-import type { MenuItem } from "./types";
+import type { Allergen, MenuItem } from "@palate/core";
 
 const ALL: MealPeriod[] = ["Breakfast", "Lunch", "Dinner"];
 type MealPeriod = "Breakfast" | "Lunch" | "Dinner";
 const LD: MealPeriod[] = ["Lunch", "Dinner"];
 const B: MealPeriod[] = ["Breakfast"];
 
-export const MENU: MenuItem[] = [
+const ITEMS: MenuItem[] = [
   // ---------------- VILLAGE ----------------
   {
     id: "v-grilled-chicken",
@@ -657,6 +657,38 @@ export const MENU: MenuItem[] = [
     tags: ["vegetarian", "vegan", "halal", "gluten-free", "dairy-free"],
   },
 ];
+
+/** Known allergens per menu item id. Unlisted items are allergen-free. */
+const ITEM_ALLERGENS: Record<string, Allergen[]> = {
+  // Village
+  "v-salmon": ["fish"],
+  "v-tofu": ["soy", "sesame"],
+  "v-whole-wheat-pasta": ["wheat"],
+  "v-eggs": ["egg"],
+  "v-greek-yogurt": ["milk"],
+  // EVK
+  "e-mongolian-chicken": ["soy", "wheat", "sesame"],
+  "e-wok-tofu": ["soy", "sesame"],
+  "e-lo-mein": ["wheat", "soy"],
+  "e-meatballs": ["wheat", "egg"],
+  "e-mashed": ["milk"],
+  "e-edamame": ["soy"],
+  "e-egg-whites": ["egg"],
+  "e-pancake": ["wheat", "egg", "milk"],
+  // Parkside
+  "p-shrimp": ["shellfish"],
+  "p-falafel": ["sesame"],
+  "p-pizza": ["wheat", "milk"],
+  "p-caesar": ["egg", "fish"],
+  "p-cottage": ["milk"],
+  "p-avocado-toast": ["wheat"],
+  "p-hard-egg": ["egg"],
+};
+
+export const MENU: MenuItem[] = ITEMS.map((item) => ({
+  ...item,
+  allergens: ITEM_ALLERGENS[item.id] ?? [],
+}));
 
 export function portionLabel(item: MenuItem, qty: number) {
   return `${qty} ${qty === 1 ? item.unit : item.unitPlural}`;
