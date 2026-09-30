@@ -1,0 +1,80 @@
+{
+  "date": "20260930",
+  "location": "usc-village-dining-hall",
+  "meals": [
+    {
+      "name": "Lunch",
+      "stations": [
+        {
+          "station": "Sweet and Treats",
+          "subtitle": "",
+          "menu": [
+            {
+              "item": "Assorted Cakes",
+              "dietary_preferences": ["Dairy", "Eggs", "Soy", "Wheat / Gluten", "Vegetarian"],
+              "allergens": ["dairy", "eggs", "soy", "gluten"],
+              "preferences": ["vegetarian"]
+            }
+          ]
+        },
+        {
+          "station": "Salad Bar",
+          "subtitle": "",
+          "menu": [
+            {
+              "item": "SALAD BAR",
+              "dietary_preferences": [],
+              "allergens": [],
+              "preferences": []
+            },
+            {
+              "item": "Ranch Dressing",
+              "dietary_preferences": ["Dairy", "Eggs", "Soy", "Vegetarian"],
+              "allergens": ["dairy", "eggs", "soy"],
+              "preferences": ["vegetarian"]
+            },
+            {
+              "item": "Creamy Caesar Dressing",
+              "dietary_preferences": ["Dairy", "Eggs", "Soy", "Vegetarian"],
+              "allergens": ["dairy", "eggs", "soy"],
+              "preferences": ["vegetarian"]
+            }
+          ]
+        },
+        {
+          "station": "Grill",
+          "subtitle": "",
+          "menu": [
+            {
+              "item": "PIZZA BAR",
+              "dietary_preferences": [],
+              "allergens": [],
+              "preferences": []
+            },
+            {
+              "item": "Margherita  Pizza",
+              "dietary_preferences": [
+                "Dairy",
+                "Soy",
+                "Wheat / Gluten",
+                "Halal Ingredients",
+                "Vegetarian"
+              ],
+              "allergens": ["dairy", "soy", "gluten"],
+              "preferences": ["halal-ingredients", "vegetarian"]
+            },
+            {
+              "item": "Meat Lovers' Pizza",
+              "dietary_preferences": ["Dairy", "Pork", "Soy", "Wheat / Gluten"],
+              "allergens": ["dairy", "pork", "soy", "gluten"],
+              "preferences": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Brunch"
+    }
+  ]
+}
