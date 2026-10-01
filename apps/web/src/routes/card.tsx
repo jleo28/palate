@@ -6,6 +6,7 @@ import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
 import { GoalPet } from "@/components/palate/GoalPet";
 import { Button } from "@/components/ui/button";
+import { GoalPicker } from "@/components/palate/GoalPicker";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   GOALS,
+  effectiveGoal,
   type Allergen,
   type DietTag,
   type DislikeId,
@@ -138,7 +140,8 @@ function CardScreen() {
           <div>
             <p className="label-caps text-muted-foreground">Goal</p>
             <p className="font-display font-bold">
-              {GOALS.find((g) => g.id === profile.goal)?.label}
+              {GOALS.find((g) => g.id === effectiveGoal(profile))?.label}
+              {profile.highProtein ? " · High Protein" : ""}
             </p>
           </div>
           <div>
@@ -286,22 +289,14 @@ function CardScreen() {
               <div className="space-y-4">
                 <div>
                   <p className="label-caps mb-2 text-muted-foreground">Goal</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {GOALS.map((g) => (
-                      <button
-                        key={g.id}
-                        onClick={() => saveProfile({ ...profile, goal: g.id as GoalId })}
-                        className={cn(
-                          "rounded-xl border px-3 py-2 text-sm font-bold",
-                          profile.goal === g.id
-                            ? "border-olive bg-olive text-primary-foreground"
-                            : "border-foreground/20",
-                        )}
-                      >
-                        {g.label}
-                      </button>
-                    ))}
-                  </div>
+                  <GoalPicker
+                    compact
+                    body={profile}
+                    goal={profile.goal}
+                    highProtein={profile.highProtein ?? false}
+                    onGoal={(goal) => saveProfile({ ...profile, goal })}
+                    onHighProtein={(highProtein) => saveProfile({ ...profile, highProtein })}
+                  />
                 </div>
 
                 <div>

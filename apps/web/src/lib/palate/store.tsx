@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   dailyTargets,
+  normalizeProfile,
   mealTargets,
   type MacroTargets,
   type HallId,
@@ -70,7 +71,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       migrateLegacyKeys(localStorage);
       const p = localStorage.getItem(KEY_PROFILE);
       if (p) {
-        const parsed = JSON.parse(p) as Profile;
+        const parsed = normalizeProfile(JSON.parse(p) as Profile);
         setProfile(parsed);
         setHall(parsed.hall);
       }
