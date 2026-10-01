@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function EightTeMark({ className }: { className?: string }) {
+export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("font-display text-2xl font-extrabold tracking-tight", className)}>
       Palate
@@ -64,7 +64,7 @@ export function ScreenHeader({ title, sub }: { title: string; sub?: string }) {
         <p className="label-caps text-muted-foreground">{sub}</p>
         <h1 className="truncate text-[1.7rem] font-extrabold leading-tight">{title}</h1>
       </div>
-      <EightTeMark className="shrink-0 pt-1" />
+      <Wordmark className="shrink-0 pt-1" />
     </header>
   );
 }

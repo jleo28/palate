@@ -72,7 +72,7 @@ function Plate() {
   const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
 
   useEffect(() => {
-    if (ready && !profile) void navigate({ to: "/onboarding" });
+    if (ready && !profile) void navigate({ to: "/welcome" });
   }, [ready, profile, navigate]);
 
   const diets = profile?.diets ?? [];
