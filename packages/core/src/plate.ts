@@ -51,15 +51,16 @@ export function buildPlate(
   const extras = pool.filter((i) => i.role === "extra");
 
   const plate: PlateItem[] = [];
+  const add = (item: MenuItem, qty: number) => plate.push({ id: `row-${plate.length}`, item, qty });
 
   const p1 = pick(proteins, seed);
-  if (p1) plate.push({ item: p1, qty: qtyFor(p1, target.protein * 0.65, "protein") });
+  if (p1) add(p1, qtyFor(p1, target.protein * 0.65, "protein"));
 
   const c1 = pick(carbs, seed + 1);
-  if (c1) plate.push({ item: c1, qty: qtyFor(c1, target.carbs * 0.6, "carbs") });
+  if (c1) add(c1, qtyFor(c1, target.carbs * 0.6, "carbs"));
 
   const v1 = pick(vegs, seed + 2);
-  if (v1) plate.push({ item: v1, qty: 2 });
+  if (v1) add(v1, 2);
 
   // top up protein if short
   let t = totals(plate);
@@ -68,30 +69,38 @@ export function buildPlate(
       proteins.filter((i) => i.id !== p1?.id),
       seed + 3,
     );
-    if (p2) plate.push({ item: p2, qty: qtyFor(p2, target.protein - t.protein, "protein") });
+    if (p2) add(p2, qtyFor(p2, target.protein - t.protein, "protein"));
   }
 
   t = totals(plate);
   if (t.kcal < target.kcal * 0.85) {
     const e1 = pick(extras, seed + 4);
-    if (e1) plate.push({ item: e1, qty: qtyFor(e1, target.kcal - t.kcal, "kcal") });
+    if (e1) add(e1, qtyFor(e1, target.kcal - t.kcal, "kcal"));
   }
 
   return plate;
 }
 
-/** Find a macro-equivalent alternative in the same hall/role. */
+/**
+ * Swap one row for a macro-equivalent alternative in the same hall and role.
+ * Never picks an item that's already on the plate, so rows can't collide.
+ */
 export function swapItem(
   menu: readonly MenuItem[],
-  current: PlateItem,
+  plate: readonly PlateItem[],
+  rowId: string,
   hall: HallId,
   meal: MealPeriod,
   diets: DietTag[],
-): PlateItem {
+): PlateItem[] {
+  const current = plate.find((row) => row.id === rowId);
+  if (!current) return [...plate];
+
+  const onPlate = new Set(plate.map((row) => row.item.id));
   const pool = availableItems(menu, hall, meal, diets).filter(
-    (i) => i.role === current.item.role && i.id !== current.item.id,
+    (i) => i.role === current.item.role && !onPlate.has(i.id),
   );
-  if (!pool.length) return current;
+  if (!pool.length) return [...plate];
 
   const targetKcal = current.item.kcal * current.qty;
   const targetProtein = current.item.protein * current.qty;
@@ -110,5 +119,5 @@ export function swapItem(
       }
     }
   }
-  return { item: best, qty: bestQty };
+  return plate.map((row) => (row.id === rowId ? { id: row.id, item: best, qty: bestQty } : row));
 }
