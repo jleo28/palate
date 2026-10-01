@@ -9,14 +9,8 @@ import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { Button } from "@/components/ui/button";
 import { CardSettings } from "@/components/palate/CardSettings";
 import { PalateCard } from "@/components/palate/PalateCard";
+import { OutsideMealDialog } from "@/components/palate/OutsideMealDialog";
 import { ProgressRing } from "@/components/palate/ProgressRing";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { GOALS, allergenLabel, daysShowedUp, effectiveGoal } from "@palate/core";
 import { hallName } from "@/lib/palate/halls";
 import { useStore } from "@/lib/palate/store";
@@ -48,7 +42,6 @@ function CardScreen() {
   const { ready, profile, saveProfile, daily, consumedToday, log, addLog, removeLog, resetAll } =
     useStore();
   const [outsideOpen, setOutsideOpen] = useState(false);
-  const [outsideMacros, setOutsideMacros] = useState({ kcal: "", protein: "", carbs: "", fat: "" });
 
   useEffect(() => {
     if (ready && !profile) void navigate({ to: "/welcome" });
@@ -70,26 +63,6 @@ function CardScreen() {
   const todaysLog = log.filter((l) => l.date === today);
   const showedUp = daysShowedUp(log);
   const checkedInToday = todaysLog.length > 0;
-
-  const logOutsideMeal = () => {
-    const values = {
-      kcal: Math.max(0, Number(outsideMacros.kcal) || 0),
-      protein: Math.max(0, Number(outsideMacros.protein) || 0),
-      carbs: Math.max(0, Number(outsideMacros.carbs) || 0),
-      fat: Math.max(0, Number(outsideMacros.fat) || 0),
-    };
-    if (values.kcal === 0 && values.protein === 0 && values.carbs === 0 && values.fat === 0) return;
-    addLog({
-      hall: profile.hall,
-      meal: "Lunch",
-      ...values,
-      items: [{ name: "Outside dining hall", portion: "Estimated" }],
-      source: "outside",
-    });
-    setOutsideMacros({ kcal: "", protein: "", carbs: "", fat: "" });
-    setOutsideOpen(false);
-    toast.success("Outside meal added to your macro bank");
-  };
 
   return (
     <AppShell>
@@ -197,49 +170,21 @@ function CardScreen() {
         </Button>
       </section>
 
-      <Dialog open={outsideOpen} onOpenChange={setOutsideOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5">
-          <DialogHeader className="text-left">
-            <DialogTitle className="font-display text-xl">Estimate your meal</DialogTitle>
-            <DialogDescription>
-              Add what you know. Any blank value counts as zero.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            {(
-              [
-                ["kcal", "Calories"],
-                ["protein", "Protein (g)"],
-                ["carbs", "Carbs (g)"],
-                ["fat", "Fat (g)"],
-              ] as const
-            ).map(([key, label]) => (
-              <label key={key} className="block">
-                <span className="label-caps text-muted-foreground">{label}</span>
-                <input
-                  type="number"
-                  min="0"
-                  inputMode="decimal"
-                  value={outsideMacros[key]}
-                  onChange={(event) =>
-                    setOutsideMacros((current) => ({ ...current, [key]: event.target.value }))
-                  }
-                  className="mt-1 w-full rounded-xl border border-foreground/20 bg-background px-3 py-2.5 font-medium outline-none focus:border-olive"
-                  placeholder="0"
-                />
-              </label>
-            ))}
-          </div>
-          <Button
-            type="button"
-            onClick={logOutsideMeal}
-            disabled={!Object.values(outsideMacros).some((value) => Number(value) > 0)}
-            className="h-11 w-full rounded-full font-bold"
-          >
-            Add to macro bank
-          </Button>
-        </DialogContent>
-      </Dialog>
+      <OutsideMealDialog
+        open={outsideOpen}
+        onOpenChange={setOutsideOpen}
+        onLog={({ name, meal, ...macros }) => {
+          addLog({
+            hall: profile.hall,
+            meal,
+            ...macros,
+            items: [{ name, portion: "Estimated" }],
+            source: "outside",
+          });
+          setOutsideOpen(false);
+          toast.success(`Added to today's ${meal.toLowerCase()}`);
+        }}
+      />
 
       {/* Logged meals */}
       {todaysLog.length > 0 && (
@@ -254,7 +199,7 @@ function CardScreen() {
                 <div className="min-w-0">
                   <p className="font-display text-sm font-bold">
                     {l.source === "outside"
-                      ? "Outside dining hall"
+                      ? `${l.meal} · outside the halls`
                       : `${l.meal} · ${hallName(l.hall)}`}
                   </p>
                   <p className="truncate text-[0.72rem] text-muted-foreground">
