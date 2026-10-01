@@ -1,7 +1,7 @@
 import type { PlateItem } from "@palate/core";
 
 function plateKey(items: PlateItem[]) {
-  return items.map(({ item, qty }) => `${item.id}-${qty}`).join("|");
+  return items.map(({ id, item, qty }) => `${id}:${item.id}-${qty}`).join("|");
 }
 
 function FoodDrawing({ entry, index, count }: { entry: PlateItem; index: number; count: number }) {
@@ -202,7 +202,7 @@ export function PlateIllustration({ items }: { items: PlateItem[] }) {
         />
         {items.slice(0, 4).map((entry, index) => (
           <FoodDrawing
-            key={entry.item.id}
+            key={entry.id}
             entry={entry}
             index={index}
             count={Math.min(items.length, 4)}

@@ -168,7 +168,7 @@ function Plate() {
                   const dislikes = dislikedMatches(p.item, profile.dislikes);
                   return (
                     <div
-                      key={p.item.id}
+                      key={p.id}
                       className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-foreground/12 bg-background px-3 py-2.5"
                     >
                       <div className="min-w-0">
@@ -205,11 +205,7 @@ function Plate() {
                       </div>
                       <button
                         onClick={() =>
-                          setPlate((prev) =>
-                            prev.map((x) =>
-                              x.item.id === p.item.id ? swapItem(MENU, x, hall, meal, diets) : x,
-                            ),
-                          )
+                          setPlate((prev) => swapItem(MENU, prev, p.id, hall, meal, diets))
                         }
                         className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/25 px-2.5 py-1.5 text-[0.7rem] font-bold"
                       >

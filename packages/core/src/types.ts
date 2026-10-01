@@ -48,6 +48,8 @@ export interface MenuItem {
 }
 
 export interface PlateItem {
+  /** Stable row id within a plate. Survives swaps, so two rows never share an identity. */
+  id: string;
   item: MenuItem;
   qty: number;
 }
