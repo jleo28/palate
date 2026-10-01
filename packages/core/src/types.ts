@@ -1,3 +1,5 @@
+import type { Seedling } from "./seedling";
+
 export type HallId = "village" | "evk" | "parkside";
 
 export type MealPeriod = "Breakfast" | "Lunch" | "Dinner";
@@ -69,6 +71,8 @@ export interface Profile {
   dislikes: DislikeId[];
   hall: HallId;
   name: string;
+  /** Assigned at sign-up. Older profiles get one on first load. */
+  seedling?: Seedling;
 }
 
 export interface LoggedMeal {

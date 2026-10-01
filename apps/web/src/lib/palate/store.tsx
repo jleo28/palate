@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   dailyTargets,
+  assignSeedling,
   normalizeProfile,
   mealGuide,
   type MacroTargets,
@@ -72,7 +73,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const p = localStorage.getItem(KEY_PROFILE);
       if (p) {
         const parsed = normalizeProfile(JSON.parse(p) as Profile);
-        setProfile(parsed);
+        // Profiles from before Seedling get one on first load.
+        const withSeedling = parsed.seedling ? parsed : { ...parsed, seedling: assignSeedling() };
+        if (withSeedling !== parsed)
+          localStorage.setItem(KEY_PROFILE, JSON.stringify(withSeedling));
+        setProfile(withSeedling);
         setHall(parsed.hall);
       }
       const l = localStorage.getItem(KEY_LOG);
@@ -84,7 +89,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const saveProfile = useCallback((p: Profile) => {
+  const saveProfile = useCallback((next: Profile) => {
+    // Seedling is assigned once, at sign-up, and kept from then on.
+    const p = next.seedling ? next : { ...next, seedling: assignSeedling() };
     setProfile(p);
     setHall(p.hall);
     localStorage.setItem(KEY_PROFILE, JSON.stringify(p));
