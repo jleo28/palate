@@ -7,6 +7,7 @@ import { MacroBar } from "@/components/palate/MacroBits";
 import { GoalPet } from "@/components/palate/GoalPet";
 import { Button } from "@/components/ui/button";
 import { GoalPicker } from "@/components/palate/GoalPicker";
+import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
 import {
   Dialog,
   DialogContent,
@@ -75,6 +76,10 @@ function CardScreen() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
+  const allAllergies = [
+    ...(profile.allergies ?? []).map(allergenLabel),
+    ...(profile.customAllergies ?? []),
+  ];
   const todaysLog = log.filter((l) => l.date === today);
   const totalsByDay = log.reduce<Record<string, { kcal: number; protein: number }>>(
     (days, meal) => {
@@ -336,9 +341,7 @@ function CardScreen() {
                     <span className="text-left">
                       <span className="label-caps block text-muted-foreground">Allergies</span>
                       <span className="mt-0.5 block text-sm font-semibold">
-                        {profile.allergies?.length
-                          ? profile.allergies.map(allergenLabel).join(", ")
-                          : "None selected"}
+                        {allAllergies.length ? allAllergies.join(", ") : "None selected"}
                       </span>
                     </span>
                     <ChevronDown
@@ -349,32 +352,38 @@ function CardScreen() {
                     />
                   </button>
                   {allergyOpen && (
-                    <div className="mt-2 flex flex-wrap gap-2 rounded-xl border border-foreground/15 bg-background p-3">
-                      {ALLERGENS.map((a) => {
-                        const active = profile.allergies?.includes(a.id) ?? false;
-                        return (
-                          <button
-                            key={a.id}
-                            type="button"
-                            onClick={() =>
-                              saveProfile({
-                                ...profile,
-                                allergies: active
-                                  ? (profile.allergies ?? []).filter((x) => x !== a.id)
-                                  : [...(profile.allergies ?? []), a.id as Allergen],
-                              })
-                            }
-                            className={cn(
-                              "rounded-full border px-3 py-1.5 text-xs font-semibold",
-                              active
-                                ? "border-destructive bg-destructive text-destructive-foreground"
-                                : "border-foreground/20 text-muted-foreground",
-                            )}
-                          >
-                            {a.label}
-                          </button>
-                        );
-                      })}
+                    <div className="mt-2 space-y-3 rounded-xl border border-foreground/15 bg-background p-3">
+                      <div className="flex flex-wrap gap-2">
+                        {ALLERGENS.map((a) => {
+                          const active = profile.allergies?.includes(a.id) ?? false;
+                          return (
+                            <button
+                              key={a.id}
+                              type="button"
+                              onClick={() =>
+                                saveProfile({
+                                  ...profile,
+                                  allergies: active
+                                    ? (profile.allergies ?? []).filter((x) => x !== a.id)
+                                    : [...(profile.allergies ?? []), a.id as Allergen],
+                                })
+                              }
+                              className={cn(
+                                "rounded-full border px-3 py-1.5 text-xs font-semibold",
+                                active
+                                  ? "border-destructive bg-destructive text-destructive-foreground"
+                                  : "border-foreground/20 text-muted-foreground",
+                              )}
+                            >
+                              {a.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <CustomAllergyInput
+                        value={profile.customAllergies ?? []}
+                        onChange={(customAllergies) => saveProfile({ ...profile, customAllergies })}
+                      />
                     </div>
                   )}
                 </div>
@@ -433,12 +442,10 @@ function CardScreen() {
                   <dd
                     className={cn(
                       "text-right font-semibold",
-                      profile.allergies?.length && "text-destructive",
+                      allAllergies.length && "text-destructive",
                     )}
                   >
-                    {profile.allergies?.length
-                      ? profile.allergies.map(allergenLabel).join(", ")
-                      : "None"}
+                    {allAllergies.length ? allAllergies.join(", ") : "None"}
                   </dd>
                 </div>
                 <div className="flex justify-between">

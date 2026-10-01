@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { EightTeMark } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { GoalPicker } from "@/components/palate/GoalPicker";
+import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
 import {
   effectiveGoal,
   dailyTargets,
@@ -105,6 +106,7 @@ function Onboarding() {
   const [highProtein, setHighProtein] = useState(profile?.highProtein ?? false);
   const [diets, setDiets] = useState<DietTag[]>(profile?.diets ?? []);
   const [allergies, setAllergies] = useState<Allergen[]>(profile?.allergies ?? []);
+  const [customAllergies, setCustomAllergies] = useState<string[]>(profile?.customAllergies ?? []);
   const [hall, setHall] = useState<HallId>(profile?.hall ?? "village");
 
   const draft: Profile = {
@@ -117,6 +119,7 @@ function Onboarding() {
     highProtein,
     diets,
     allergies,
+    customAllergies,
     dislikes: profile?.dislikes ?? [],
     hall,
   };
@@ -271,8 +274,11 @@ function Onboarding() {
               ))}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              We flag anything on the menu that contains these.
+              We flag menu items USC lists as containing these.
             </p>
+            <div className="mt-3">
+              <CustomAllergyInput value={customAllergies} onChange={setCustomAllergies} />
+            </div>
           </div>
 
           <div className="card-edge rounded-2xl bg-card p-4">

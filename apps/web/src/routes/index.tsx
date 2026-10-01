@@ -30,6 +30,8 @@ import {
   swapItem,
   totals,
   withoutSkipped,
+  withoutAllergyConflicts,
+  CONFIRM_WITH_STAFF,
   type PlateItem,
 } from "@palate/core";
 import { MENU, portionLabel } from "@/lib/palate/menu";
@@ -76,9 +78,18 @@ function Plate() {
   const diets = profile?.diets ?? [];
   const dietKey = diets.join(",");
   const skipKey = (profile?.dislikes ?? []).join(",");
-  // Skipped foods never appear on a plate.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const menu = useMemo(() => withoutSkipped(MENU, profile?.dislikes), [skipKey]);
+  const allergyKey = [...(profile?.allergies ?? []), ...(profile?.customAllergies ?? [])].join(",");
+  // Skipped foods and anything flagged for the user's allergies never go on a generated plate.
+  const menu = useMemo(
+    () =>
+      withoutAllergyConflicts(
+        withoutSkipped(MENU, profile?.dislikes),
+        profile?.allergies,
+        profile?.customAllergies,
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [skipKey, allergyKey],
+  );
 
   const freshPlate = () => {
     if (!mealTarget || !daily) return [];
@@ -254,6 +265,7 @@ function Plate() {
                 key={row.id}
                 row={row}
                 allergies={profile.allergies}
+                customAllergies={profile.customAllergies ?? []}
                 alternatives={alternatives(menu, plate, row.id, hall, meal, diets)}
                 onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, meal, diets))}
                 onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
@@ -263,6 +275,13 @@ function Plate() {
             ))}
           </ul>
         )}
+
+        <p className="mt-2 text-[0.7rem] text-muted-foreground">
+          {profile.allergies.length || profile.customAllergies?.length
+            ? "We left out items USC lists with your allergies, but labels can be incomplete."
+            : "Allergen info comes from USC's labels, which can be incomplete."}{" "}
+          <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
+        </p>
 
         <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
           <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />

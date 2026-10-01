@@ -13,7 +13,14 @@ import {
 } from "@/components/ui/sheet";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import { MENU } from "@/lib/palate/menu";
-import { allergenConflicts, allergenLabel, dislikedMatches, type MenuItem } from "@palate/core";
+import {
+  CONFIRM_WITH_STAFF,
+  allergenConflicts,
+  allergenLabel,
+  customAllergyMatches,
+  dislikedMatches,
+  type MenuItem,
+} from "@palate/core";
 import { useStore } from "@/lib/palate/store";
 import { cn } from "@/lib/utils";
 
@@ -183,6 +190,7 @@ function Menus() {
             <div className="space-y-2">
               {items.map((i) => {
                 const hits = allergenConflicts(i, allergies);
+                const possible = customAllergyMatches(i, profile?.customAllergies);
                 const dislikes = dislikedMatches(i, profile?.dislikes);
                 return (
                   <div
@@ -191,7 +199,7 @@ function Menus() {
                   >
                     <div className="min-w-0">
                       <p className="flex items-center gap-1.5 font-display text-[0.95rem] font-bold">
-                        {hits.length > 0 && (
+                        {(hits.length > 0 || possible.length > 0) && (
                           <span
                             className="size-2 shrink-0 rounded-full bg-destructive"
                             title={`Contains ${hits.map(allergenLabel).join(", ")}`}
@@ -217,6 +225,11 @@ function Menus() {
                           Contains {hits.map(allergenLabel).join(", ")}
                         </p>
                       )}
+                      {possible.length > 0 && (
+                        <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
+                          May contain {possible.join(", ")} · {CONFIRM_WITH_STAFF}
+                        </p>
+                      )}
                     </div>
                     <Button
                       type="button"
@@ -238,6 +251,11 @@ function Menus() {
           </section>
         ))}
       </div>
+
+      <p className="mt-5 text-center text-[0.7rem] text-muted-foreground">
+        Allergen info comes from USC's labels, which can be incomplete.{" "}
+        <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
+      </p>
 
       {custom.length > 0 && (
         <div className="fixed inset-x-0 bottom-[76px] z-30 px-4">
@@ -289,6 +307,7 @@ function Menus() {
               <div className="space-y-2">
                 {customRows.map(({ item, quantity }) => {
                   const hits = allergenConflicts(item, allergies);
+                  const possible = customAllergyMatches(item, profile?.customAllergies);
                   const dislikes = dislikedMatches(item, profile?.dislikes);
                   return (
                     <div
@@ -298,7 +317,7 @@ function Menus() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="flex items-center gap-1.5 font-display text-sm font-bold">
-                            {hits.length > 0 && (
+                            {(hits.length > 0 || possible.length > 0) && (
                               <span
                                 className="size-2 shrink-0 rounded-full bg-destructive"
                                 aria-label={`Allergen warning: contains ${hits.map(allergenLabel).join(", ")}`}
@@ -322,6 +341,11 @@ function Menus() {
                           {hits.length > 0 && (
                             <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
                               Contains {hits.map(allergenLabel).join(", ")}
+                            </p>
+                          )}
+                          {possible.length > 0 && (
+                            <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
+                              May contain {possible.join(", ")} · {CONFIRM_WITH_STAFF}
                             </p>
                           )}
                         </div>
