@@ -10,7 +10,7 @@ import {
 import {
   dailyTargets,
   normalizeProfile,
-  mealTargets,
+  mealGuide,
   type MacroTargets,
   type HallId,
   type LoggedMeal,
@@ -107,7 +107,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const daily = useMemo(() => (profile ? dailyTargets(profile) : null), [profile]);
-  const mealTarget = useMemo(() => (daily ? mealTargets(daily, meal) : null), [daily, meal]);
 
   const consumedToday = useMemo(() => {
     const d = today();
@@ -123,6 +122,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         { kcal: 0, protein: 0, carbs: 0, fat: 0 },
       );
   }, [log]);
+
+  // Rolling guide: what's left of today, split over this meal and the unlogged meals after it.
+  const mealTarget = useMemo(() => {
+    if (!daily) return null;
+    const d = today();
+    const logged = log.filter((l) => l.date === d).map((l) => l.meal);
+    return mealGuide(daily, consumedToday, meal, logged);
+  }, [daily, consumedToday, log, meal]);
 
   const value: Ctx = {
     ready,

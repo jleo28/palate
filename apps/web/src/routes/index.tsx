@@ -7,7 +7,13 @@ import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import {
+  GOALS,
   buildPlate,
+  capPlate,
+  effectiveGoal,
+  fitCheck,
+  fitSummary,
+  remainingToday,
   swapItem,
   totals,
   allergenConflicts,
@@ -43,7 +49,8 @@ export const Route = createFileRoute("/")({
 
 function Plate() {
   const navigate = useNavigate();
-  const { ready, profile, hall, setHall, meal, setMeal, mealTarget, addLog } = useStore();
+  const { ready, profile, hall, setHall, meal, setMeal, mealTarget, daily, consumedToday, addLog } =
+    useStore();
   const [seed, setSeed] = useState(0);
   const [plate, setPlate] = useState<PlateItem[]>([]);
 
@@ -55,12 +62,18 @@ function Plate() {
   const dietKey = diets.join(",");
 
   useEffect(() => {
-    if (!mealTarget) return;
-    setPlate(buildPlate(MENU, hall, meal, diets, mealTarget, seed));
+    if (!mealTarget || !daily) return;
+    // The day's calorie target is a hard cap: the plate never plans past what's left of it.
+    const left = remainingToday(daily, consumedToday).kcal;
+    setPlate(capPlate(buildPlate(MENU, hall, meal, diets, mealTarget, seed), left));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hall, meal, dietKey, seed, mealTarget?.kcal]);
+  }, [hall, meal, dietKey, seed, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
 
   const t = useMemo(() => totals(plate), [plate]);
+  const fit = useMemo(
+    () => (mealTarget && daily ? fitCheck(t, mealTarget, consumedToday, daily) : null),
+    [t, mealTarget, consumedToday, daily],
+  );
   const stations = useMemo(() => {
     const map = new Map<string, PlateItem[]>();
     for (const p of plate) {
@@ -71,7 +84,7 @@ function Plate() {
     return [...map.entries()];
   }, [plate]);
 
-  if (!ready || !profile || !mealTarget) {
+  if (!ready || !profile || !mealTarget || !fit) {
     return (
       <AppShell>
         <div className="py-24 text-center text-sm text-muted-foreground">Loading your plate…</div>
@@ -132,12 +145,18 @@ function Plate() {
 
       <section className="mb-4 rounded-2xl border border-foreground/15 bg-card p-3">
         <div className="mb-2 flex items-baseline justify-between">
-          <p className="label-caps text-muted-foreground">{meal} target</p>
+          <p className="label-caps text-muted-foreground">{meal} guide</p>
           <p className="text-[0.7rem] font-semibold text-olive">
-            tailored to your {profile.goal} goal
+            {GOALS.find((g) => g.id === effectiveGoal(profile))?.label} ·{" "}
+            {profile.highProtein ? "high protein · " : ""}what's left of today
           </p>
         </div>
         <MacroRow t={mealTarget} />
+        {fit.capReached && (
+          <p className="mt-2 rounded-xl bg-clay-soft px-3 py-2 text-[0.78rem] font-semibold">
+            Today's calorie target is reached.
+          </p>
+        )}
       </section>
 
       <section className="card-edge rounded-3xl bg-card p-4">
@@ -220,8 +239,18 @@ function Plate() {
         </div>
 
         <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
-          <MacroRow t={t} target={mealTarget} />
+          <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />
         </div>
+
+        <p
+          className={cn(
+            "mt-3 rounded-2xl px-3 py-2.5 text-sm",
+            fit.dayOverCap ? "bg-clay-soft" : fit.over.length ? "bg-amber-soft" : "bg-olive-soft",
+          )}
+        >
+          <span className="font-bold">Seedling: </span>
+          {fitSummary(fit, meal)}
+        </p>
 
         <button
           onClick={logMeal}
