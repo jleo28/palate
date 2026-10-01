@@ -6,6 +6,8 @@ import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
 import { SwipeArea } from "@/components/palate/SwipeArea";
+import { SeedlingAvatar } from "@/components/palate/SeedlingAvatar";
+import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { PlateRow } from "@/components/palate/PlateRow";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import {
@@ -151,6 +153,7 @@ function Plate() {
   return (
     <AppShell>
       <ScreenHeader title="The Plate" sub={`Hey ${profile.name.split(" ")[0]} · USC`} />
+      {profile.seedling && <SeedlingHint screen="plate" seedling={profile.seedling} />}
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (
@@ -287,15 +290,20 @@ function Plate() {
           <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />
         </div>
 
-        <p
+        <div
           className={cn(
-            "mt-3 rounded-2xl px-3 py-2.5 text-sm",
+            "mt-3 flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm",
             fit.dayOverCap ? "bg-clay-soft" : fit.over.length ? "bg-amber-soft" : "bg-olive-soft",
           )}
         >
-          <span className="font-bold">Seedling: </span>
-          {fitSummary(fit, meal)}
-        </p>
+          {profile.seedling && (
+            <SeedlingAvatar seedling={profile.seedling} className="size-9 shrink-0" />
+          )}
+          <p>
+            <span className="font-bold">{profile.seedling?.name ?? "Seedling"}: </span>
+            {fitSummary(fit, meal)}
+          </p>
+        </div>
 
         <button
           onClick={logMeal}

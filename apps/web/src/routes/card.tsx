@@ -4,7 +4,8 @@ import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
-import { GoalPet } from "@/components/palate/GoalPet";
+import { SeedlingCard } from "@/components/palate/SeedlingCard";
+import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { Button } from "@/components/ui/button";
 import { GoalPicker } from "@/components/palate/GoalPicker";
 import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
@@ -18,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   GOALS,
+  daysShowedUp,
   effectiveGoal,
   type Allergen,
   type DietTag,
@@ -81,27 +83,8 @@ function CardScreen() {
     ...(profile.customAllergies ?? []),
   ];
   const todaysLog = log.filter((l) => l.date === today);
-  const totalsByDay = log.reduce<Record<string, { kcal: number; protein: number }>>(
-    (days, meal) => {
-      const total = days[meal.date] ?? { kcal: 0, protein: 0 };
-      days[meal.date] = { kcal: total.kcal + meal.kcal, protein: total.protein + meal.protein };
-      return days;
-    },
-    {},
-  );
-  const completedDays = Object.values(totalsByDay).filter(
-    (total) => total.kcal >= daily.kcal * 0.9 && total.protein >= daily.protein * 0.9,
-  ).length;
-  const metToday =
-    consumedToday.kcal >= daily.kcal * 0.9 && consumedToday.protein >= daily.protein * 0.9;
-  const startOfWeek = new Date();
-  const day = startOfWeek.getDay();
-  startOfWeek.setDate(startOfWeek.getDate() - ((day + 6) % 7));
-  const weekStart = startOfWeek.toISOString().slice(0, 10);
-  const weeklyDays = Object.entries(totalsByDay).filter(
-    ([date, total]) =>
-      date >= weekStart && total.kcal >= daily.kcal * 0.9 && total.protein >= daily.protein * 0.9,
-  ).length;
+  const showedUp = daysShowedUp(log);
+  const checkedInToday = todaysLog.length > 0;
 
   const logOutsideMeal = () => {
     const values = {
@@ -126,6 +109,7 @@ function CardScreen() {
   return (
     <AppShell>
       <ScreenHeader title="My Palate Card" sub="Profile & stats" />
+      {profile.seedling && <SeedlingHint screen="card" seedling={profile.seedling} />}
 
       {/* Student ID card */}
       <section className="card-edge relative overflow-hidden rounded-3xl bg-card p-5">
@@ -162,7 +146,14 @@ function CardScreen() {
         <div className="mt-5 h-6 rounded-md bg-foreground" />
       </section>
 
-      <GoalPet completedDays={completedDays} metToday={metToday} weeklyDays={weeklyDays} />
+      {profile.seedling && (
+        <SeedlingCard
+          seedling={profile.seedling}
+          daysShowedUp={showedUp}
+          checkedInToday={checkedInToday}
+          onChange={(seedling) => saveProfile({ ...profile, seedling })}
+        />
+      )}
 
       {/* Macro bank */}
       <section className="mt-5 rounded-2xl border border-foreground/15 bg-card p-4">

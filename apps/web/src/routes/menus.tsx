@@ -4,6 +4,7 @@ import { Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { Button } from "@/components/ui/button";
+import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import {
   Sheet,
   SheetContent,
@@ -124,6 +125,7 @@ function Menus() {
   return (
     <AppShell>
       <ScreenHeader title="Hall Menus" sub="Explore every station" />
+      {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (

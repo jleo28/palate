@@ -122,6 +122,7 @@ function Onboarding() {
     customAllergies,
     dislikes: profile?.dislikes ?? [],
     hall,
+    ...(profile?.seedling ? { seedling: profile.seedling } : {}),
   };
 
   const daily = dailyTargets(draft);
