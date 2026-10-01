@@ -23,3 +23,9 @@ export function dislikedMatches(item: MenuItem, dislikes: DislikeId[] | undefine
     (preference) => dislikes.includes(preference.id) && preference.matches.test(item.name),
   );
 }
+
+/** The menu without foods the user chose to skip. Plates never include skipped foods. */
+export function withoutSkipped(menu: readonly MenuItem[], dislikes: DislikeId[] | undefined) {
+  if (!dislikes?.length) return [...menu];
+  return menu.filter((item) => dislikedMatches(item, dislikes).length === 0);
+}

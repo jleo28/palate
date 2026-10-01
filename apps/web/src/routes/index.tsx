@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, RefreshCw, Shuffle } from "lucide-react";
+import { Check, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
+import { PlateRow } from "@/components/palate/PlateRow";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import {
   GOALS,
@@ -14,11 +15,13 @@ import {
   fitCheck,
   fitSummary,
   remainingToday,
+  alternatives,
+  removeRow,
+  replaceRow,
+  setQty,
   swapItem,
   totals,
-  allergenConflicts,
-  allergenLabel,
-  dislikedMatches,
+  withoutSkipped,
   type PlateItem,
 } from "@palate/core";
 import { MENU, portionLabel } from "@/lib/palate/menu";
@@ -60,29 +63,24 @@ function Plate() {
 
   const diets = profile?.diets ?? [];
   const dietKey = diets.join(",");
+  const skipKey = (profile?.dislikes ?? []).join(",");
+  // Skipped foods never appear on a plate.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const menu = useMemo(() => withoutSkipped(MENU, profile?.dislikes), [skipKey]);
 
   useEffect(() => {
     if (!mealTarget || !daily) return;
     // The day's calorie target is a hard cap: the plate never plans past what's left of it.
     const left = remainingToday(daily, consumedToday).kcal;
-    setPlate(capPlate(buildPlate(MENU, hall, meal, diets, mealTarget, seed), left));
+    setPlate(capPlate(buildPlate(menu, hall, meal, diets, mealTarget, seed), left));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hall, meal, dietKey, seed, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
+  }, [menu, hall, meal, dietKey, seed, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
 
   const t = useMemo(() => totals(plate), [plate]);
   const fit = useMemo(
     () => (mealTarget && daily ? fitCheck(t, mealTarget, consumedToday, daily) : null),
     [t, mealTarget, consumedToday, daily],
   );
-  const stations = useMemo(() => {
-    const map = new Map<string, PlateItem[]>();
-    for (const p of plate) {
-      const list = map.get(p.item.station) ?? [];
-      list.push(p);
-      map.set(p.item.station, list);
-    }
-    return [...map.entries()];
-  }, [plate]);
 
   if (!ready || !profile || !mealTarget || !fit) {
     return (
@@ -177,66 +175,29 @@ function Plate() {
 
         <PlateIllustration items={plate} />
 
-        <div className="space-y-4">
-          {stations.map(([station, items]) => (
-            <div key={station}>
-              <p className="label-caps mb-1.5 text-muted-foreground">{station}</p>
-              <div className="space-y-2">
-                {items.map((p) => {
-                  const hits = allergenConflicts(p.item, profile.allergies);
-                  const dislikes = dislikedMatches(p.item, profile.dislikes);
-                  return (
-                    <div
-                      key={p.id}
-                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-foreground/12 bg-background px-3 py-2.5"
-                    >
-                      <div className="min-w-0">
-                        <p className="flex items-center gap-1.5 font-display text-[0.95rem] font-bold">
-                          {hits.length > 0 && (
-                            <span
-                              className="size-2 shrink-0 rounded-full bg-destructive"
-                              aria-label={`Allergen warning: contains ${hits.map(allergenLabel).join(", ")}`}
-                            />
-                          )}
-                          {dislikes.length > 0 && (
-                            <span
-                              className="shrink-0 text-base leading-none text-muted-foreground"
-                              aria-label={`Not preferred: ${dislikes.map((item) => item.label).join(", ")}`}
-                              title="Not preferred"
-                            >
-                              ~
-                            </span>
-                          )}
-                          <span className="truncate">{p.item.name}</span>
-                        </p>
-                        <p className="mt-0.5 inline-block rounded-full bg-olive-soft px-2 py-0.5 text-[0.7rem] font-bold text-olive">
-                          {portionLabel(p.item, p.qty)}
-                        </p>
-                        <p className="mt-1 text-[0.7rem] text-muted-foreground">
-                          {p.item.kcal * p.qty} cal · {p.item.protein * p.qty}P ·{" "}
-                          {p.item.carbs * p.qty}C · {p.item.fat * p.qty}F
-                        </p>
-                        {hits.length > 0 && (
-                          <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
-                            Contains {hits.map(allergenLabel).join(", ")}
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() =>
-                          setPlate((prev) => swapItem(MENU, prev, p.id, hall, meal, diets))
-                        }
-                        className="flex shrink-0 items-center gap-1 rounded-full border border-foreground/25 px-2.5 py-1.5 text-[0.7rem] font-bold"
-                      >
-                        <RefreshCw className="size-3" /> Swap
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+        {plate.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-foreground/25 px-3 py-6 text-center text-sm text-muted-foreground">
+            Your plate is empty. Tap Shuffle for a fresh one.
+          </p>
+        ) : (
+          <ul
+            aria-label={`Your ${meal.toLowerCase()} plate`}
+            className="divide-y divide-foreground/10 rounded-2xl border border-foreground/15 bg-background"
+          >
+            {plate.map((row) => (
+              <PlateRow
+                key={row.id}
+                row={row}
+                allergies={profile.allergies}
+                alternatives={alternatives(menu, plate, row.id, hall, meal, diets)}
+                onSwap={() => setPlate((prev) => swapItem(menu, prev, row.id, hall, meal, diets))}
+                onQty={(qty) => setPlate((prev) => setQty(prev, row.id, qty))}
+                onRemove={() => setPlate((prev) => removeRow(prev, row.id))}
+                onReplace={(item) => setPlate((prev) => replaceRow(prev, row.id, item))}
+              />
+            ))}
+          </ul>
+        )}
 
         <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
           <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />
@@ -254,7 +215,8 @@ function Plate() {
 
         <button
           onClick={logMeal}
-          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px"
+          disabled={plate.length === 0}
+          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
         >
           <Check className="size-5" /> Ate This Meal
         </button>
