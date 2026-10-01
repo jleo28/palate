@@ -658,7 +658,7 @@ const ITEMS: MenuItem[] = [
   },
 ];
 
-/** Known allergens per menu item id. Unlisted items are allergen-free. */
+/** Known allergens per menu item id. Unlisted means none listed, not allergen-free. */
 const ITEM_ALLERGENS: Record<string, Allergen[]> = {
   // Village
   "v-salmon": ["fish"],

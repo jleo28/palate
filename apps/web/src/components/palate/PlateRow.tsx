@@ -3,6 +3,8 @@ import {
   MAX_QTY,
   allergenConflicts,
   allergenLabel,
+  customAllergyMatches,
+  CONFIRM_WITH_STAFF,
   type Allergen,
   type MenuItem,
   type PlateItem,
@@ -12,6 +14,7 @@ import { portionLabel } from "@/lib/palate/menu";
 interface Props {
   row: PlateItem;
   allergies: Allergen[];
+  customAllergies: string[];
   alternatives: MenuItem[];
   onSwap: () => void;
   onQty: (qty: number) => void;
@@ -25,6 +28,7 @@ const iconButton =
 export function PlateRow({
   row,
   allergies,
+  customAllergies,
   alternatives,
   onSwap,
   onQty,
@@ -33,6 +37,7 @@ export function PlateRow({
 }: Props) {
   const { item, qty } = row;
   const hits = allergenConflicts(item, allergies);
+  const possible = customAllergyMatches(item, customAllergies);
 
   return (
     <li className="px-3 py-2.5">
@@ -42,10 +47,10 @@ export function PlateRow({
             {item.station}
           </p>
           <p className="flex items-center gap-1.5 font-display text-[0.95rem] font-bold">
-            {hits.length > 0 && (
+            {(hits.length > 0 || possible.length > 0) && (
               <span
                 className="size-2 shrink-0 rounded-full bg-destructive"
-                aria-label={`Allergen warning: contains ${hits.map(allergenLabel).join(", ")}`}
+                aria-label={`Allergen warning: ${[...hits.map(allergenLabel), ...possible].join(", ")}`}
               />
             )}
             <span className="truncate">{item.name}</span>
@@ -56,6 +61,11 @@ export function PlateRow({
           {hits.length > 0 && (
             <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
               Contains {hits.map(allergenLabel).join(", ")}
+            </p>
+          )}
+          {possible.length > 0 && (
+            <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
+              May contain {possible.join(", ")} · {CONFIRM_WITH_STAFF}
             </p>
           )}
         </div>

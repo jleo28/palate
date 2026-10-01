@@ -64,6 +64,8 @@ export interface Profile {
   highProtein?: boolean;
   diets: DietTag[];
   allergies: Allergen[];
+  /** Free-text "Other" allergies, matched against item names. */
+  customAllergies?: string[];
   dislikes: DislikeId[];
   hall: HallId;
   name: string;
