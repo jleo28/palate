@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Check, Shuffle } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
+import { SwipeArea } from "@/components/palate/SwipeArea";
 import { PlateRow } from "@/components/palate/PlateRow";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import {
@@ -16,6 +17,13 @@ import {
   fitSummary,
   remainingToday,
   alternatives,
+  back,
+  canGoBack,
+  currentPlate,
+  editCurrent,
+  forward,
+  startHistory,
+  type PlateHistory,
   removeRow,
   replaceRow,
   setQty,
@@ -54,8 +62,12 @@ function Plate() {
   const navigate = useNavigate();
   const { ready, profile, hall, setHall, meal, setMeal, mealTarget, daily, consumedToday, addLog } =
     useStore();
-  const [seed, setSeed] = useState(0);
-  const [plate, setPlate] = useState<PlateItem[]>([]);
+  // Each new variation uses the next seed; the stack keeps the last 10 to swipe back through.
+  const seed = useRef(0);
+  const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
+  const [direction, setDirection] = useState<"next" | "prev">("next");
+  const plate = currentPlate(history);
+  const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
 
   useEffect(() => {
     if (ready && !profile) void navigate({ to: "/onboarding" });
@@ -68,13 +80,33 @@ function Plate() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const menu = useMemo(() => withoutSkipped(MENU, profile?.dislikes), [skipKey]);
 
-  useEffect(() => {
-    if (!mealTarget || !daily) return;
+  const freshPlate = () => {
+    if (!mealTarget || !daily) return [];
     // The day's calorie target is a hard cap: the plate never plans past what's left of it.
     const left = remainingToday(daily, consumedToday).kcal;
-    setPlate(capPlate(buildPlate(menu, hall, meal, diets, mealTarget, seed), left));
+    return capPlate(buildPlate(menu, hall, meal, diets, mealTarget, seed.current), left);
+  };
+
+  // A new hall, meal or budget starts a fresh stack.
+  useEffect(() => {
+    seed.current = 0;
+    setHistory(startHistory(freshPlate()));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menu, hall, meal, dietKey, seed, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
+  }, [menu, hall, meal, dietKey, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
+
+  const nextPlate = () => {
+    setDirection("next");
+    setHistory((h) =>
+      forward(h, () => {
+        seed.current += 1;
+        return freshPlate();
+      }),
+    );
+  };
+  const previousPlate = () => {
+    setDirection("prev");
+    setHistory(back);
+  };
 
   const t = useMemo(() => totals(plate), [plate]);
   const fit = useMemo(
@@ -166,14 +198,47 @@ function Plate() {
             </h2>
           </div>
           <button
-            onClick={() => setSeed((s) => s + 1)}
+            onClick={nextPlate}
             className="flex shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 py-1.5 text-xs font-bold"
           >
             <Shuffle className="size-3.5" /> Shuffle
           </button>
         </div>
 
-        <PlateIllustration items={plate} />
+        <SwipeArea onNext={nextPlate} onPrevious={previousPlate} label="Plate variations">
+          <div
+            key={`${history.index}-${history.plates.length}`}
+            className={cn(
+              "animate-in fade-in duration-300",
+              direction === "next" ? "slide-in-from-right-8" : "slide-in-from-left-8",
+            )}
+          >
+            <PlateIllustration items={plate} />
+          </div>
+        </SwipeArea>
+
+        <div className="mb-3 flex items-center justify-center gap-3 text-[0.7rem] text-muted-foreground">
+          <button
+            type="button"
+            onClick={previousPlate}
+            disabled={!canGoBack(history)}
+            aria-label="Previous plate"
+            className="grid size-8 place-items-center rounded-full border border-foreground/20 disabled:opacity-30"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <span aria-live="polite">
+            Swipe for another idea · {history.index + 1} of {history.plates.length}
+          </span>
+          <button
+            type="button"
+            onClick={nextPlate}
+            aria-label="Next plate"
+            className="grid size-8 place-items-center rounded-full border border-foreground/20"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
 
         {plate.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-foreground/25 px-3 py-6 text-center text-sm text-muted-foreground">
@@ -190,10 +255,10 @@ function Plate() {
                 row={row}
                 allergies={profile.allergies}
                 alternatives={alternatives(menu, plate, row.id, hall, meal, diets)}
-                onSwap={() => setPlate((prev) => swapItem(menu, prev, row.id, hall, meal, diets))}
-                onQty={(qty) => setPlate((prev) => setQty(prev, row.id, qty))}
-                onRemove={() => setPlate((prev) => removeRow(prev, row.id))}
-                onReplace={(item) => setPlate((prev) => replaceRow(prev, row.id, item))}
+                onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, meal, diets))}
+                onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
+                onRemove={() => edit((prev) => removeRow(prev, row.id))}
+                onReplace={(item) => edit((prev) => replaceRow(prev, row.id, item))}
               />
             ))}
           </ul>
