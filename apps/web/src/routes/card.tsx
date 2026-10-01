@@ -1,14 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
 import { SeedlingCard } from "@/components/palate/SeedlingCard";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { Button } from "@/components/ui/button";
-import { GoalPicker } from "@/components/palate/GoalPicker";
-import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
+import { CardSettings } from "@/components/palate/CardSettings";
+import { PalateCard } from "@/components/palate/PalateCard";
+import { ProgressRing } from "@/components/palate/ProgressRing";
 import {
   Dialog,
   DialogContent,
@@ -16,21 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  GOALS,
-  daysShowedUp,
-  effectiveGoal,
-  type Allergen,
-  type DietTag,
-  type DislikeId,
-  type GoalId,
-  type HallId,
-  ALLERGENS,
-  allergenLabel,
-  DISLIKES,
-} from "@palate/core";
-import { HALLS, hallName } from "@/lib/palate/halls";
+import { GOALS, allergenLabel, daysShowedUp, effectiveGoal } from "@palate/core";
+import { hallName } from "@/lib/palate/halls";
 import { useStore } from "@/lib/palate/store";
 import { cn } from "@/lib/utils";
 
@@ -55,13 +43,10 @@ export const Route = createFileRoute("/card")({
   component: CardScreen,
 });
 
-const DIETS: DietTag[] = ["vegetarian", "vegan", "halal", "gluten-free", "dairy-free"];
-
 function CardScreen() {
   const navigate = useNavigate();
-  const { ready, profile, saveProfile, daily, consumedToday, log, addLog, removeLog } = useStore();
-  const [editing, setEditing] = useState(false);
-  const [allergyOpen, setAllergyOpen] = useState(false);
+  const { ready, profile, saveProfile, daily, consumedToday, log, addLog, removeLog, resetAll } =
+    useStore();
   const [outsideOpen, setOutsideOpen] = useState(false);
   const [outsideMacros, setOutsideMacros] = useState({ kcal: "", protein: "", carbs: "", fat: "" });
 
@@ -111,40 +96,73 @@ function CardScreen() {
       <ScreenHeader title="My Palate Card" sub="Profile & stats" />
       {profile.seedling && <SeedlingHint screen="card" seedling={profile.seedling} />}
 
-      {/* Student ID card */}
-      <section className="card-edge relative overflow-hidden rounded-3xl bg-card p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="font-display text-4xl font-extrabold tracking-tight">Palate</p>
-            <p className="label-caps mt-1 text-muted-foreground">USC · {hallName(profile.hall)}</p>
-          </div>
-          <span className="size-12 rounded-xl bg-olive" />
-        </div>
+      <PalateCard
+        front={
+          <>
+            <div className="flex items-start justify-between gap-3 pr-10">
+              <div>
+                <p className="font-display text-4xl font-extrabold tracking-tight">Palate</p>
+                <p className="label-caps mt-1 text-muted-foreground">
+                  USC · {hallName(profile.hall)}
+                </p>
+              </div>
+              <ProgressRing value={consumedToday.kcal} target={daily.kcal} />
+            </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-y-3">
-          <div>
-            <p className="label-caps text-muted-foreground">Name</p>
-            <p className="font-display font-bold">{profile.name}</p>
-          </div>
-          <div>
-            <p className="label-caps text-muted-foreground">Goal</p>
-            <p className="font-display font-bold">
-              {GOALS.find((g) => g.id === effectiveGoal(profile))?.label}
-              {profile.highProtein ? " · High Protein" : ""}
-            </p>
-          </div>
-          <div>
-            <p className="label-caps text-muted-foreground">Weight</p>
-            <p className="font-display font-bold">{profile.weightLb} lb</p>
-          </div>
-          <div>
-            <p className="label-caps text-muted-foreground">Daily</p>
-            <p className="font-display font-bold">{daily.kcal} cal</p>
-          </div>
-        </div>
+            <div className="mt-6 grid grid-cols-2 gap-y-3">
+              <div>
+                <p className="label-caps text-muted-foreground">Name</p>
+                <p className="font-display font-bold">{profile.name}</p>
+              </div>
+              <div>
+                <p className="label-caps text-muted-foreground">Goal</p>
+                <p className="font-display font-bold">
+                  {GOALS.find((g) => g.id === effectiveGoal(profile))?.label}
+                  {profile.highProtein ? " · High Protein" : ""}
+                </p>
+              </div>
+              <div>
+                <p className="label-caps text-muted-foreground">Weight</p>
+                <p className="font-display font-bold">{profile.weightLb} lb</p>
+              </div>
+              <div>
+                <p className="label-caps text-muted-foreground">Daily</p>
+                <p className="font-display font-bold">{daily.kcal} cal</p>
+              </div>
+              <div className="col-span-2">
+                <p className="label-caps text-muted-foreground">Allergies</p>
+                <p
+                  className={cn(
+                    "font-display font-bold",
+                    allAllergies.length && "text-destructive",
+                  )}
+                >
+                  {allAllergies.length ? allAllergies.join(", ") : "None"}
+                </p>
+              </div>
+            </div>
 
-        <div className="mt-5 h-6 rounded-md bg-foreground" />
-      </section>
+            <div className="mt-5 h-6 rounded-md bg-foreground" />
+          </>
+        }
+        back={
+          <>
+            <h2 className="mb-4 pr-10 font-display text-xl font-bold">Goals & settings</h2>
+            <CardSettings
+              key={JSON.stringify(profile)}
+              profile={profile}
+              onSave={(next) => {
+                saveProfile(next);
+                toast.success("Saved. Your plates will follow these settings.");
+              }}
+              onStartOver={() => {
+                resetAll();
+                void navigate({ to: "/welcome" });
+              }}
+            />
+          </>
+        }
+      />
 
       {profile.seedling && (
         <SeedlingCard
@@ -258,239 +276,6 @@ function CardScreen() {
           </div>
         </section>
       )}
-
-      {/* Settings */}
-      <section className="mt-5 rounded-2xl border border-foreground/15 bg-card p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold">Goals & settings</h2>
-          <button
-            onClick={() => setEditing((e) => !e)}
-            className="flex items-center gap-1.5 rounded-full border border-foreground/25 px-3 py-1.5 text-xs font-bold"
-          >
-            <Pencil className="size-3.5" /> {editing ? "Done" : "Edit"}
-          </button>
-        </div>
-
-        <Tabs defaultValue="goals">
-          <TabsList className="mb-4 grid h-10 w-full grid-cols-2 rounded-xl">
-            <TabsTrigger value="goals" className="rounded-lg">
-              Goals & settings
-            </TabsTrigger>
-            <TabsTrigger value="preferences" className="rounded-lg">
-              Preferences
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="goals" className="mt-0">
-            {editing ? (
-              <div className="space-y-4">
-                <div>
-                  <p className="label-caps mb-2 text-muted-foreground">Goal</p>
-                  <GoalPicker
-                    compact
-                    body={profile}
-                    goal={profile.goal}
-                    highProtein={profile.highProtein ?? false}
-                    onGoal={(goal) => saveProfile({ ...profile, goal })}
-                    onHighProtein={(highProtein) => saveProfile({ ...profile, highProtein })}
-                  />
-                </div>
-
-                <div>
-                  <p className="label-caps mb-2 text-muted-foreground">Dietary filters</p>
-                  <div className="flex flex-wrap gap-2">
-                    {DIETS.map((d) => (
-                      <button
-                        key={d}
-                        onClick={() =>
-                          saveProfile({
-                            ...profile,
-                            diets: profile.diets.includes(d)
-                              ? profile.diets.filter((x) => x !== d)
-                              : [...profile.diets, d],
-                          })
-                        }
-                        className={cn(
-                          "rounded-full border px-3 py-1.5 text-xs font-semibold capitalize",
-                          profile.diets.includes(d)
-                            ? "border-olive bg-olive text-primary-foreground"
-                            : "border-foreground/20 text-muted-foreground",
-                        )}
-                      >
-                        {d.replace("-", " ")}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setAllergyOpen((o) => !o)}
-                    aria-expanded={allergyOpen}
-                    className="flex w-full items-center justify-between rounded-xl border border-foreground/20 px-3 py-2.5"
-                  >
-                    <span className="text-left">
-                      <span className="label-caps block text-muted-foreground">Allergies</span>
-                      <span className="mt-0.5 block text-sm font-semibold">
-                        {allAllergies.length ? allAllergies.join(", ") : "None selected"}
-                      </span>
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        "size-4 shrink-0 text-muted-foreground transition-transform",
-                        allergyOpen && "rotate-180",
-                      )}
-                    />
-                  </button>
-                  {allergyOpen && (
-                    <div className="mt-2 space-y-3 rounded-xl border border-foreground/15 bg-background p-3">
-                      <div className="flex flex-wrap gap-2">
-                        {ALLERGENS.map((a) => {
-                          const active = profile.allergies?.includes(a.id) ?? false;
-                          return (
-                            <button
-                              key={a.id}
-                              type="button"
-                              onClick={() =>
-                                saveProfile({
-                                  ...profile,
-                                  allergies: active
-                                    ? (profile.allergies ?? []).filter((x) => x !== a.id)
-                                    : [...(profile.allergies ?? []), a.id as Allergen],
-                                })
-                              }
-                              className={cn(
-                                "rounded-full border px-3 py-1.5 text-xs font-semibold",
-                                active
-                                  ? "border-destructive bg-destructive text-destructive-foreground"
-                                  : "border-foreground/20 text-muted-foreground",
-                              )}
-                            >
-                              {a.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <CustomAllergyInput
-                        value={profile.customAllergies ?? []}
-                        onChange={(customAllergies) => saveProfile({ ...profile, customAllergies })}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <p className="label-caps mb-2 text-muted-foreground">Primary hall</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {HALLS.map((h) => (
-                      <button
-                        key={h.id}
-                        onClick={() => saveProfile({ ...profile, hall: h.id as HallId })}
-                        className={cn(
-                          "rounded-xl border px-2 py-2 text-sm font-bold",
-                          profile.hall === h.id
-                            ? "border-olive bg-olive text-primary-foreground"
-                            : "border-foreground/20",
-                        )}
-                      >
-                        {h.short}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="label-caps mb-2 text-muted-foreground">Current weight (lb)</p>
-                  <input
-                    inputMode="numeric"
-                    value={profile.weightLb}
-                    onChange={(e) =>
-                      saveProfile({ ...profile, weightLb: Number(e.target.value) || 0 })
-                    }
-                    className="w-full rounded-xl border border-foreground/20 bg-background px-3 py-2.5 font-medium outline-none focus:border-olive"
-                  />
-                </div>
-
-                <button
-                  onClick={() => void navigate({ to: "/onboarding" })}
-                  className="w-full rounded-full border border-foreground/25 py-2.5 text-sm font-bold"
-                >
-                  Redo full setup
-                </button>
-              </div>
-            ) : (
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Dietary</dt>
-                  <dd className="font-semibold capitalize">
-                    {profile.diets.length
-                      ? profile.diets.map((d) => d.replace("-", " ")).join(", ")
-                      : "No filters"}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">Allergies</dt>
-                  <dd
-                    className={cn(
-                      "text-right font-semibold",
-                      allAllergies.length && "text-destructive",
-                    )}
-                  >
-                    {allAllergies.length ? allAllergies.join(", ") : "None"}
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Primary hall</dt>
-                  <dd className="font-semibold">{hallName(profile.hall)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Height</dt>
-                  <dd className="font-semibold">
-                    {Math.floor(profile.heightIn / 12)}'{profile.heightIn % 12}"
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Protein target</dt>
-                  <dd className="font-semibold">{daily.protein}g / day</dd>
-                </div>
-              </dl>
-            )}
-          </TabsContent>
-          <TabsContent value="preferences" className="mt-0">
-            <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-              Choose foods you’d rather skip. They’re left off your plates and get a gray ~ on
-              menus.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {DISLIKES.map((preference) => {
-                const active = profile.dislikes?.includes(preference.id) ?? false;
-                return (
-                  <button
-                    key={preference.id}
-                    type="button"
-                    onClick={() =>
-                      saveProfile({
-                        ...profile,
-                        dislikes: active
-                          ? (profile.dislikes ?? []).filter((id) => id !== preference.id)
-                          : [...(profile.dislikes ?? []), preference.id as DislikeId],
-                      })
-                    }
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-xs font-semibold",
-                      active
-                        ? "border-muted-foreground bg-muted text-foreground"
-                        : "border-foreground/20 text-muted-foreground",
-                    )}
-                  >
-                    {preference.label}
-                  </button>
-                );
-              })}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </section>
     </AppShell>
   );
 }

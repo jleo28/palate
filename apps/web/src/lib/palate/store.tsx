@@ -45,6 +45,8 @@ interface Ctx {
   log: LoggedMeal[];
   addLog: (m: Omit<LoggedMeal, "id" | "date">) => void;
   removeLog: (id: string) => void;
+  /** Clear the profile, log and per-device state, as if new. */
+  resetAll: () => void;
   daily: MacroTargets | null;
   meal: MealPeriod;
   setMeal: (m: MealPeriod) => void;
@@ -138,6 +140,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return mealGuide(daily, consumedToday, meal, logged);
   }, [daily, consumedToday, log, meal]);
 
+  const resetAll = useCallback(() => {
+    for (const key of [KEY_PROFILE, KEY_LOG, "palate.hints.v1", "palate.cardPeek.v1"]) {
+      localStorage.removeItem(key);
+    }
+    setProfile(null);
+    setLog([]);
+  }, []);
+
   const value: Ctx = {
     ready,
     profile,
@@ -145,6 +155,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     log,
     addLog,
     removeLog,
+    resetAll,
     daily,
     meal,
     setMeal,
