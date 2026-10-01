@@ -3,8 +3,9 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { EightTeMark } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
+import { GoalPicker } from "@/components/palate/GoalPicker";
 import {
-  GOALS,
+  effectiveGoal,
   dailyTargets,
   mealTargets,
   ALLERGENS,
@@ -101,6 +102,7 @@ function Onboarding() {
   const [inch, setInch] = useState(String((profile?.heightIn ?? 66) % 12));
   const [weight, setWeight] = useState(String(profile?.weightLb ?? 150));
   const [goal, setGoal] = useState<GoalId>(profile?.goal ?? "maintain");
+  const [highProtein, setHighProtein] = useState(profile?.highProtein ?? false);
   const [diets, setDiets] = useState<DietTag[]>(profile?.diets ?? []);
   const [allergies, setAllergies] = useState<Allergen[]>(profile?.allergies ?? []);
   const [hall, setHall] = useState<HallId>(profile?.hall ?? "village");
@@ -112,6 +114,7 @@ function Onboarding() {
     heightIn: (Number(ft) || 5) * 12 + (Number(inch) || 6),
     weightLb: Number(weight) || 150,
     goal,
+    highProtein,
     diets,
     allergies,
     dislikes: profile?.dislikes ?? [],
@@ -122,7 +125,7 @@ function Onboarding() {
   const perMeal = mealTargets(daily, "Lunch");
 
   const finish = () => {
-    saveProfile(draft);
+    saveProfile({ ...draft, goal: effectiveGoal(draft) });
     void navigate({ to: "/" });
   };
 
@@ -222,26 +225,13 @@ function Onboarding() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
-            {GOALS.map((g) => (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => setGoal(g.id)}
-                className={cn(
-                  "rounded-2xl border px-3 py-3 text-left transition-colors",
-                  goal === g.id
-                    ? "border-olive bg-olive text-primary-foreground"
-                    : "border-foreground/20 bg-card",
-                )}
-              >
-                <span className="font-display block text-base font-bold">{g.label}</span>
-                <span className="mt-0.5 block text-[0.72rem] leading-snug opacity-80">
-                  {g.note}
-                </span>
-              </button>
-            ))}
-          </div>
+          <GoalPicker
+            body={draft}
+            goal={goal}
+            highProtein={highProtein}
+            onGoal={setGoal}
+            onHighProtein={setHighProtein}
+          />
 
           <div>
             <p className="label-caps mb-2 text-muted-foreground">Dietary filters</p>

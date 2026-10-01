@@ -4,7 +4,7 @@ export type MealPeriod = "Breakfast" | "Lunch" | "Dinner";
 
 export type DietTag = "vegetarian" | "vegan" | "halal" | "gluten-free" | "dairy-free";
 
-export type GoalId = "cut" | "maintain" | "lean-bulk" | "high-protein";
+export type GoalId = "cut" | "maintain" | "lean-bulk";
 
 export type ItemRole = "protein" | "carb" | "veg" | "extra";
 
@@ -60,6 +60,8 @@ export interface Profile {
   heightIn: number;
   weightLb: number;
   goal: GoalId;
+  /** Raises protein to 1.2 g/lb on top of any goal. */
+  highProtein?: boolean;
   diets: DietTag[];
   allergies: Allergen[];
   dislikes: DislikeId[];
