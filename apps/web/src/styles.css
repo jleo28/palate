@@ -61,6 +61,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-olive: var(--olive);
   --color-olive-soft: var(--olive-soft);
+  --color-amber-soft: var(--amber-soft);
+  --color-amber-ink: var(--amber-ink);
+  --color-clay: var(--clay);
+  --color-clay-soft: var(--clay-soft);
   --color-food-protein: var(--food-protein);
   --color-food-carb: var(--food-carb);
   --color-food-veg: var(--food-veg);
@@ -90,6 +94,12 @@
   --accent-foreground: oklch(0.975 0.011 91.5);
   --olive: oklch(0.52 0.056 129);
   --olive-soft: oklch(0.52 0.056 129 / 12%);
+  /* Budget states: soft amber when a macro runs over, muted clay when the day passes its cap.
+     Both stay quieter than allergen warnings (destructive). */
+  --amber-soft: oklch(0.88 0.08 80 / 45%);
+  --amber-ink: oklch(0.5 0.09 70);
+  --clay: oklch(0.6 0.08 45);
+  --clay-soft: oklch(0.6 0.08 45 / 14%);
   --food-protein: oklch(0.79 0.075 48);
   --food-carb: oklch(0.88 0.1 88);
   --food-veg: oklch(0.8 0.08 133);
