@@ -64,7 +64,7 @@ function CardScreen() {
   const [outsideMacros, setOutsideMacros] = useState({ kcal: "", protein: "", carbs: "", fat: "" });
 
   useEffect(() => {
-    if (ready && !profile) void navigate({ to: "/onboarding" });
+    if (ready && !profile) void navigate({ to: "/welcome" });
   }, [ready, profile, navigate]);
 
   if (!ready || !profile || !daily) {

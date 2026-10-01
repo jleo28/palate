@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { EightTeMark } from "@/components/palate/AppShell";
+import { Wordmark } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { GoalPicker } from "@/components/palate/GoalPicker";
 import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
@@ -135,7 +135,7 @@ function Onboarding() {
   return (
     <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
       <div className="mb-6 flex items-center justify-between">
-        <EightTeMark />
+        <Wordmark />
         <span className="label-caps text-muted-foreground">Step {step + 1} of 3</span>
       </div>
 
@@ -294,21 +294,16 @@ function Onboarding() {
       {step === 2 && (
         <section className="space-y-4">
           <div>
-            <h1 className="text-2xl font-extrabold">Your Campus</h1>
+            <h1 className="text-2xl font-extrabold">Your Hall</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Piloting at USC. Choose the hall you swipe into most.
+              Choose the hall you swipe into most. You can switch any time.
             </p>
           </div>
 
-          <div className="card-edge flex items-center gap-3 rounded-2xl bg-card p-4">
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-olive font-display text-base font-bold text-primary-foreground">
-              USC
-            </span>
-            <div className="min-w-0">
-              <p className="font-display font-bold">University of Southern California</p>
-              <p className="text-xs text-muted-foreground">Los Angeles, CA · Pilot campus</p>
-            </div>
-          </div>
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-olive-soft px-3 py-1 text-xs font-bold text-olive">
+            <Check className="size-3.5" aria-hidden /> University of Southern California · your
+            campus
+          </p>
 
           <div className="space-y-2.5">
             {HALLS.map((h) => (
