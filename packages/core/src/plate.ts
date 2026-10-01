@@ -81,6 +81,30 @@ export function buildPlate(
   return plate;
 }
 
+export const MAX_QTY = 6;
+
+/** How closely `qty` portions of `cand` match a calorie and protein target. Lower is better. */
+function portionScore(cand: MenuItem, qty: number, kcal: number, protein: number) {
+  return Math.abs(cand.kcal * qty - kcal) / 25 + Math.abs(cand.protein * qty - protein) / 4;
+}
+
+/** The candidate and portion (1–4) that best match what a row currently provides. */
+function closestMatch(current: PlateItem, pool: readonly MenuItem[]) {
+  const kcal = current.item.kcal * current.qty;
+  const protein = current.item.protein * current.qty;
+  let best = { item: pool[0]!, qty: 1, score: Infinity };
+  for (const cand of pool) {
+    for (let q = 1; q <= 4; q++) {
+      const score = portionScore(cand, q, kcal, protein);
+      if (score < best.score) best = { item: cand, qty: q, score };
+    }
+  }
+  return best;
+}
+
+const replace = (plate: readonly PlateItem[], rowId: string, fn: (row: PlateItem) => PlateItem) =>
+  plate.map((row) => (row.id === rowId ? fn(row) : row));
+
 /**
  * Swap one row for a macro-equivalent alternative in the same hall and role.
  * Never picks an item that's already on the plate, so rows can't collide.
@@ -102,22 +126,45 @@ export function swapItem(
   );
   if (!pool.length) return [...plate];
 
-  const targetKcal = current.item.kcal * current.qty;
-  const targetProtein = current.item.protein * current.qty;
+  const { item, qty } = closestMatch(current, pool);
+  return replace(plate, rowId, (row) => ({ id: row.id, item, qty }));
+}
 
-  let best = pool[0]!;
-  let bestQty = 1;
-  let bestScore = Infinity;
-  for (const cand of pool) {
-    for (let q = 1; q <= 4; q++) {
-      const score =
-        Math.abs(cand.kcal * q - targetKcal) / 25 + Math.abs(cand.protein * q - targetProtein) / 4;
-      if (score < bestScore) {
-        bestScore = score;
-        best = cand;
-        bestQty = q;
-      }
-    }
-  }
-  return plate.map((row) => (row.id === rowId ? { id: row.id, item: best, qty: bestQty } : row));
+/** Items that could replace a row: same station and role, not already on the plate. */
+export function alternatives(
+  menu: readonly MenuItem[],
+  plate: readonly PlateItem[],
+  rowId: string,
+  hall: HallId,
+  meal: MealPeriod,
+  diets: DietTag[],
+): MenuItem[] {
+  const current = plate.find((row) => row.id === rowId);
+  if (!current) return [];
+  const onPlate = new Set(plate.map((row) => row.item.id));
+  return availableItems(menu, hall, meal, diets)
+    .filter(
+      (i) =>
+        i.station === current.item.station && i.role === current.item.role && !onPlate.has(i.id),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Put a chosen item in a row, portioned to roughly match what the row provided. */
+export function replaceRow(
+  plate: readonly PlateItem[],
+  rowId: string,
+  item: MenuItem,
+): PlateItem[] {
+  return replace(plate, rowId, (row) => ({ id: row.id, item, qty: closestMatch(row, [item]).qty }));
+}
+
+/** Set a row's portions, clamped to 1–MAX_QTY. */
+export function setQty(plate: readonly PlateItem[], rowId: string, qty: number): PlateItem[] {
+  const clamped = Math.min(MAX_QTY, Math.max(1, Math.round(qty)));
+  return replace(plate, rowId, (row) => ({ ...row, qty: clamped }));
+}
+
+export function removeRow(plate: readonly PlateItem[], rowId: string): PlateItem[] {
+  return plate.filter((row) => row.id !== rowId);
 }

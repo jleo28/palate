@@ -460,7 +460,8 @@ function CardScreen() {
           </TabsContent>
           <TabsContent value="preferences" className="mt-0">
             <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-              Choose foods you’d rather skip. They’ll get a gray ~ on plate and menu cards.
+              Choose foods you’d rather skip. They’re left off your plates and get a gray ~ on
+              menus.
             </p>
             <div className="flex flex-wrap gap-2">
               {DISLIKES.map((preference) => {
