@@ -234,7 +234,26 @@
   animation: pet-celebrate 900ms ease-in-out infinite;
 }
 
+/* First visit: the card half-flips to hint that it has a back. */
+@keyframes card-peek {
+  0%,
+  100% {
+    transform: perspective(900px) rotateY(0);
+  }
+  45%,
+  60% {
+    transform: perspective(900px) rotateY(-38deg);
+  }
+}
+
+@utility card-peek {
+  animation: card-peek 1.2s ease-in-out 0.4s 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .card-peek {
+    animation: none;
+  }
   .plate-sketch-in {
     animation: none;
   }
