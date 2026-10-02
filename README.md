@@ -29,8 +29,8 @@ so `pnpm dev` works with no setup. To use another project, copy `.env.example` t
 Schema changes are SQL files in `supabase/migrations`. To apply them to the hosted project:
 
 ```sh
-pnpm exec supabase login                                  # once, opens your browser
-pnpm exec supabase link --project-ref zfnlftgwjwugxnymkuzi  # once, asks for the database password
+npx supabase@2.119.0 login                                   # once, opens your browser
+npx supabase@2.119.0 link --project-ref zfnlftgwjwugxnymkuzi  # once, asks for the database password
 pnpm db:push
 ```
 
