@@ -1,17 +1,36 @@
 import { useEffect, useRef, useState } from "react";
-import { Pencil } from "lucide-react";
-import { SPECIES, growthStage, renameSeedling, type Seedling } from "@palate/core";
+import { Flame, Snowflake, Pencil } from "lucide-react";
+import {
+  FREEZES_PER_MONTH,
+  SPECIES,
+  growthStage,
+  renameSeedling,
+  type Seedling,
+  type Streak,
+} from "@palate/core";
 import { SeedlingAvatar } from "./SeedlingAvatar";
 
 interface Props {
   seedling: Seedling;
   daysShowedUp: number;
   checkedInToday: boolean;
+  streak: Streak;
   onChange: (next: Seedling) => void;
 }
 
+const formatDays = (dates: string[]) =>
+  dates
+    .map((d) =>
+      new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      }),
+    )
+    .join(" and ");
+
 /** Seedling grows from showing up: any logged meal counts, and missed days never undo it. */
-export function SeedlingCard({ seedling, daysShowedUp, checkedInToday, onChange }: Props) {
+export function SeedlingCard({ seedling, daysShowedUp, checkedInToday, streak, onChange }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(seedling.name);
   const input = useRef<HTMLInputElement>(null);
@@ -93,6 +112,26 @@ export function SeedlingCard({ seedling, daysShowedUp, checkedInToday, onChange 
           celebrate={checkedInToday}
           className="h-28 w-28 justify-self-center"
         />
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-foreground/10 pt-3 text-xs">
+        <p className="flex items-center gap-1.5 font-bold">
+          <Flame className="size-4 text-olive" aria-hidden />
+          {streak.days > 0 ? `${streak.days}-day streak` : "Log a meal to start a streak"}
+          {streak.days > 0 && !streak.loggedToday && (
+            <span className="font-medium text-muted-foreground">· log today to keep it going</span>
+          )}
+        </p>
+        <p className="flex items-center gap-1 text-muted-foreground">
+          <Snowflake className="size-3.5" aria-hidden />
+          {streak.freezesLeft} of {FREEZES_PER_MONTH} freezes left this month
+        </p>
+        {streak.frozen.length > 0 && (
+          <p className="basis-full text-muted-foreground">
+            {streak.frozen.length === 1 ? "A freeze" : "Freezes"} covered{" "}
+            {formatDays(streak.frozen)}, so your streak kept going.
+          </p>
+        )}
       </div>
     </section>
   );

@@ -5,4 +5,5 @@ export * from "./macros";
 export * from "./plate";
 export * from "./preferences";
 export * from "./seedling";
+export * from "./streak";
 export * from "./types";
