@@ -13,11 +13,10 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write .",
-    "db:push": "supabase db push"
+    "db:push": "npx --yes supabase@2.119.0 db push"
   },
   "devDependencies": {
     "prettier": "^3.9.9",
-    "supabase": "^2.119.0",
     "turbo": "^2.11.5"
   }
 }
