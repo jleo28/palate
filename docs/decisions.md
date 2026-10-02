@@ -4,7 +4,7 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 
 - 2026-09-30: Rebuild on Jasmine Mai's Lovable prototype (TanStack Start, React 19, Tailwind 4, shadcn/ui) as the design language and starting codebase (the team picked it).
 - 2026-09-30: Overwrite the previous prototype repo and keep its history at the tag `archive/crunch-v0`.
-- 2026-09-30: Rename the product from 8teSC to **Palate**, and the repo from `jleo28/8tesc` to `jleo28/palate`.
+- 2026-09-30: The product is called **Palate**, and the repo is `jleo28/palate`.
 - 2026-09-30: Remove the Lovable connection; git is the only source of truth.
 - 2026-09-30: Use gitflow with `main` and `develop` (the default branch); squash into `develop`, merge commits for releases and hotfixes.
 - 2026-09-30: Claude Code self-merges its PRs into `develop` once CI is green.
@@ -16,7 +16,7 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 - 2026-09-30: Branch protection is unavailable because the repo is private on GitHub Free. CI is the merge gate until the repo gets GitHub Pro (free with the Student Developer Pack).
 - 2026-09-30: Ingest USC menus from the public `hsp-api` JSON endpoint without asking USC Hospitality first (robots.txt allows it and no terms forbid it). Keep it polite: about 24 requests a day, spaced out, with an identifying User-Agent. See `docs/spikes/usc-menus.md`.
 - 2026-09-30: Nutrition comes from a team-curated table for common items, with USDA FoodData Central matching and a confidence flag for the rest. The UI labels macros as estimates.
-- 2026-09-30: Keep the product name **Palate** for v1.1, although the v1.1 brief says 8teSC. "My 8te" is "My Palate", and Seedling is the companion (formerly "Palate Pal").
+- 2026-09-30: Seedling is the companion's name, and the card tab is "My Palate".
 - 2026-09-30: Shipped `v0.1.0-alpha.1` to production as a demo ahead of Supabase, using sample menus and localStorage.
 - 2026-09-30: Guardrails live in `@palate/core` and are enforced in the maths. Cut is off under BMI 18.5, with a floor of 1,200 kcal (female and other) or 1,500 (male), a 500 kcal maximum deficit, and protein from the weight at BMI 25 when BMI is over 30. BMI is never shown.
 - 2026-09-30: High Protein is a toggle (1.2 g/lb), not a goal. Old profiles migrate to Maintain with the toggle on.
@@ -28,3 +28,5 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 - 2026-10-01: Allergen warnings stay red. They're a health risk and must read clearly, the one exception to the PRD's "nothing turns red".
 - 2026-10-01: Add streaks per the PRD: a day counts when a meal is logged, with two automatic freezes per calendar month and no guilt copy. Seedling growth still counts total days.
 - 2026-10-01: Speak to "dining hall warriors" (anyone who eats in the halls a lot), not to class years.
+- 2026-10-01: Remove every remaining reference to the old name from the app, code and docs.
+- 2026-10-02: Production lives at https://palateusc.vercel.app (Vercel project renamed to Palate). The old address is retired.
