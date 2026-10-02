@@ -29,3 +29,4 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 - 2026-10-01: Add streaks per the PRD: a day counts when a meal is logged, with two automatic freezes per calendar month and no guilt copy. Seedling growth still counts total days.
 - 2026-10-01: Speak to "dining hall warriors" (anyone who eats in the halls a lot), not to class years.
 - 2026-10-01: Remove every remaining reference to the old name from the app, code and docs.
+- 2026-10-02: Production lives at https://palateusc.vercel.app (Vercel project renamed to Palate). The old address is retired.
