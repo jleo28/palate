@@ -4,6 +4,7 @@ export * from "./history";
 export * from "./macros";
 export * from "./plate";
 export * from "./preferences";
+export * from "./rows";
 export * from "./seedling";
 export * from "./streak";
 export * from "./types";

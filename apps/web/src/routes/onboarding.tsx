@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Wordmark } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { GoalPicker } from "@/components/palate/GoalPicker";
+import { CreateAccount } from "@/components/palate/CreateAccount";
 import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
 import {
   effectiveGoal,
@@ -93,8 +94,15 @@ function Chip({
 
 function Onboarding() {
   const navigate = useNavigate();
-  const { profile, saveProfile } = useStore();
+  const { ready, session, profile, saveProfile } = useStore();
   const [step, setStep] = useState(0);
+  // New users finish by creating an account; signed-in users without a profile skip that step.
+  const steps = session ? 3 : 4;
+
+  // Once signed in with a profile (straight after sign-up, or after the import), go to the plate.
+  useEffect(() => {
+    if (ready && session && profile && step === 3) void navigate({ to: "/" });
+  }, [ready, session, profile, step, navigate]);
 
   const [name, setName] = useState(profile?.name ?? "");
   const [age, setAge] = useState(String(profile?.age ?? 20));
@@ -128,20 +136,23 @@ function Onboarding() {
   const daily = dailyTargets(draft);
   const perMeal = mealTargets(daily, "Lunch");
 
-  const finish = () => {
-    saveProfile({ ...draft, goal: effectiveGoal(draft) });
-    void navigate({ to: "/" });
+  const finish = async () => {
+    await saveProfile({ ...draft, goal: effectiveGoal(draft) });
+    if (session) void navigate({ to: "/" });
+    else setStep(3);
   };
 
   return (
     <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
       <div className="mb-6 flex items-center justify-between">
         <Wordmark />
-        <span className="label-caps text-muted-foreground">Step {step + 1} of 3</span>
+        <span className="label-caps text-muted-foreground">
+          Step {step + 1} of {steps}
+        </span>
       </div>
 
       <div className="mb-6 flex gap-1.5">
-        {[0, 1, 2].map((i) => (
+        {Array.from({ length: steps }, (_, i) => i).map((i) => (
           <span
             key={i}
             className={cn("h-1.5 flex-1 rounded-full", i <= step ? "bg-olive" : "bg-foreground/15")}
@@ -330,6 +341,8 @@ function Onboarding() {
         </section>
       )}
 
+      {step === 3 && <CreateAccount />}
+
       <div className="mt-7 flex items-center gap-3">
         {step > 0 && (
           <button
@@ -340,14 +353,16 @@ function Onboarding() {
             <ArrowLeft className="size-5" />
           </button>
         )}
-        <button
-          type="button"
-          onClick={() => (step === 2 ? finish() : setStep((s) => s + 1))}
-          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px"
-        >
-          {step === 2 ? "Make my Palate card" : "Continue"}
-          <ArrowRight className="size-5" />
-        </button>
+        {step < 3 && (
+          <button
+            type="button"
+            onClick={() => (step === 2 ? void finish() : setStep((s) => s + 1))}
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px"
+          >
+            {step === 2 ? "Make my Palate card" : "Continue"}
+            <ArrowRight className="size-5" />
+          </button>
+        )}
       </div>
     </div>
   );

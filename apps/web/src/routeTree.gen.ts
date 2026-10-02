@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CardRouteImport } from './routes/card'
 import { Route as MenusRouteImport } from './routes/menus'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +37,16 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
@@ -46,6 +58,8 @@ export interface FileRoutesByFullPath {
   '/card': typeof CardRoute
   '/menus': typeof MenusRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-in': typeof SignInRoute
   '/welcome': typeof WelcomeRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +67,8 @@ export interface FileRoutesByTo {
   '/card': typeof CardRoute
   '/menus': typeof MenusRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-in': typeof SignInRoute
   '/welcome': typeof WelcomeRoute
 }
 export interface FileRoutesById {
@@ -61,14 +77,38 @@ export interface FileRoutesById {
   '/card': typeof CardRoute
   '/menus': typeof MenusRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-in': typeof SignInRoute
   '/welcome': typeof WelcomeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/card' | '/menus' | '/onboarding' | '/welcome'
+  fullPaths:
+    | '/'
+    | '/card'
+    | '/menus'
+    | '/onboarding'
+    | '/reset-password'
+    | '/sign-in'
+    | '/welcome'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/card' | '/menus' | '/onboarding' | '/welcome'
-  id: '__root__' | '/' | '/card' | '/menus' | '/onboarding' | '/welcome'
+  to:
+    | '/'
+    | '/card'
+    | '/menus'
+    | '/onboarding'
+    | '/reset-password'
+    | '/sign-in'
+    | '/welcome'
+  id:
+    | '__root__'
+    | '/'
+    | '/card'
+    | '/menus'
+    | '/onboarding'
+    | '/reset-password'
+    | '/sign-in'
+    | '/welcome'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +116,8 @@ export interface RootRouteChildren {
   CardRoute: typeof CardRoute
   MenusRoute: typeof MenusRoute
   OnboardingRoute: typeof OnboardingRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SignInRoute: typeof SignInRoute
   WelcomeRoute: typeof WelcomeRoute
 }
 
@@ -109,6 +151,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/welcome': {
       id: '/welcome'
       path: '/welcome'
@@ -124,6 +180,8 @@ const rootRouteChildren: RootRouteChildren = {
   CardRoute: CardRoute,
   MenusRoute: MenusRoute,
   OnboardingRoute: OnboardingRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignInRoute: SignInRoute,
   WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport

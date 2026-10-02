@@ -13,7 +13,9 @@ import { OutsideMealDialog } from "@/components/palate/OutsideMealDialog";
 import { ProgressRing } from "@/components/palate/ProgressRing";
 import { GOALS, allergenLabel, daysShowedUp, effectiveGoal, streak } from "@palate/core";
 import { hallName } from "@/lib/palate/halls";
+import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
+import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/card")({
@@ -39,13 +41,22 @@ export const Route = createFileRoute("/card")({
 
 function CardScreen() {
   const navigate = useNavigate();
-  const { ready, profile, saveProfile, daily, consumedToday, log, addLog, removeLog, resetAll } =
-    useStore();
+  const {
+    ready,
+    session,
+    profile,
+    saveProfile,
+    daily,
+    consumedToday,
+    log,
+    addLog,
+    removeLog,
+    resetAll,
+    signOut,
+  } = useStore();
   const [outsideOpen, setOutsideOpen] = useState(false);
 
-  useEffect(() => {
-    if (ready && !profile) void navigate({ to: "/welcome" });
-  }, [ready, profile, navigate]);
+  useRequireProfile();
 
   if (!ready || !profile || !daily) {
     return (
@@ -55,7 +66,7 @@ function CardScreen() {
     );
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
   const allAllergies = [
     ...(profile.allergies ?? []).map(allergenLabel),
     ...(profile.customAllergies ?? []),
@@ -125,12 +136,13 @@ function CardScreen() {
               key={JSON.stringify(profile)}
               profile={profile}
               onSave={(next) => {
-                saveProfile(next);
+                void saveProfile(next);
                 toast.success("Saved. Your plates will follow these settings.");
               }}
+              email={session?.user.email}
+              onSignOut={() => void signOut().then(() => navigate({ to: "/welcome" }))}
               onStartOver={() => {
-                resetAll();
-                void navigate({ to: "/welcome" });
+                void resetAll().then(() => navigate({ to: "/onboarding" }));
               }}
             />
           </>
@@ -146,7 +158,7 @@ function CardScreen() {
             log.map((l) => l.date),
             today,
           )}
-          onChange={(seedling) => saveProfile({ ...profile, seedling })}
+          onChange={(seedling) => void saveProfile({ ...profile, seedling })}
         />
       )}
 
