@@ -9,7 +9,7 @@ export const Route = createFileRoute("/welcome")({
       {
         name: "description",
         content:
-          "Palate builds a balanced plate from today's USC dining hall menus. Made for freshmen and sophomores on the meal plan.",
+          "Palate builds a balanced plate from today's USC dining hall menus. Made for USC's dining hall warriors.",
       },
     ],
   }),
@@ -29,8 +29,7 @@ function Welcome() {
 
       <div className="mt-auto pt-12">
         <p className="inline-flex items-center gap-1.5 rounded-full bg-olive-soft px-3 py-1 text-xs font-bold text-olive">
-          <Check className="size-3.5" aria-hidden /> For USC freshmen and sophomores on the meal
-          plan
+          <Check className="size-3.5" aria-hidden /> For USC's dining hall warriors
         </p>
         <h1 className="mt-4 text-4xl leading-[1.05] font-extrabold tracking-tight">
           Know what to put on your plate.
