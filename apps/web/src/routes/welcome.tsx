@@ -57,7 +57,12 @@ function Welcome() {
       >
         Get started <ArrowRight className="size-5" aria-hidden />
       </Link>
-      <p className="mt-3 text-center text-xs text-muted-foreground">Takes about a minute.</p>
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        Takes about a minute.{" "}
+        <Link to="/sign-in" className="font-bold text-olive underline">
+          I already have an account
+        </Link>
+      </p>
     </div>
   );
 }
