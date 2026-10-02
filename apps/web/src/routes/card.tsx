@@ -11,7 +11,7 @@ import { CardSettings } from "@/components/palate/CardSettings";
 import { PalateCard } from "@/components/palate/PalateCard";
 import { OutsideMealDialog } from "@/components/palate/OutsideMealDialog";
 import { ProgressRing } from "@/components/palate/ProgressRing";
-import { GOALS, allergenLabel, daysShowedUp, effectiveGoal } from "@palate/core";
+import { GOALS, allergenLabel, daysShowedUp, effectiveGoal, streak } from "@palate/core";
 import { hallName } from "@/lib/palate/halls";
 import { useStore } from "@/lib/palate/store";
 import { cn } from "@/lib/utils";
@@ -142,6 +142,10 @@ function CardScreen() {
           seedling={profile.seedling}
           daysShowedUp={showedUp}
           checkedInToday={checkedInToday}
+          streak={streak(
+            log.map((l) => l.date),
+            today,
+          )}
           onChange={(seedling) => saveProfile({ ...profile, seedling })}
         />
       )}
