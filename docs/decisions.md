@@ -25,3 +25,6 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 - 2026-09-30: Generated plates leave out skipped foods and items flagged for the user's allergies (listed or possible custom matches). "Confirm with dining staff" is always shown, and nothing says a plate is safe.
 - 2026-09-30: Seedling grows from days showed up (any logged meal), never from hitting calorie targets. There are no streaks, and gaps never undo growth.
 - 2026-09-30: Card settings save as a draft ("Save changes"). "Start over" clears the profile, log and Seedling on the device after a confirmation.
+- 2026-10-01: Allergen warnings stay red. They're a health risk and must read clearly, the one exception to the PRD's "nothing turns red".
+- 2026-10-01: Add streaks per the PRD: a day counts when a meal is logged, with two automatic freezes per calendar month and no guilt copy. Seedling growth still counts total days.
+- 2026-10-01: Speak to "dining hall warriors" (anyone who eats in the halls a lot), not to class years.
