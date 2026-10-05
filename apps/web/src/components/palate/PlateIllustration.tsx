@@ -310,22 +310,22 @@ export function PlateIllustration({ items }: { items: PlateItem[] }) {
       aria-label={items.length ? `Illustrated plate with ${description}` : "An empty plate"}
     >
       <svg
-        className="pointer-events-none absolute top-5 -left-1 h-36 w-10 text-olive/35"
+        className="pointer-events-none absolute top-1/2 left-1 h-[13rem] max-h-[88%] w-12 -translate-y-1/2 text-olive/40"
         viewBox="0 0 40 150"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
         aria-hidden="true"
       >
         <path d="M20 142c-2-32-1-60 0-88M10 8v31c0 13 20 13 20 0V8M15 8v30M20 8v30M25 8v30" />
       </svg>
       <svg
-        className="pointer-events-none absolute top-6 -right-1 h-36 w-10 text-olive/35"
+        className="pointer-events-none absolute top-1/2 right-1 h-[13rem] max-h-[88%] w-12 -translate-y-1/2 text-olive/40"
         viewBox="0 0 40 150"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
         aria-hidden="true"
       >
@@ -355,10 +355,6 @@ export function PlateIllustration({ items }: { items: PlateItem[] }) {
           <Food key={entry.id} entry={entry} at={layout.at[i] ?? [120, 120]} scale={layout.scale} />
         ))}
       </svg>
-
-      <figcaption className="label-caps absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-olive">
-        Your plate
-      </figcaption>
     </figure>
   );
 }
