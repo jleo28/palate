@@ -1,9 +1,38 @@
 import type { MacroTargets } from "./macros";
 import { totals } from "./plate";
-import type { MealPeriod, PlateItem } from "./types";
+import type { MealPeriod, PlateItem, Slot, SnackSlot } from "./types";
 
 export const MEALS: MealPeriod[] = ["Breakfast", "Lunch", "Dinner"];
-const SHARE: Record<MealPeriod, number> = { Breakfast: 0.28, Lunch: 0.36, Dinner: 0.36 };
+const MEAL_SHARE: Record<MealPeriod, number> = { Breakfast: 0.28, Lunch: 0.36, Dinner: 0.36 };
+
+/** Snacks are planned from the hall meal nearest them, so you can grab one on the way out. */
+export const SNACKS: Record<SnackSlot, { from: MealPeriod; label: string; question: string }> = {
+  "Afternoon snack": { from: "Lunch", label: "Snack", question: "Between classes" },
+  "Late-night snack": { from: "Dinner", label: "Late night", question: "Late at night" },
+};
+/** Share of the day saved for each snack; meals shrink to make room. */
+export const SNACK_SHARE = 0.1;
+
+export const isSnack = (slot: Slot): slot is SnackSlot => slot in SNACKS;
+
+/** The menu period a slot draws from: a meal's own, or a snack's nearest meal. */
+export const menuPeriod = (slot: Slot): MealPeriod => (isSnack(slot) ? SNACKS[slot].from : slot);
+
+/** The day's slots in order, with any snacks the user chose. */
+export function daySlots(snacks: readonly SnackSlot[] = []): Slot[] {
+  const slots: Slot[] = ["Breakfast", "Lunch"];
+  if (snacks.includes("Afternoon snack")) slots.push("Afternoon snack");
+  slots.push("Dinner");
+  if (snacks.includes("Late-night snack")) slots.push("Late-night snack");
+  return slots;
+}
+
+/** Each slot's share of the day. Shares add up to 1. */
+export function slotShare(slot: Slot, slots: readonly Slot[]) {
+  if (isSnack(slot)) return SNACK_SHARE;
+  const snackCount = slots.filter(isSnack).length;
+  return MEAL_SHARE[slot] * (1 - SNACK_SHARE * snackCount);
+}
 const MACROS = ["kcal", "protein", "carbs", "fat"] as const;
 export type Macro = (typeof MACROS)[number];
 
@@ -27,11 +56,12 @@ export function remainingToday(daily: MacroTargets, consumed: MacroTargets): Mac
 export function mealGuide(
   daily: MacroTargets,
   consumed: MacroTargets,
-  meal: MealPeriod,
-  loggedMeals: readonly MealPeriod[],
+  meal: Slot,
+  loggedMeals: readonly Slot[],
+  slots: readonly Slot[] = MEALS,
 ): MacroTargets {
-  const open = MEALS.filter((m) => m === meal || !loggedMeals.includes(m));
-  const share = SHARE[meal] / open.reduce((sum, m) => sum + SHARE[m], 0);
+  const open = slots.filter((m) => m === meal || !loggedMeals.includes(m));
+  const share = slotShare(meal, slots) / open.reduce((sum, m) => sum + slotShare(m, slots), 0);
   const left = remainingToday(daily, consumed);
   return map((m) => Math.round(left[m] * share));
 }
@@ -96,8 +126,8 @@ const LABEL: Record<Macro, string> = {
 const unit = (m: Macro) => (m === "kcal" ? " cal" : " g");
 
 /** One plain-language line about how a plate fits, in Seedling's voice. */
-export function fitSummary(fit: Fit, meal: MealPeriod): string {
-  const nextMeal = MEALS[MEALS.indexOf(meal) + 1]?.toLowerCase();
+export function fitSummary(fit: Fit, meal: Slot, slots: readonly Slot[] = MEALS): string {
+  const nextMeal = slots[slots.indexOf(meal) + 1]?.toLowerCase();
   if (fit.capReached) {
     return "You've reached today's calories. If you're still hungry, this is a balanced, lighter option.";
   }

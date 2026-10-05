@@ -5,6 +5,7 @@ import { Wordmark } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { GoalPicker } from "@/components/palate/GoalPicker";
 import { CreateAccount } from "@/components/palate/CreateAccount";
+import { SnackPicker } from "@/components/palate/SnackPicker";
 import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
 import {
   effectiveGoal,
@@ -17,6 +18,7 @@ import {
   type Allergen,
   type DietTag,
   type GoalId,
+  type SnackSlot,
   type HallId,
   type Profile,
 } from "@palate/core";
@@ -114,6 +116,7 @@ function Onboarding() {
   const [weight, setWeight] = useState(String(profile?.weightLb ?? 150));
   const [goal, setGoal] = useState<GoalId>(profile?.goal ?? "maintain");
   const [highProtein, setHighProtein] = useState(profile?.highProtein ?? false);
+  const [snacks, setSnacks] = useState<SnackSlot[]>(profile?.snacks ?? []);
   const [diets, setDiets] = useState<DietTag[]>(profile?.diets ?? []);
   const [allergies, setAllergies] = useState<Allergen[]>(profile?.allergies ?? []);
   const [customAllergies, setCustomAllergies] = useState<string[]>(profile?.customAllergies ?? []);
@@ -127,6 +130,7 @@ function Onboarding() {
     weightLb: parseNumber(weight, 150) || 150,
     goal,
     highProtein,
+    snacks,
     diets,
     allergies,
     customAllergies,
@@ -249,6 +253,8 @@ function Onboarding() {
             onGoal={setGoal}
             onHighProtein={setHighProtein}
           />
+
+          <SnackPicker value={snacks} onChange={setSnacks} />
 
           <div>
             <p className="label-caps mb-2 text-muted-foreground">Dietary filters</p>

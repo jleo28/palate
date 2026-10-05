@@ -7,6 +7,7 @@ describe("profile rows", () => {
   it("round-trips a full profile", () => {
     const p = profile({
       highProtein: true,
+      snacks: ["Late-night snack"],
       customAllergies: ["coconut"],
       seedling: { species: "fern", tone: 4, seed: 99, name: "Fernie" },
     });
