@@ -83,6 +83,18 @@ export interface Profile {
   seedling?: Seedling;
 }
 
+/** One food in a logged meal. Per-portion macros make it editable later; older logs lack them. */
+export interface LoggedItem {
+  name: string;
+  /** Display label, e.g. "2 tongs". */
+  portion: string;
+  qty?: number;
+  unit?: string;
+  unitPlural?: string;
+  /** Macros for one portion. */
+  per?: { kcal: number; protein: number; carbs: number; fat: number };
+}
+
 export interface LoggedMeal {
   id: string;
   date: string;
@@ -92,6 +104,6 @@ export interface LoggedMeal {
   protein: number;
   carbs: number;
   fat: number;
-  items: { name: string; portion: string }[];
+  items: LoggedItem[];
   source?: "dining-hall" | "outside";
 }

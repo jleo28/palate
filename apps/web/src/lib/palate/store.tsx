@@ -106,6 +106,8 @@ interface Ctx {
   /** Slots logged today, in log order. */
   loggedToday: Slot[];
   removeLog: (id: string) => void;
+  /** Save an edited logged meal (portions, items or totals). */
+  updateLog: (m: LoggedMeal) => void;
   /** Delete the profile and log (the account stays) and per-device state. */
   resetAll: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -229,6 +231,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [loggedToday, slots],
   );
 
+  const updateLog = useCallback(
+    (next: LoggedMeal) => {
+      const before = log.find((l) => l.id === next.id);
+      setLog((prev) => prev.map((l) => (l.id === next.id ? next : l)));
+      const { id, ...row } = logToRow(next);
+      void supabase
+        .from("meal_logs")
+        .update(row)
+        .eq("id", id)
+        .then(({ error }) => {
+          if (!error || !before) return;
+          console.error(error);
+          setLog((prev) => prev.map((l) => (l.id === before.id ? before : l)));
+          toast.error("Couldn't save that change. Try again.");
+        });
+    },
+    [log],
+  );
+
   const removeLog = useCallback(
     (id: string) => {
       const removed = log.find((l) => l.id === id);
@@ -311,6 +332,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addLog,
     loggedToday,
     removeLog,
+    updateLog,
     resetAll,
     signOut,
     daily,

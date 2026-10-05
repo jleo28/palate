@@ -17,6 +17,7 @@ import {
   buildPlate,
   buildSnack,
   isSnack,
+  logItems,
   nextOpenSlot,
   menuPeriod,
   capPlate,
@@ -169,7 +170,7 @@ function Plate() {
       protein: t.protein,
       carbs: t.carbs,
       fat: t.fat,
-      items: plate.map((p) => ({ name: p.item.name, portion: portionLabel(p.item, p.qty) })),
+      items: logItems(plate),
     });
     if (!logged) return;
     toast.success(`${meal} logged`, {
