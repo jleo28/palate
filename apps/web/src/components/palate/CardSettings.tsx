@@ -3,6 +3,8 @@ import {
   ALLERGENS,
   DISLIKES,
   effectiveGoal,
+  feetAndInches,
+  heightIn,
   type Allergen,
   type DietTag,
   type DislikeId,
@@ -26,6 +28,8 @@ const toggle = <T,>(list: T[], value: T) =>
   list.includes(value) ? list.filter((x) => x !== value) : [...list, value];
 
 const chip = "rounded-full border px-3 py-1.5 text-xs font-semibold";
+const field =
+  "mt-1 w-full rounded-xl border border-foreground/20 bg-background px-3 py-2.5 font-medium outline-none focus:border-olive";
 
 interface Props {
   profile: Profile;
@@ -39,6 +43,8 @@ interface Props {
 export function CardSettings({ profile, onSave, onStartOver, email, onSignOut }: Props) {
   const [draft, setDraft] = useState(profile);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [feet, setFeet] = useState(String(feetAndInches(profile.heightIn).feet));
+  const [inches, setInches] = useState(String(feetAndInches(profile.heightIn).inches));
   const set = (patch: Partial<Profile>) => setDraft((d) => ({ ...d, ...patch }));
   const dirty = JSON.stringify(draft) !== JSON.stringify(profile);
 
@@ -161,20 +167,48 @@ export function CardSettings({ profile, onSave, onStartOver, email, onSignOut }:
         </div>
       </div>
 
-      <label className="block">
-        <span className="label-caps text-muted-foreground">Current weight (lb)</span>
-        <input
-          inputMode="numeric"
-          value={draft.weightLb || ""}
-          onChange={(e) => set({ weightLb: Number(e.target.value.replace(/\D/g, "")) || 0 })}
-          className="mt-1 w-full rounded-xl border border-foreground/20 bg-background px-3 py-2.5 font-medium outline-none focus:border-olive"
-        />
-      </label>
+      <div className="grid grid-cols-3 gap-2">
+        <label className="block">
+          <span className="label-caps text-muted-foreground">Height (ft)</span>
+          <input
+            inputMode="numeric"
+            value={feet}
+            onChange={(e) => {
+              const v = e.target.value.replace(/\D/g, "").slice(0, 1);
+              setFeet(v);
+              set({ heightIn: heightIn(v, inches) });
+            }}
+            className={field}
+          />
+        </label>
+        <label className="block">
+          <span className="label-caps text-muted-foreground">Height (in)</span>
+          <input
+            inputMode="numeric"
+            value={inches}
+            onChange={(e) => {
+              const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+              setInches(v);
+              set({ heightIn: heightIn(feet, v) });
+            }}
+            className={field}
+          />
+        </label>
+        <label className="block">
+          <span className="label-caps text-muted-foreground">Weight (lb)</span>
+          <input
+            inputMode="numeric"
+            value={draft.weightLb || ""}
+            onChange={(e) => set({ weightLb: Number(e.target.value.replace(/\D/g, "")) || 0 })}
+            className={field}
+          />
+        </label>
+      </div>
 
       <div className="space-y-2">
         <button
           type="button"
-          disabled={!dirty || draft.weightLb < 60}
+          disabled={!dirty || draft.weightLb < 60 || draft.heightIn < 48 || feet === ""}
           onClick={() => onSave({ ...draft, goal: effectiveGoal(draft) })}
           className="h-12 w-full rounded-full bg-foreground text-base font-bold text-primary-foreground disabled:opacity-40"
         >

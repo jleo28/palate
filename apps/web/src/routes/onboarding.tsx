@@ -8,6 +8,8 @@ import { CreateAccount } from "@/components/palate/CreateAccount";
 import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
 import {
   effectiveGoal,
+  heightIn,
+  parseNumber,
   dailyTargets,
   mealTargets,
   ALLERGENS,
@@ -119,10 +121,10 @@ function Onboarding() {
 
   const draft: Profile = {
     name: name.trim() || "Trojan",
-    age: Number(age) || 20,
+    age: parseNumber(age, 20) || 20,
     gender,
-    heightIn: (Number(ft) || 5) * 12 + (Number(inch) || 6),
-    weightLb: Number(weight) || 150,
+    heightIn: heightIn(ft, inch),
+    weightLb: parseNumber(weight, 150) || 150,
     goal,
     highProtein,
     diets,

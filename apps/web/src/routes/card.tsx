@@ -106,8 +106,11 @@ function CardScreen() {
                 </p>
               </div>
               <div>
-                <p className="label-caps text-muted-foreground">Weight</p>
-                <p className="font-display font-bold">{profile.weightLb} lb</p>
+                <p className="label-caps text-muted-foreground">Height · weight</p>
+                <p className="font-display font-bold">
+                  {Math.floor(profile.heightIn / 12)}'{profile.heightIn % 12}" · {profile.weightLb}{" "}
+                  lb
+                </p>
               </div>
               <div>
                 <p className="label-caps text-muted-foreground">Daily</p>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { RotateCcw } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PEEK_KEY = "palate.cardPeek.v1";
@@ -24,6 +24,7 @@ export function PalateCard({ front, back }: Props) {
   const [fading, setFading] = useState(false);
   const [peek, setPeek] = useState(false);
   const busy = useRef(false);
+  const swipeFrom = useRef<number | null>(null);
 
   useEffect(() => {
     try {
@@ -83,12 +84,40 @@ export function PalateCard({ front, back }: Props) {
         <button
           type="button"
           onClick={flip}
-          aria-label={side === "front" ? "Show goals and settings" : "Show the front of your card"}
-          className="absolute top-3 right-3 z-10 grid size-9 place-items-center rounded-full border border-foreground/20 bg-background/80"
+          aria-label={
+            side === "front" ? "Edit goals and settings" : "Done, show the front of your card"
+          }
+          className="absolute top-3 right-3 z-10 flex h-9 items-center gap-1.5 rounded-full border border-foreground/20 bg-background/90 px-3 text-xs font-bold"
         >
-          <RotateCcw className="size-4" />
+          {side === "front" ? (
+            <>
+              <Pencil className="size-3.5" aria-hidden /> Edit
+            </>
+          ) : (
+            <>
+              <Check className="size-3.5" aria-hidden /> Done
+            </>
+          )}
         </button>
-        {side === "front" ? front : back}
+        {side === "front" ? (
+          // The whole front is a flip target: tap it, or swipe it sideways.
+          <button
+            type="button"
+            onClick={flip}
+            onPointerDown={(e) => (swipeFrom.current = e.clientX)}
+            onPointerUp={(e) => {
+              const from = swipeFrom.current;
+              swipeFrom.current = null;
+              if (from !== null && Math.abs(e.clientX - from) > 50) flip();
+            }}
+            aria-label="Your Palate card. Tap to edit goals and settings."
+            className="block w-full cursor-pointer touch-pan-y text-left"
+          >
+            {front}
+          </button>
+        ) : (
+          back
+        )}
       </section>
 
       {side === "front" && (
@@ -97,7 +126,7 @@ export function PalateCard({ front, back }: Props) {
           onClick={flip}
           className="mt-2 w-full text-center text-xs font-semibold text-olive underline-offset-2 hover:underline"
         >
-          Goals & settings are on the back of your card
+          Tap the card to edit your goals & settings
         </button>
       )}
     </div>
