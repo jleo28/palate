@@ -37,21 +37,6 @@ const KEY_PROFILE = "palate.profile.v1";
 const KEY_LOG = "palate.log.v1";
 const DEVICE_KEYS = ["palate.hints.v1", "palate.cardPeek.v1"];
 
-// Keys used before the rename to Palate. Copied forward once, then removed.
-const LEGACY_KEYS: [legacy: string, current: string][] = [
-  ["8te.profile.v1", KEY_PROFILE],
-  ["8te.log.v1", KEY_LOG],
-];
-
-function migrateLegacyKeys(storage: Pick<Storage, "getItem" | "setItem" | "removeItem">) {
-  for (const [legacy, current] of LEGACY_KEYS) {
-    const value = storage.getItem(legacy);
-    if (value === null) continue;
-    if (storage.getItem(current) === null) storage.setItem(current, value);
-    storage.removeItem(legacy);
-  }
-}
-
 function readLocal<T>(key: string): T | null {
   try {
     const raw = localStorage.getItem(key);
@@ -67,7 +52,6 @@ const withSeedling = (p: Profile): Profile =>
 
 /** Load a user's data, importing any browser-only profile and log the first time. */
 async function loadUser(userId: string) {
-  migrateLegacyKeys(localStorage);
   const [profileRes, logRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle<ProfileRow>(),
     supabase.from("meal_logs").select("*").order("date", { ascending: false }).limit(1000),
