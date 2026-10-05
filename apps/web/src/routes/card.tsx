@@ -54,6 +54,7 @@ function CardScreen() {
     resetAll,
     signOut,
     slots,
+    loggedToday,
   } = useStore();
   const [outsideOpen, setOutsideOpen] = useState(false);
 
@@ -194,14 +195,16 @@ function CardScreen() {
         open={outsideOpen}
         onOpenChange={setOutsideOpen}
         slots={slots}
+        loggedToday={loggedToday}
         onLog={({ name, meal, ...macros }) => {
-          addLog({
+          const logged = addLog({
             hall: profile.hall,
             meal,
             ...macros,
             items: [{ name, portion: "Estimated" }],
             source: "outside",
           });
+          if (!logged) return;
           setOutsideOpen(false);
           toast.success(`Added to today's ${meal.toLowerCase()}`);
         }}

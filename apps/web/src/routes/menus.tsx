@@ -111,7 +111,7 @@ function Menus() {
   const clearItem = (id: string) => setCustom((prev) => prev.filter((item) => item.id !== id));
 
   const logCustomPlate = () => {
-    addLog({
+    const logged = addLog({
       hall,
       meal,
       ...t,
@@ -120,9 +120,10 @@ function Menus() {
         portion: `${quantity} ${quantity === 1 ? item.unit : item.unitPlural}`,
       })),
     });
+    if (!logged) return;
     setCustom([]);
     setPlateOpen(false);
-    toast.success("Custom plate logged");
+    toast.success(`${meal} logged`);
   };
 
   return (

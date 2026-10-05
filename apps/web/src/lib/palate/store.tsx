@@ -15,7 +15,10 @@ import {
   dailyTargets,
   logFromRow,
   logToRow,
+  canLogSlot,
   daySlots,
+  firstOpenSlot,
+  nextOpenSlot,
   mealGuide,
   normalizeProfile,
   profileFromRow,
@@ -98,7 +101,10 @@ interface Ctx {
   /** Signed in: saves to Supabase. Signed out: keeps an onboarding draft in this browser. */
   saveProfile: (p: Profile) => Promise<void>;
   log: LoggedMeal[];
-  addLog: (m: Omit<LoggedMeal, "id" | "date">) => void;
+  /** Returns false when the slot can't be logged again today. */
+  addLog: (m: Omit<LoggedMeal, "id" | "date">) => boolean;
+  /** Slots logged today, in log order. */
+  loggedToday: Slot[];
   removeLog: (id: string) => void;
   /** Delete the profile and log (the account stays) and per-device state. */
   resetAll: () => Promise<void>;
@@ -186,19 +192,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [userId],
   );
 
-  const addLog = useCallback((m: Omit<LoggedMeal, "id" | "date">) => {
-    const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date: today() };
-    setLog((prev) => [entry, ...prev]);
-    void supabase
-      .from("meal_logs")
-      .insert(logToRow(entry))
-      .then(({ error }) => {
-        if (!error) return;
-        console.error(error);
-        setLog((prev) => prev.filter((l) => l.id !== entry.id));
-        toast.error("Couldn't log that meal. Try again.");
-      });
-  }, []);
+  const snackKey = (profile?.snacks ?? []).join(",");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const slots = useMemo(() => daySlots(profile?.snacks), [snackKey]);
+  const loggedToday = useMemo(() => {
+    const d = today();
+    return log.filter((l) => l.date === d).map((l) => l.meal);
+  }, [log]);
+
+  const addLog = useCallback(
+    (m: Omit<LoggedMeal, "id" | "date">) => {
+      // Breakfast, lunch and dinner once a day; change a logged meal from the macro bank.
+      if (!canLogSlot(m.meal, loggedToday)) {
+        toast.error(`${m.meal} is already logged today. Edit it in your macro bank.`);
+        return false;
+      }
+      const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date: today() };
+      setLog((prev) => [entry, ...prev]);
+      // Move on to the next slot that can still be logged.
+      setMeal((current) =>
+        current === m.meal
+          ? (nextOpenSlot(slots, m.meal, [...loggedToday, m.meal]) ?? current)
+          : current,
+      );
+      void supabase
+        .from("meal_logs")
+        .insert(logToRow(entry))
+        .then(({ error }) => {
+          if (!error) return;
+          console.error(error);
+          setLog((prev) => prev.filter((l) => l.id !== entry.id));
+          toast.error("Couldn't log that meal. Try again.");
+        });
+      return true;
+    },
+    [loggedToday, slots],
+  );
 
   const removeLog = useCallback(
     (id: string) => {
@@ -238,9 +267,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const daily = useMemo(() => (profile ? dailyTargets(profile) : null), [profile]);
-  const snackKey = (profile?.snacks ?? []).join(",");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const slots = useMemo(() => daySlots(profile?.snacks), [snackKey]);
 
   const consumedToday = useMemo(() => {
     const d = today();
@@ -263,12 +289,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!slots.includes(meal)) setMeal(currentMeal());
   }, [slots, meal]);
 
+  // Once data has loaded, start on the first slot from now that can still be logged.
+  const startedOn = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || !userId || startedOn.current === userId) return;
+    startedOn.current = userId;
+    setMeal(firstOpenSlot(slots, currentMeal(), loggedToday) ?? currentMeal());
+  }, [ready, userId, slots, loggedToday]);
+
   const mealTarget = useMemo(() => {
     if (!daily) return null;
-    const d = today();
-    const logged = log.filter((l) => l.date === d).map((l) => l.meal);
-    return mealGuide(daily, consumedToday, meal, logged, slots);
-  }, [daily, consumedToday, log, meal, slots]);
+    return mealGuide(daily, consumedToday, meal, loggedToday, slots);
+  }, [daily, consumedToday, loggedToday, meal, slots]);
 
   const value: Ctx = {
     ready,
@@ -277,6 +309,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveProfile,
     log,
     addLog,
+    loggedToday,
     removeLog,
     resetAll,
     signOut,
