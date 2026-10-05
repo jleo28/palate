@@ -59,12 +59,9 @@ export function Wordmark({ className }: { className?: string }) {
 
 export function ScreenHeader({ title, sub }: { title: string; sub?: string }) {
   return (
-    <header className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-      <div className="min-w-0">
-        <p className="label-caps text-muted-foreground">{sub}</p>
-        <h1 className="truncate text-[1.7rem] font-extrabold leading-tight">{title}</h1>
-      </div>
-      <Wordmark className="shrink-0 pt-1" />
+    <header className="mb-4 min-w-0">
+      <p className="label-caps text-muted-foreground">{sub}</p>
+      <h1 className="truncate text-[1.7rem] font-extrabold leading-tight">{title}</h1>
     </header>
   );
 }
