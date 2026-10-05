@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ import {
 } from "@palate/core";
 import { MENU, portionLabel } from "@/lib/palate/menu";
 import { useStore } from "@/lib/palate/store";
+import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -63,7 +64,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Plate() {
-  const navigate = useNavigate();
   const { ready, profile, hall, setHall, meal, setMeal, mealTarget, daily, consumedToday, addLog } =
     useStore();
   // Each new variation uses the next seed; the stack keeps the last 10 to swipe back through.
@@ -73,9 +73,7 @@ function Plate() {
   const plate = currentPlate(history);
   const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
 
-  useEffect(() => {
-    if (ready && !profile) void navigate({ to: "/welcome" });
-  }, [ready, profile, navigate]);
+  useRequireProfile();
 
   const diets = profile?.diets ?? [];
   const dietKey = diets.join(",");

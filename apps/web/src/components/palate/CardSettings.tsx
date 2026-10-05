@@ -31,10 +31,12 @@ interface Props {
   profile: Profile;
   onSave: (next: Profile) => void;
   onStartOver: () => void;
+  email: string | undefined;
+  onSignOut: () => void;
 }
 
 /** The back of the card: goals and settings, edited as a draft until "Save changes". */
-export function CardSettings({ profile, onSave, onStartOver }: Props) {
+export function CardSettings({ profile, onSave, onStartOver, email, onSignOut }: Props) {
   const [draft, setDraft] = useState(profile);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const set = (patch: Partial<Profile>) => setDraft((d) => ({ ...d, ...patch }));
@@ -187,13 +189,24 @@ export function CardSettings({ profile, onSave, onStartOver }: Props) {
         </button>
       </div>
 
+      <div className="flex items-center justify-between gap-3 border-t border-foreground/10 pt-4 text-xs">
+        <span className="min-w-0 truncate text-muted-foreground">Signed in as {email}</span>
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="shrink-0 rounded-full border border-foreground/25 px-3 py-1.5 font-bold"
+        >
+          Sign out
+        </button>
+      </div>
+
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5">
           <DialogHeader className="text-left">
             <DialogTitle className="font-display text-xl">Start over?</DialogTitle>
             <DialogDescription>
-              This clears your profile, meal log and Seedling on this device, and takes you back to
-              the start. It can't be undone.
+              This deletes your profile, meal log and Seedling, and takes you back through setup.
+              Your account stays. It can't be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-2">
