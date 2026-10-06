@@ -9,6 +9,7 @@ import { SwipeArea } from "@/components/palate/SwipeArea";
 import { SeedlingAvatar } from "@/components/palate/SeedlingAvatar";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { PlateRow } from "@/components/palate/PlateRow";
+import { LoggedSlot } from "@/components/palate/LoggedSlot";
 import { HALLS } from "@/lib/palate/halls";
 import {
   GOALS,
@@ -16,6 +17,7 @@ import {
   buildPlate,
   buildSnack,
   isSnack,
+  nextOpenSlot,
   menuPeriod,
   capPlate,
   effectiveGoal,
@@ -41,6 +43,7 @@ import {
   type PlateItem,
 } from "@palate/core";
 import { MENU, portionLabel } from "@/lib/palate/menu";
+import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
@@ -80,9 +83,15 @@ function Plate() {
     daily,
     consumedToday,
     addLog,
+    loggedToday,
+    log,
   } = useStore();
   // Snacks draw on a nearby hall meal's menu.
   const period = menuPeriod(meal);
+  // A hall meal logged today shows what was eaten instead of a new plate.
+  const loggedEntry = !isSnack(meal)
+    ? log.find((l) => l.date === localToday() && l.meal === meal)
+    : undefined;
   // Each new variation uses the next seed; the stack keeps the last 10 to swipe back through.
   const seed = useRef(0);
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
@@ -152,7 +161,8 @@ function Plate() {
   }
 
   const logMeal = () => {
-    addLog({
+    const next = nextOpenSlot(slots, meal, [...loggedToday, meal]);
+    const logged = addLog({
       hall,
       meal,
       kcal: t.kcal,
@@ -161,8 +171,9 @@ function Plate() {
       fat: t.fat,
       items: plate.map((p) => ({ name: p.item.name, portion: portionLabel(p.item, p.qty) })),
     });
-    toast.success("Logged to your macro bank", {
-      description: `${Math.round(t.kcal)} cal · ${t.protein}g protein`,
+    if (!logged) return;
+    toast.success(`${meal} logged`, {
+      description: `${Math.round(t.kcal)} cal · ${t.protein}g protein${next ? ` · next up: ${next.toLowerCase()}` : " · that's the day"}`,
     });
   };
 
@@ -199,6 +210,7 @@ function Plate() {
             )}
           >
             {isSnack(m) ? SNACKS[m].label : m}
+            {!isSnack(m) && loggedToday.includes(m) && <span aria-label=" (logged)"> ✓</span>}
           </button>
         ))}
       </div>
@@ -219,123 +231,127 @@ function Plate() {
         )}
       </section>
 
-      <section className="card-edge rounded-3xl bg-card p-4">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="label-caps text-olive">The 1-Tap Plate</p>
-            <h2 className="text-xl font-extrabold leading-tight">
-              {isSnack(meal)
-                ? `A light ${meal.toLowerCase()}`
-                : `Built for this ${meal.toLowerCase()}`}
-            </h2>
-            {isSnack(meal) && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Grab it on your way out of {SNACKS[meal].from.toLowerCase()}.
-              </p>
-            )}
+      {loggedEntry ? (
+        <LoggedSlot entry={loggedEntry} />
+      ) : (
+        <section className="card-edge rounded-3xl bg-card p-4">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="label-caps text-olive">The 1-Tap Plate</p>
+              <h2 className="text-xl font-extrabold leading-tight">
+                {isSnack(meal)
+                  ? `A light ${meal.toLowerCase()}`
+                  : `Built for this ${meal.toLowerCase()}`}
+              </h2>
+              {isSnack(meal) && (
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Grab it on your way out of {SNACKS[meal].from.toLowerCase()}.
+                </p>
+              )}
+            </div>
+            <button
+              onClick={nextPlate}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 py-1.5 text-xs font-bold"
+            >
+              <Shuffle className="size-3.5" /> Shuffle
+            </button>
           </div>
-          <button
-            onClick={nextPlate}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 py-1.5 text-xs font-bold"
-          >
-            <Shuffle className="size-3.5" /> Shuffle
-          </button>
-        </div>
 
-        <SwipeArea onNext={nextPlate} onPrevious={previousPlate} label="Plate variations">
+          <SwipeArea onNext={nextPlate} onPrevious={previousPlate} label="Plate variations">
+            <div
+              key={`${history.index}-${history.plates.length}`}
+              className={cn(
+                "animate-in fade-in duration-300",
+                direction === "next" ? "slide-in-from-right-8" : "slide-in-from-left-8",
+              )}
+            >
+              <PlateIllustration items={plate} />
+            </div>
+          </SwipeArea>
+
+          <div className="mb-3 flex items-center justify-center gap-3 text-[0.7rem] text-muted-foreground">
+            <button
+              type="button"
+              onClick={previousPlate}
+              disabled={!canGoBack(history)}
+              aria-label="Previous plate"
+              className="grid size-8 place-items-center rounded-full border border-foreground/20 disabled:opacity-30"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <span aria-live="polite">
+              Swipe for another idea · {history.index + 1} of {history.plates.length}
+            </span>
+            <button
+              type="button"
+              onClick={nextPlate}
+              aria-label="Next plate"
+              className="grid size-8 place-items-center rounded-full border border-foreground/20"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+
+          {plate.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-foreground/25 px-3 py-6 text-center text-sm text-muted-foreground">
+              Your plate is empty. Tap Shuffle for a fresh one.
+            </p>
+          ) : (
+            <ul
+              aria-label={`Your ${meal.toLowerCase()} plate`}
+              className="divide-y divide-foreground/10 rounded-2xl border border-foreground/15 bg-background"
+            >
+              {plate.map((row) => (
+                <PlateRow
+                  key={row.id}
+                  row={row}
+                  allergies={profile.allergies}
+                  customAllergies={profile.customAllergies ?? []}
+                  alternatives={alternatives(menu, plate, row.id, hall, period, diets)}
+                  onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, period, diets))}
+                  onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
+                  onRemove={() => edit((prev) => removeRow(prev, row.id))}
+                  onReplace={(item) => edit((prev) => replaceRow(prev, row.id, item))}
+                />
+              ))}
+            </ul>
+          )}
+
+          <p className="mt-2 text-[0.7rem] text-muted-foreground">
+            {profile.allergies.length || profile.customAllergies?.length
+              ? "We left out items USC lists with your allergies, but labels can be incomplete."
+              : "Allergen info comes from USC's labels, which can be incomplete."}{" "}
+            <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
+          </p>
+
+          <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
+            <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />
+          </div>
+
           <div
-            key={`${history.index}-${history.plates.length}`}
             className={cn(
-              "animate-in fade-in duration-300",
-              direction === "next" ? "slide-in-from-right-8" : "slide-in-from-left-8",
+              "mt-3 flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm",
+              fit.dayOverCap ? "bg-clay-soft" : fit.over.length ? "bg-amber-soft" : "bg-olive-soft",
             )}
           >
-            <PlateIllustration items={plate} />
+            {profile.seedling && (
+              <SeedlingAvatar seedling={profile.seedling} className="size-9 shrink-0" />
+            )}
+            <p>
+              <span className="font-bold">{profile.seedling?.name ?? "Seedling"}: </span>
+              {fitSummary(fit, meal, slots)}
+            </p>
           </div>
-        </SwipeArea>
 
-        <div className="mb-3 flex items-center justify-center gap-3 text-[0.7rem] text-muted-foreground">
           <button
-            type="button"
-            onClick={previousPlate}
-            disabled={!canGoBack(history)}
-            aria-label="Previous plate"
-            className="grid size-8 place-items-center rounded-full border border-foreground/20 disabled:opacity-30"
+            onClick={logMeal}
+            disabled={plate.length === 0}
+            className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
           >
-            <ChevronLeft className="size-4" />
+            <Check className="size-5" /> Ate This Meal
           </button>
-          <span aria-live="polite">
-            Swipe for another idea · {history.index + 1} of {history.plates.length}
-          </span>
-          <button
-            type="button"
-            onClick={nextPlate}
-            aria-label="Next plate"
-            className="grid size-8 place-items-center rounded-full border border-foreground/20"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
-
-        {plate.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-foreground/25 px-3 py-6 text-center text-sm text-muted-foreground">
-            Your plate is empty. Tap Shuffle for a fresh one.
-          </p>
-        ) : (
-          <ul
-            aria-label={`Your ${meal.toLowerCase()} plate`}
-            className="divide-y divide-foreground/10 rounded-2xl border border-foreground/15 bg-background"
-          >
-            {plate.map((row) => (
-              <PlateRow
-                key={row.id}
-                row={row}
-                allergies={profile.allergies}
-                customAllergies={profile.customAllergies ?? []}
-                alternatives={alternatives(menu, plate, row.id, hall, period, diets)}
-                onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, period, diets))}
-                onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
-                onRemove={() => edit((prev) => removeRow(prev, row.id))}
-                onReplace={(item) => edit((prev) => replaceRow(prev, row.id, item))}
-              />
-            ))}
-          </ul>
-        )}
-
-        <p className="mt-2 text-[0.7rem] text-muted-foreground">
-          {profile.allergies.length || profile.customAllergies?.length
-            ? "We left out items USC lists with your allergies, but labels can be incomplete."
-            : "Allergen info comes from USC's labels, which can be incomplete."}{" "}
-          <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
-        </p>
-
-        <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
-          <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />
-        </div>
-
-        <div
-          className={cn(
-            "mt-3 flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm",
-            fit.dayOverCap ? "bg-clay-soft" : fit.over.length ? "bg-amber-soft" : "bg-olive-soft",
-          )}
-        >
-          {profile.seedling && (
-            <SeedlingAvatar seedling={profile.seedling} className="size-9 shrink-0" />
-          )}
-          <p>
-            <span className="font-bold">{profile.seedling?.name ?? "Seedling"}: </span>
-            {fitSummary(fit, meal, slots)}
-          </p>
-        </div>
-
-        <button
-          onClick={logMeal}
-          disabled={plate.length === 0}
-          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
-        >
-          <Check className="size-5" /> Ate This Meal
-        </button>
-      </section>
+        </section>
+      )}
     </AppShell>
   );
 }

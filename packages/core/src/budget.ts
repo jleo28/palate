@@ -148,3 +148,19 @@ export function fitSummary(fit: Fit, meal: Slot, slots: readonly Slot[] = MEALS)
   if (fit.lowProtein) return "Light on protein. Another protein would round this plate out.";
   return `This plate fits your ${meal.toLowerCase()} nicely.`;
 }
+
+/** Hall meals can be logged once a day; snacks as often as you like. */
+export function canLogSlot(slot: Slot, loggedToday: readonly Slot[]) {
+  return isSnack(slot) || !loggedToday.includes(slot);
+}
+
+/** The first slot, from `from` onwards, that can still be logged today. Null when the day's done. */
+export function firstOpenSlot(slots: readonly Slot[], from: Slot, loggedToday: readonly Slot[]) {
+  const start = Math.max(0, slots.indexOf(from));
+  return slots.slice(start).find((s) => canLogSlot(s, loggedToday)) ?? null;
+}
+
+/** Where to go after logging `slot`: the next slot that can still be logged. */
+export function nextOpenSlot(slots: readonly Slot[], slot: Slot, loggedToday: readonly Slot[]) {
+  return slots.slice(slots.indexOf(slot) + 1).find((s) => canLogSlot(s, loggedToday)) ?? null;
+}

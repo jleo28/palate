@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SNACKS, isSnack, type Slot } from "@palate/core";
+import { SNACKS, canLogSlot, firstOpenSlot, isSnack, type Slot } from "@palate/core";
 import { currentMeal } from "@/lib/palate/halls";
 import { cn } from "@/lib/utils";
 import {
@@ -34,12 +34,15 @@ interface Props {
   onLog: (meal: OutsideMeal) => void;
   /** Today's slots, including the user's snacks. */
   slots: Slot[];
+  /** Meals logged today can't be logged again. */
+  loggedToday: Slot[];
 }
 
 /** Log a meal eaten outside the halls. It counts toward the day's budget like any other. */
-export function OutsideMealDialog({ open, onOpenChange, onLog, slots }: Props) {
+export function OutsideMealDialog({ open, onOpenChange, onLog, slots, loggedToday }: Props) {
+  const openSlot = () => firstOpenSlot(slots, currentMeal(), loggedToday) ?? currentMeal();
   const [name, setName] = useState("");
-  const [meal, setMeal] = useState<Slot>(currentMeal);
+  const [meal, setMeal] = useState<Slot>(openSlot);
   const [macros, setMacros] = useState(EMPTY);
   const hasValue = Object.values(macros).some((v) => Number(v) > 0);
 
@@ -61,7 +64,7 @@ export function OutsideMealDialog({ open, onOpenChange, onLog, slots }: Props) {
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (next) setMeal(currentMeal());
+        if (next) setMeal(openSlot());
         onOpenChange(next);
       }}
     >
@@ -91,12 +94,14 @@ export function OutsideMealDialog({ open, onOpenChange, onLog, slots }: Props) {
               type="button"
               role="radio"
               aria-checked={meal === m}
+              disabled={!canLogSlot(m, loggedToday)}
               onClick={() => setMeal(m)}
               className={cn(
                 "rounded-full border px-3 py-1.5 text-xs font-bold",
                 meal === m
                   ? "border-olive bg-olive text-primary-foreground"
                   : "border-foreground/20 text-muted-foreground",
+                "disabled:opacity-35",
               )}
             >
               {isSnack(m) ? SNACKS[m].label : m}
@@ -124,7 +129,7 @@ export function OutsideMealDialog({ open, onOpenChange, onLog, slots }: Props) {
         <button
           type="button"
           onClick={submit}
-          disabled={!hasValue}
+          disabled={!hasValue || !canLogSlot(meal, loggedToday)}
           className="h-11 w-full rounded-full bg-foreground font-bold text-primary-foreground disabled:opacity-40"
         >
           Add to today
