@@ -1,5 +1,6 @@
 export * from "./allergens";
 export * from "./budget";
+export * from "./food-kind";
 export * from "./history";
 export * from "./logs";
 export * from "./macros";
