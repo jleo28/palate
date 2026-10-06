@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function EightTeMark({ className }: { className?: string }) {
+export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("font-display text-2xl font-extrabold tracking-tight", className)}>
       Palate
@@ -59,12 +59,9 @@ export function EightTeMark({ className }: { className?: string }) {
 
 export function ScreenHeader({ title, sub }: { title: string; sub?: string }) {
   return (
-    <header className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-      <div className="min-w-0">
-        <p className="label-caps text-muted-foreground">{sub}</p>
-        <h1 className="truncate text-[1.7rem] font-extrabold leading-tight">{title}</h1>
-      </div>
-      <EightTeMark className="shrink-0 pt-1" />
+    <header className="mb-4 min-w-0">
+      <p className="label-caps text-muted-foreground">{sub}</p>
+      <h1 className="truncate text-[1.7rem] font-extrabold leading-tight">{title}</h1>
     </header>
   );
 }

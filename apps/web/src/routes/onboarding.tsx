@@ -1,17 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { EightTeMark } from "@/components/palate/AppShell";
+import { Wordmark } from "@/components/palate/AppShell";
 import { MacroRow } from "@/components/palate/MacroBits";
+import { GoalPicker } from "@/components/palate/GoalPicker";
+import { CreateAccount } from "@/components/palate/CreateAccount";
+import { SnackPicker } from "@/components/palate/SnackPicker";
+import { AllergyPicker } from "@/components/palate/AllergyPicker";
 import {
-  GOALS,
+  effectiveGoal,
+  heightIn,
+  parseNumber,
   dailyTargets,
   mealTargets,
-  ALLERGENS,
-  allergenLabel,
   type Allergen,
   type DietTag,
   type GoalId,
+  type SnackSlot,
   type HallId,
   type Profile,
 } from "@palate/core";
@@ -91,8 +96,15 @@ function Chip({
 
 function Onboarding() {
   const navigate = useNavigate();
-  const { profile, saveProfile } = useStore();
+  const { ready, session, profile, saveProfile } = useStore();
   const [step, setStep] = useState(0);
+  // New users finish by creating an account; signed-in users without a profile skip that step.
+  const steps = session ? 3 : 4;
+
+  // Once signed in with a profile (straight after sign-up, or after the import), go to the plate.
+  useEffect(() => {
+    if (ready && session && profile && step === 3) void navigate({ to: "/" });
+  }, [ready, session, profile, step, navigate]);
 
   const [name, setName] = useState(profile?.name ?? "");
   const [age, setAge] = useState(String(profile?.age ?? 20));
@@ -101,40 +113,50 @@ function Onboarding() {
   const [inch, setInch] = useState(String((profile?.heightIn ?? 66) % 12));
   const [weight, setWeight] = useState(String(profile?.weightLb ?? 150));
   const [goal, setGoal] = useState<GoalId>(profile?.goal ?? "maintain");
+  const [highProtein, setHighProtein] = useState(profile?.highProtein ?? false);
+  const [snacks, setSnacks] = useState<SnackSlot[]>(profile?.snacks ?? []);
   const [diets, setDiets] = useState<DietTag[]>(profile?.diets ?? []);
   const [allergies, setAllergies] = useState<Allergen[]>(profile?.allergies ?? []);
+  const [customAllergies, setCustomAllergies] = useState<string[]>(profile?.customAllergies ?? []);
   const [hall, setHall] = useState<HallId>(profile?.hall ?? "village");
 
   const draft: Profile = {
     name: name.trim() || "Trojan",
-    age: Number(age) || 20,
+    age: parseNumber(age, 20) || 20,
     gender,
-    heightIn: (Number(ft) || 5) * 12 + (Number(inch) || 6),
-    weightLb: Number(weight) || 150,
+    heightIn: heightIn(ft, inch),
+    weightLb: parseNumber(weight, 150) || 150,
     goal,
+    highProtein,
+    snacks,
     diets,
     allergies,
+    customAllergies,
     dislikes: profile?.dislikes ?? [],
     hall,
+    ...(profile?.seedling ? { seedling: profile.seedling } : {}),
   };
 
   const daily = dailyTargets(draft);
   const perMeal = mealTargets(daily, "Lunch");
 
-  const finish = () => {
-    saveProfile(draft);
-    void navigate({ to: "/" });
+  const finish = async () => {
+    await saveProfile({ ...draft, goal: effectiveGoal(draft) });
+    if (session) void navigate({ to: "/" });
+    else setStep(3);
   };
 
   return (
     <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
       <div className="mb-6 flex items-center justify-between">
-        <EightTeMark />
-        <span className="label-caps text-muted-foreground">Step {step + 1} of 3</span>
+        <Wordmark />
+        <span className="label-caps text-muted-foreground">
+          Step {step + 1} of {steps}
+        </span>
       </div>
 
       <div className="mb-6 flex gap-1.5">
-        {[0, 1, 2].map((i) => (
+        {Array.from({ length: steps }, (_, i) => i).map((i) => (
           <span
             key={i}
             className={cn("h-1.5 flex-1 rounded-full", i <= step ? "bg-olive" : "bg-foreground/15")}
@@ -222,26 +244,15 @@ function Onboarding() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
-            {GOALS.map((g) => (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => setGoal(g.id)}
-                className={cn(
-                  "rounded-2xl border px-3 py-3 text-left transition-colors",
-                  goal === g.id
-                    ? "border-olive bg-olive text-primary-foreground"
-                    : "border-foreground/20 bg-card",
-                )}
-              >
-                <span className="font-display block text-base font-bold">{g.label}</span>
-                <span className="mt-0.5 block text-[0.72rem] leading-snug opacity-80">
-                  {g.note}
-                </span>
-              </button>
-            ))}
-          </div>
+          <GoalPicker
+            body={draft}
+            goal={goal}
+            highProtein={highProtein}
+            onGoal={setGoal}
+            onHighProtein={setHighProtein}
+          />
+
+          <SnackPicker value={snacks} onChange={setSnacks} />
 
           <div>
             <p className="label-caps mb-2 text-muted-foreground">Dietary filters</p>
@@ -264,24 +275,14 @@ function Onboarding() {
 
           <div>
             <p className="label-caps mb-2 text-muted-foreground">Allergies</p>
-            <div className="flex flex-wrap gap-2">
-              {ALLERGENS.map((a) => (
-                <Chip
-                  key={a.id}
-                  active={allergies.includes(a.id)}
-                  destructive={allergies.includes(a.id)}
-                  onClick={() =>
-                    setAllergies((prev) =>
-                      prev.includes(a.id) ? prev.filter((x) => x !== a.id) : [...prev, a.id],
-                    )
-                  }
-                >
-                  {allergenLabel(a.id)}
-                </Chip>
-              ))}
-            </div>
+            <AllergyPicker
+              allergies={allergies}
+              onAllergies={setAllergies}
+              custom={customAllergies}
+              onCustom={setCustomAllergies}
+            />
             <p className="mt-2 text-xs text-muted-foreground">
-              We flag anything on the menu that contains these.
+              We flag menu items USC lists as containing these.
             </p>
           </div>
 
@@ -298,21 +299,16 @@ function Onboarding() {
       {step === 2 && (
         <section className="space-y-4">
           <div>
-            <h1 className="text-2xl font-extrabold">Your Campus</h1>
+            <h1 className="text-2xl font-extrabold">Your Hall</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Piloting at USC. Choose the hall you swipe into most.
+              Choose the hall you swipe into most. You can switch any time.
             </p>
           </div>
 
-          <div className="card-edge flex items-center gap-3 rounded-2xl bg-card p-4">
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-olive font-display text-base font-bold text-primary-foreground">
-              USC
-            </span>
-            <div className="min-w-0">
-              <p className="font-display font-bold">University of Southern California</p>
-              <p className="text-xs text-muted-foreground">Los Angeles, CA · Pilot campus</p>
-            </div>
-          </div>
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-olive-soft px-3 py-1 text-xs font-bold text-olive">
+            <Check className="size-3.5" aria-hidden /> University of Southern California · your
+            campus
+          </p>
 
           <div className="space-y-2.5">
             {HALLS.map((h) => (
@@ -338,6 +334,8 @@ function Onboarding() {
         </section>
       )}
 
+      {step === 3 && <CreateAccount />}
+
       <div className="mt-7 flex items-center gap-3">
         {step > 0 && (
           <button
@@ -348,14 +346,16 @@ function Onboarding() {
             <ArrowLeft className="size-5" />
           </button>
         )}
-        <button
-          type="button"
-          onClick={() => (step === 2 ? finish() : setStep((s) => s + 1))}
-          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px"
-        >
-          {step === 2 ? "Make my Palate card" : "Continue"}
-          <ArrowRight className="size-5" />
-        </button>
+        {step < 3 && (
+          <button
+            type="button"
+            onClick={() => (step === 2 ? void finish() : setStep((s) => s + 1))}
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px"
+          >
+            {step === 2 ? "Make my Palate card" : "Continue"}
+            <ArrowRight className="size-5" />
+          </button>
+        )}
       </div>
     </div>
   );

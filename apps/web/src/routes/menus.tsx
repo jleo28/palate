@@ -4,6 +4,7 @@ import { Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { Button } from "@/components/ui/button";
+import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import {
   Sheet,
   SheetContent,
@@ -13,7 +14,16 @@ import {
 } from "@/components/ui/sheet";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import { MENU } from "@/lib/palate/menu";
-import { allergenConflicts, allergenLabel, dislikedMatches, type MenuItem } from "@palate/core";
+import {
+  CONFIRM_WITH_STAFF,
+  logItems,
+  menuPeriod,
+  allergenConflicts,
+  allergenLabel,
+  customAllergyMatches,
+  dislikedMatches,
+  type MenuItem,
+} from "@palate/core";
 import { useStore } from "@/lib/palate/store";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +60,8 @@ const FILTERS: { id: FilterId; label: string; test: (i: MenuItem) => boolean }[]
 
 function Menus() {
   const { hall, setHall, meal, setMeal, addLog, profile } = useStore();
+  // Menus are per hall meal; a selected snack shows the meal it's planned from.
+  const period = menuPeriod(meal);
   const allergies = profile?.allergies ?? [];
   const [filters, setFilters] = useState<FilterId[]>([]);
   const [custom, setCustom] = useState<MenuItem[]>([]);
@@ -59,7 +71,7 @@ function Menus() {
     const items = MENU.filter(
       (i) =>
         i.hall === hall &&
-        i.meals.includes(meal) &&
+        i.meals.includes(period) &&
         filters.every((f) => FILTERS.find((x) => x.id === f)?.test(i) ?? true),
     );
     const map = new Map<string, MenuItem[]>();
@@ -69,7 +81,7 @@ function Menus() {
       map.set(i.station, list);
     }
     return [...map.entries()];
-  }, [hall, meal, filters]);
+  }, [hall, period, filters]);
 
   const t = custom.reduce(
     (a, i) => ({
@@ -100,23 +112,24 @@ function Menus() {
   const clearItem = (id: string) => setCustom((prev) => prev.filter((item) => item.id !== id));
 
   const logCustomPlate = () => {
-    addLog({
+    const logged = addLog({
       hall,
       meal,
       ...t,
-      items: customRows.map(({ item, quantity }) => ({
-        name: item.name,
-        portion: `${quantity} ${quantity === 1 ? item.unit : item.unitPlural}`,
-      })),
+      items: logItems(
+        customRows.map(({ item, quantity }, n) => ({ id: String(n), item, qty: quantity })),
+      ),
     });
+    if (!logged) return;
     setCustom([]);
     setPlateOpen(false);
-    toast.success("Custom plate logged");
+    toast.success(`${meal} logged`);
   };
 
   return (
     <AppShell>
       <ScreenHeader title="Hall Menus" sub="Explore every station" />
+      {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (
@@ -140,7 +153,7 @@ function Menus() {
             onClick={() => setMeal(m)}
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-bold transition-colors",
-              meal === m
+              period === m
                 ? "border-olive bg-olive text-primary-foreground"
                 : "border-foreground/20 text-muted-foreground",
             )}
@@ -183,6 +196,7 @@ function Menus() {
             <div className="space-y-2">
               {items.map((i) => {
                 const hits = allergenConflicts(i, allergies);
+                const possible = customAllergyMatches(i, profile?.customAllergies);
                 const dislikes = dislikedMatches(i, profile?.dislikes);
                 return (
                   <div
@@ -191,7 +205,7 @@ function Menus() {
                   >
                     <div className="min-w-0">
                       <p className="flex items-center gap-1.5 font-display text-[0.95rem] font-bold">
-                        {hits.length > 0 && (
+                        {(hits.length > 0 || possible.length > 0) && (
                           <span
                             className="size-2 shrink-0 rounded-full bg-destructive"
                             title={`Contains ${hits.map(allergenLabel).join(", ")}`}
@@ -217,6 +231,11 @@ function Menus() {
                           Contains {hits.map(allergenLabel).join(", ")}
                         </p>
                       )}
+                      {possible.length > 0 && (
+                        <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
+                          May contain {possible.join(", ")} · {CONFIRM_WITH_STAFF}
+                        </p>
+                      )}
                     </div>
                     <Button
                       type="button"
@@ -238,6 +257,11 @@ function Menus() {
           </section>
         ))}
       </div>
+
+      <p className="mt-5 text-center text-[0.7rem] text-muted-foreground">
+        Allergen info comes from USC's labels, which can be incomplete.{" "}
+        <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
+      </p>
 
       {custom.length > 0 && (
         <div className="fixed inset-x-0 bottom-[76px] z-30 px-4">
@@ -289,6 +313,7 @@ function Menus() {
               <div className="space-y-2">
                 {customRows.map(({ item, quantity }) => {
                   const hits = allergenConflicts(item, allergies);
+                  const possible = customAllergyMatches(item, profile?.customAllergies);
                   const dislikes = dislikedMatches(item, profile?.dislikes);
                   return (
                     <div
@@ -298,7 +323,7 @@ function Menus() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="flex items-center gap-1.5 font-display text-sm font-bold">
-                            {hits.length > 0 && (
+                            {(hits.length > 0 || possible.length > 0) && (
                               <span
                                 className="size-2 shrink-0 rounded-full bg-destructive"
                                 aria-label={`Allergen warning: contains ${hits.map(allergenLabel).join(", ")}`}
@@ -322,6 +347,11 @@ function Menus() {
                           {hits.length > 0 && (
                             <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
                               Contains {hits.map(allergenLabel).join(", ")}
+                            </p>
+                          )}
+                          {possible.length > 0 && (
+                            <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
+                              May contain {possible.join(", ")} · {CONFIRM_WITH_STAFF}
                             </p>
                           )}
                         </div>

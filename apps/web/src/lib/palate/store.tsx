@@ -4,48 +4,119 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import type { Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
 import {
+  assignSeedling,
   dailyTargets,
-  mealTargets,
-  type MacroTargets,
+  logFromRow,
+  logToRow,
+  canLogSlot,
+  daySlots,
+  firstOpenSlot,
+  nextOpenSlot,
+  mealGuide,
+  normalizeProfile,
+  profileFromRow,
+  profileToRow,
   type HallId,
   type LoggedMeal,
-  type MealPeriod,
+  type MacroTargets,
+  type MealLogRow,
+  type Slot,
   type Profile,
+  type ProfileRow,
 } from "@palate/core";
+import { supabase } from "@/lib/supabase";
+import { today } from "./dates";
 import { currentMeal } from "./halls";
 
+// Browser-only data: a signed-out onboarding draft, plus anything saved before accounts existed.
+// Imported into Supabase once, on the first sign-in, then removed.
 const KEY_PROFILE = "palate.profile.v1";
 const KEY_LOG = "palate.log.v1";
+const DEVICE_KEYS = ["palate.hints.v1", "palate.cardPeek.v1"];
 
-// Keys used before the rename to Palate. Copied forward once, then removed.
-const LEGACY_KEYS: [legacy: string, current: string][] = [
-  ["8te.profile.v1", KEY_PROFILE],
-  ["8te.log.v1", KEY_LOG],
-];
-
-export function migrateLegacyKeys(storage: Pick<Storage, "getItem" | "setItem" | "removeItem">) {
-  for (const [legacy, current] of LEGACY_KEYS) {
-    const value = storage.getItem(legacy);
-    if (value === null) continue;
-    if (storage.getItem(current) === null) storage.setItem(current, value);
-    storage.removeItem(legacy);
+function readLocal<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
   }
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const withSeedling = (p: Profile): Profile =>
+  p.seedling ? p : { ...p, seedling: assignSeedling() };
+
+/** Load a user's data, importing any browser-only profile and log the first time. */
+async function loadUser(userId: string) {
+  const [profileRes, logRes] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", userId).maybeSingle<ProfileRow>(),
+    supabase.from("meal_logs").select("*").order("date", { ascending: false }).limit(1000),
+  ]);
+  if (profileRes.error) throw profileRes.error;
+  if (logRes.error) throw logRes.error;
+
+  let profile = profileRes.data ? profileFromRow(profileRes.data) : null;
+  let log = ((logRes.data ?? []) as MealLogRow[]).map(logFromRow);
+
+  const localProfile = readLocal<Profile>(KEY_PROFILE);
+  const localLog = readLocal<LoggedMeal[]>(KEY_LOG) ?? [];
+
+  if (!profile && localProfile) profile = withSeedling(normalizeProfile(localProfile));
+  if (profile && (!profileRes.data || !profile.seedling)) {
+    profile = withSeedling(profile);
+    const { error } = await supabase.from("profiles").upsert(profileToRow(userId, profile));
+    if (error) throw error;
+  }
+
+  if (localLog.length) {
+    const rows = localLog.map((m) =>
+      logToRow(UUID.test(m.id) ? m : { ...m, id: crypto.randomUUID() }),
+    );
+    const { error } = await supabase
+      .from("meal_logs")
+      .upsert(rows, { onConflict: "id", ignoreDuplicates: true });
+    if (error) throw error;
+    const known = new Set(log.map((m) => m.id));
+    log = [...rows.map(logFromRow).filter((m) => !known.has(m.id)), ...log];
+  }
+
+  localStorage.removeItem(KEY_PROFILE);
+  localStorage.removeItem(KEY_LOG);
+  return { profile, log };
+}
+
 interface Ctx {
+  /** Auth and the user's data have loaded. */
   ready: boolean;
+  session: Session | null;
   profile: Profile | null;
-  saveProfile: (p: Profile) => void;
+  /** Signed in: saves to Supabase. Signed out: keeps an onboarding draft in this browser. */
+  saveProfile: (p: Profile) => Promise<void>;
   log: LoggedMeal[];
-  addLog: (m: Omit<LoggedMeal, "id" | "date">) => void;
+  /** Returns false when the slot can't be logged again today. */
+  addLog: (m: Omit<LoggedMeal, "id" | "date">) => boolean;
+  /** Slots logged today, in log order. */
+  loggedToday: Slot[];
   removeLog: (id: string) => void;
+  /** Save an edited logged meal (portions, items or totals). */
+  updateLog: (m: LoggedMeal) => void;
+  /** Delete the profile and log (the account stays) and per-device state. */
+  resetAll: () => Promise<void>;
+  signOut: () => Promise<void>;
   daily: MacroTargets | null;
-  meal: MealPeriod;
-  setMeal: (m: MealPeriod) => void;
+  /** The slot being planned: a hall meal or a snack. */
+  meal: Slot;
+  setMeal: (m: Slot) => void;
+  /** Today's slots in order, including the user's snacks. */
+  slots: Slot[];
   hall: HallId;
   setHall: (h: HallId) => void;
   mealTarget: MacroTargets | null;
@@ -54,59 +125,169 @@ interface Ctx {
 
 const StoreContext = createContext<Ctx | null>(null);
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [log, setLog] = useState<LoggedMeal[]>([]);
-  const [meal, setMeal] = useState<MealPeriod>("Lunch");
+  const [meal, setMeal] = useState<Slot>("Lunch");
   const [hall, setHall] = useState<HallId>("village");
+  const loadedFor = useRef<string | null>(null);
+  const userId = session?.user.id ?? null;
 
   useEffect(() => {
-    try {
-      migrateLegacyKeys(localStorage);
-      const p = localStorage.getItem(KEY_PROFILE);
-      if (p) {
-        const parsed = JSON.parse(p) as Profile;
-        setProfile(parsed);
-        setHall(parsed.hall);
-      }
-      const l = localStorage.getItem(KEY_LOG);
-      if (l) setLog(JSON.parse(l) as LoggedMeal[]);
-    } catch {
-      /* ignore */
-    }
     setMeal(currentMeal());
-    setReady(true);
-  }, []);
 
-  const saveProfile = useCallback((p: Profile) => {
-    setProfile(p);
-    setHall(p.hall);
-    localStorage.setItem(KEY_PROFILE, JSON.stringify(p));
-  }, []);
+    const apply = (next: Session | null) => {
+      setSession(next);
+      const id = next?.user.id ?? null;
+      if (id === loadedFor.current) {
+        setReady(true);
+        return;
+      }
+      loadedFor.current = id;
+      if (!id) {
+        setProfile(null);
+        setLog([]);
+        setReady(true);
+        return;
+      }
+      setReady(false);
+      loadUser(id)
+        .then(({ profile: p, log: l }) => {
+          if (loadedFor.current !== id) return;
+          setProfile(p);
+          if (p) setHall(p.hall);
+          setLog(l);
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+          toast.error("Couldn't load your data. Check your connection and refresh.");
+        })
+        .finally(() => setReady(true));
+    };
 
-  const addLog = useCallback((m: Omit<LoggedMeal, "id" | "date">) => {
-    setLog((prev) => {
-      const next = [{ ...m, id: crypto.randomUUID(), date: today() }, ...prev];
-      localStorage.setItem(KEY_LOG, JSON.stringify(next));
-      return next;
+    void supabase.auth.getSession().then(({ data }) => apply(data.session));
+    // Defer: Supabase warns against awaiting its own calls inside this callback.
+    const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+      setTimeout(() => apply(next), 0);
     });
+    return () => data.subscription.unsubscribe();
   }, []);
 
-  const removeLog = useCallback((id: string) => {
-    setLog((prev) => {
-      const next = prev.filter((l) => l.id !== id);
-      localStorage.setItem(KEY_LOG, JSON.stringify(next));
-      return next;
-    });
+  const saveProfile = useCallback(
+    async (next: Profile) => {
+      // Seedling is assigned once, at sign-up, and kept from then on.
+      const p = withSeedling(next);
+      setProfile(p);
+      setHall(p.hall);
+      if (!userId) {
+        localStorage.setItem(KEY_PROFILE, JSON.stringify(p));
+        return;
+      }
+      const { error } = await supabase.from("profiles").upsert(profileToRow(userId, p));
+      if (error) {
+        console.error(error);
+        toast.error("Couldn't save your profile. Try again.");
+      }
+    },
+    [userId],
+  );
+
+  const snackKey = (profile?.snacks ?? []).join(",");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const slots = useMemo(() => daySlots(profile?.snacks), [snackKey]);
+  const loggedToday = useMemo(() => {
+    const d = today();
+    return log.filter((l) => l.date === d).map((l) => l.meal);
+  }, [log]);
+
+  const addLog = useCallback(
+    (m: Omit<LoggedMeal, "id" | "date">) => {
+      // Breakfast, lunch and dinner once a day; change a logged meal from the macro bank.
+      if (!canLogSlot(m.meal, loggedToday)) {
+        toast.error(`${m.meal} is already logged today. Edit it in your macro bank.`);
+        return false;
+      }
+      const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date: today() };
+      setLog((prev) => [entry, ...prev]);
+      // Move on to the next slot that can still be logged.
+      setMeal((current) =>
+        current === m.meal
+          ? (nextOpenSlot(slots, m.meal, [...loggedToday, m.meal]) ?? current)
+          : current,
+      );
+      void supabase
+        .from("meal_logs")
+        .insert(logToRow(entry))
+        .then(({ error }) => {
+          if (!error) return;
+          console.error(error);
+          setLog((prev) => prev.filter((l) => l.id !== entry.id));
+          toast.error("Couldn't log that meal. Try again.");
+        });
+      return true;
+    },
+    [loggedToday, slots],
+  );
+
+  const updateLog = useCallback(
+    (next: LoggedMeal) => {
+      const before = log.find((l) => l.id === next.id);
+      setLog((prev) => prev.map((l) => (l.id === next.id ? next : l)));
+      const { id, ...row } = logToRow(next);
+      void supabase
+        .from("meal_logs")
+        .update(row)
+        .eq("id", id)
+        .then(({ error }) => {
+          if (!error || !before) return;
+          console.error(error);
+          setLog((prev) => prev.map((l) => (l.id === before.id ? before : l)));
+          toast.error("Couldn't save that change. Try again.");
+        });
+    },
+    [log],
+  );
+
+  const removeLog = useCallback(
+    (id: string) => {
+      const removed = log.find((l) => l.id === id);
+      setLog((prev) => prev.filter((l) => l.id !== id));
+      void supabase
+        .from("meal_logs")
+        .delete()
+        .eq("id", id)
+        .then(({ error }) => {
+          if (!error || !removed) return;
+          console.error(error);
+          setLog((prev) => [removed, ...prev]);
+          toast.error("Couldn't remove that meal. Try again.");
+        });
+    },
+    [log],
+  );
+
+  const resetAll = useCallback(async () => {
+    for (const key of [KEY_PROFILE, KEY_LOG, ...DEVICE_KEYS]) localStorage.removeItem(key);
+    if (userId) {
+      const logs = await supabase.from("meal_logs").delete().eq("user_id", userId);
+      const prof = await supabase.from("profiles").delete().eq("id", userId);
+      if (logs.error || prof.error) {
+        console.error(logs.error ?? prof.error);
+        toast.error("Couldn't clear everything. Try again.");
+        return;
+      }
+    }
+    setProfile(null);
+    setLog([]);
+  }, [userId]);
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
   }, []);
 
   const daily = useMemo(() => (profile ? dailyTargets(profile) : null), [profile]);
-  const mealTarget = useMemo(() => (daily ? mealTargets(daily, meal) : null), [daily, meal]);
 
   const consumedToday = useMemo(() => {
     const d = today();
@@ -123,16 +304,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       );
   }, [log]);
 
+  // Rolling guide: what's left of today, split over this meal and the unlogged meals after it.
+  // A snack that was turned off can't stay selected.
+  useEffect(() => {
+    if (!slots.includes(meal)) setMeal(currentMeal());
+  }, [slots, meal]);
+
+  // Once data has loaded, start on the first slot from now that can still be logged.
+  const startedOn = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || !userId || startedOn.current === userId) return;
+    startedOn.current = userId;
+    setMeal(firstOpenSlot(slots, currentMeal(), loggedToday) ?? currentMeal());
+  }, [ready, userId, slots, loggedToday]);
+
+  const mealTarget = useMemo(() => {
+    if (!daily) return null;
+    return mealGuide(daily, consumedToday, meal, loggedToday, slots);
+  }, [daily, consumedToday, loggedToday, meal, slots]);
+
   const value: Ctx = {
     ready,
+    session,
     profile,
     saveProfile,
     log,
     addLog,
+    loggedToday,
     removeLog,
+    updateLog,
+    resetAll,
+    signOut,
     daily,
     meal,
     setMeal,
+    slots,
     hall,
     setHall,
     mealTarget,
