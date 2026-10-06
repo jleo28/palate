@@ -6,15 +6,13 @@ import { MacroRow } from "@/components/palate/MacroBits";
 import { GoalPicker } from "@/components/palate/GoalPicker";
 import { CreateAccount } from "@/components/palate/CreateAccount";
 import { SnackPicker } from "@/components/palate/SnackPicker";
-import { CustomAllergyInput } from "@/components/palate/CustomAllergyInput";
+import { AllergyPicker } from "@/components/palate/AllergyPicker";
 import {
   effectiveGoal,
   heightIn,
   parseNumber,
   dailyTargets,
   mealTargets,
-  ALLERGENS,
-  allergenLabel,
   type Allergen,
   type DietTag,
   type GoalId,
@@ -277,28 +275,15 @@ function Onboarding() {
 
           <div>
             <p className="label-caps mb-2 text-muted-foreground">Allergies</p>
-            <div className="flex flex-wrap gap-2">
-              {ALLERGENS.map((a) => (
-                <Chip
-                  key={a.id}
-                  active={allergies.includes(a.id)}
-                  destructive={allergies.includes(a.id)}
-                  onClick={() =>
-                    setAllergies((prev) =>
-                      prev.includes(a.id) ? prev.filter((x) => x !== a.id) : [...prev, a.id],
-                    )
-                  }
-                >
-                  {allergenLabel(a.id)}
-                </Chip>
-              ))}
-            </div>
+            <AllergyPicker
+              allergies={allergies}
+              onAllergies={setAllergies}
+              custom={customAllergies}
+              onCustom={setCustomAllergies}
+            />
             <p className="mt-2 text-xs text-muted-foreground">
               We flag menu items USC lists as containing these.
             </p>
-            <div className="mt-3">
-              <CustomAllergyInput value={customAllergies} onChange={setCustomAllergies} />
-            </div>
           </div>
 
           <div className="card-edge rounded-2xl bg-card p-4">
