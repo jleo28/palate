@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
@@ -10,8 +10,16 @@ import { Button } from "@/components/ui/button";
 import { CardSettings } from "@/components/palate/CardSettings";
 import { PalateCard } from "@/components/palate/PalateCard";
 import { OutsideMealDialog } from "@/components/palate/OutsideMealDialog";
+import { EditLogDialog } from "@/components/palate/EditLogDialog";
 import { ProgressRing } from "@/components/palate/ProgressRing";
-import { GOALS, allergenLabel, daysShowedUp, effectiveGoal, streak } from "@palate/core";
+import {
+  GOALS,
+  allergenLabel,
+  daysShowedUp,
+  effectiveGoal,
+  streak,
+  type LoggedMeal,
+} from "@palate/core";
 import { hallName } from "@/lib/palate/halls";
 import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
@@ -51,12 +59,14 @@ function CardScreen() {
     log,
     addLog,
     removeLog,
+    updateLog,
     resetAll,
     signOut,
     slots,
     loggedToday,
   } = useStore();
   const [outsideOpen, setOutsideOpen] = useState(false);
+  const [editing, setEditing] = useState<LoggedMeal | null>(null);
 
   useRequireProfile();
 
@@ -210,6 +220,21 @@ function CardScreen() {
         }}
       />
 
+      <EditLogDialog
+        entry={editing}
+        onClose={() => setEditing(null)}
+        onSave={(next) => {
+          updateLog(next);
+          setEditing(null);
+          toast.success(`${next.meal} updated`);
+        }}
+        onDelete={(id) => {
+          removeLog(id);
+          setEditing(null);
+          toast.success("Meal removed from today");
+        }}
+      />
+
       {/* Logged meals */}
       {todaysLog.length > 0 && (
         <section className="mt-5">
@@ -234,11 +259,11 @@ function CardScreen() {
                   </p>
                 </div>
                 <button
-                  onClick={() => removeLog(l.id)}
-                  aria-label="Remove logged meal"
-                  className="grid size-9 shrink-0 place-items-center rounded-full border border-foreground/25"
+                  onClick={() => setEditing(l)}
+                  aria-label={`Edit ${l.meal.toLowerCase()}`}
+                  className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 text-xs font-bold"
                 >
-                  <Trash2 className="size-4" />
+                  <Pencil className="size-3.5" /> Edit
                 </button>
               </div>
             ))}

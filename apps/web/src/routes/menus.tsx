@@ -16,6 +16,7 @@ import { HALLS, MEALS } from "@/lib/palate/halls";
 import { MENU } from "@/lib/palate/menu";
 import {
   CONFIRM_WITH_STAFF,
+  logItems,
   menuPeriod,
   allergenConflicts,
   allergenLabel,
@@ -115,10 +116,9 @@ function Menus() {
       hall,
       meal,
       ...t,
-      items: customRows.map(({ item, quantity }) => ({
-        name: item.name,
-        portion: `${quantity} ${quantity === 1 ? item.unit : item.unitPlural}`,
-      })),
+      items: logItems(
+        customRows.map(({ item, quantity }, n) => ({ id: String(n), item, qty: quantity })),
+      ),
     });
     if (!logged) return;
     setCustom([]);
