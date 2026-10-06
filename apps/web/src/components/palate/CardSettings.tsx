@@ -1,18 +1,16 @@
 import { useState } from "react";
 import {
-  ALLERGENS,
   DISLIKES,
   effectiveGoal,
   feetAndInches,
   heightIn,
-  type Allergen,
   type DietTag,
   type DislikeId,
   type Profile,
 } from "@palate/core";
 import { HALLS } from "@/lib/palate/halls";
 import { cn } from "@/lib/utils";
-import { CustomAllergyInput } from "./CustomAllergyInput";
+import { AllergyPicker } from "./AllergyPicker";
 import { GoalPicker } from "./GoalPicker";
 import { SnackPicker } from "./SnackPicker";
 import {
@@ -122,30 +120,11 @@ export function CardSettings({ profile, onSave, onStartOver, email, onSignOut }:
 
       <div>
         <p className="label-caps mb-2 text-muted-foreground">Allergies</p>
-        <div className="mb-3 flex flex-wrap gap-2">
-          {ALLERGENS.map((a) => {
-            const active = draft.allergies.includes(a.id);
-            return (
-              <button
-                key={a.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => set({ allergies: toggle<Allergen>(draft.allergies, a.id) })}
-                className={cn(
-                  chip,
-                  active
-                    ? "border-destructive bg-destructive text-destructive-foreground"
-                    : "border-foreground/20 text-muted-foreground",
-                )}
-              >
-                {a.label}
-              </button>
-            );
-          })}
-        </div>
-        <CustomAllergyInput
-          value={draft.customAllergies ?? []}
-          onChange={(customAllergies) => set({ customAllergies })}
+        <AllergyPicker
+          allergies={draft.allergies}
+          onAllergies={(allergies) => set({ allergies })}
+          custom={draft.customAllergies ?? []}
+          onCustom={(customAllergies) => set({ customAllergies })}
         />
       </div>
 
