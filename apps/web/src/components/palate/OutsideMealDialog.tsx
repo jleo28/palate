@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MEALS, type MealPeriod } from "@palate/core";
+import { SNACKS, isSnack, type Slot } from "@palate/core";
 import { currentMeal } from "@/lib/palate/halls";
 import { cn } from "@/lib/utils";
 import {
@@ -12,7 +12,7 @@ import {
 
 export interface OutsideMeal {
   name: string;
-  meal: MealPeriod;
+  meal: Slot;
   kcal: number;
   protein: number;
   carbs: number;
@@ -32,12 +32,14 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLog: (meal: OutsideMeal) => void;
+  /** Today's slots, including the user's snacks. */
+  slots: Slot[];
 }
 
 /** Log a meal eaten outside the halls. It counts toward the day's budget like any other. */
-export function OutsideMealDialog({ open, onOpenChange, onLog }: Props) {
+export function OutsideMealDialog({ open, onOpenChange, onLog, slots }: Props) {
   const [name, setName] = useState("");
-  const [meal, setMeal] = useState<MealPeriod>(currentMeal);
+  const [meal, setMeal] = useState<Slot>(currentMeal);
   const [macros, setMacros] = useState(EMPTY);
   const hasValue = Object.values(macros).some((v) => Number(v) > 0);
 
@@ -82,8 +84,8 @@ export function OutsideMealDialog({ open, onOpenChange, onLog }: Props) {
           />
         </label>
 
-        <div role="radiogroup" aria-label="Which meal" className="grid grid-cols-3 gap-1.5">
-          {MEALS.map((m) => (
+        <div role="radiogroup" aria-label="Which meal" className="flex flex-wrap gap-1.5">
+          {slots.map((m) => (
             <button
               key={m}
               type="button"
@@ -91,13 +93,13 @@ export function OutsideMealDialog({ open, onOpenChange, onLog }: Props) {
               aria-checked={meal === m}
               onClick={() => setMeal(m)}
               className={cn(
-                "rounded-full border py-1.5 text-xs font-bold",
+                "rounded-full border px-3 py-1.5 text-xs font-bold",
                 meal === m
                   ? "border-olive bg-olive text-primary-foreground"
                   : "border-foreground/20 text-muted-foreground",
               )}
             >
-              {m}
+              {isSnack(m) ? SNACKS[m].label : m}
             </button>
           ))}
         </div>

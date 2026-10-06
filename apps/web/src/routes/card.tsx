@@ -53,6 +53,7 @@ function CardScreen() {
     removeLog,
     resetAll,
     signOut,
+    slots,
   } = useStore();
   const [outsideOpen, setOutsideOpen] = useState(false);
 
@@ -192,6 +193,7 @@ function CardScreen() {
       <OutsideMealDialog
         open={outsideOpen}
         onOpenChange={setOutsideOpen}
+        slots={slots}
         onLog={({ name, meal, ...macros }) => {
           addLog({
             hall: profile.hall,

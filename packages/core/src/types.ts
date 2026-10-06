@@ -4,6 +4,12 @@ export type HallId = "village" | "evk" | "parkside";
 
 export type MealPeriod = "Breakfast" | "Lunch" | "Dinner";
 
+/** Optional snacks, planned from a nearby hall meal's menu. */
+export type SnackSlot = "Afternoon snack" | "Late-night snack";
+
+/** A point in the day someone eats: a hall meal or a snack. */
+export type Slot = MealPeriod | SnackSlot;
+
 export type DietTag = "vegetarian" | "vegan" | "halal" | "gluten-free" | "dairy-free";
 
 export type GoalId = "cut" | "maintain" | "lean-bulk";
@@ -64,6 +70,8 @@ export interface Profile {
   goal: GoalId;
   /** Raises protein to 1.2 g/lb on top of any goal. */
   highProtein?: boolean;
+  /** Snacks to save room for in the day. */
+  snacks?: SnackSlot[];
   diets: DietTag[];
   allergies: Allergen[];
   /** Free-text "Other" allergies, matched against item names. */
@@ -79,7 +87,7 @@ export interface LoggedMeal {
   id: string;
   date: string;
   hall: HallId;
-  meal: MealPeriod;
+  meal: Slot;
   kcal: number;
   protein: number;
   carbs: number;

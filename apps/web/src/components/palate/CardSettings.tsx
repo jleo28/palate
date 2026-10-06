@@ -14,6 +14,7 @@ import { HALLS } from "@/lib/palate/halls";
 import { cn } from "@/lib/utils";
 import { CustomAllergyInput } from "./CustomAllergyInput";
 import { GoalPicker } from "./GoalPicker";
+import { SnackPicker } from "./SnackPicker";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,9 @@ export function CardSettings({ profile, onSave, onStartOver, email, onSignOut }:
           onGoal={(goal) => set({ goal })}
           onHighProtein={(highProtein) => set({ highProtein })}
         />
+        <div className="mt-4">
+          <SnackPicker value={draft.snacks ?? []} onChange={(snacks) => set({ snacks })} />
+        </div>
       </div>
 
       <div className="rounded-2xl border-2 border-olive bg-olive-soft p-3">

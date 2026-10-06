@@ -168,3 +168,48 @@ export function setQty(plate: readonly PlateItem[], rowId: string, qty: number):
 export function removeRow(plate: readonly PlateItem[], rowId: string): PlateItem[] {
   return plate.filter((row) => row.id !== rowId);
 }
+
+/** Station names (ours and USC's) where food is easy to grab and carry out. */
+const GRAB_AND_GO = /fruit|salad|breakfast|deli|expo|grab|yogurt|sweet/i;
+
+/**
+ * A light snack: one item portioned to most of the snack's calories, plus a small second item
+ * of a different kind when there's room. Drawn from a hall meal's menu (fruit, yogurt, eggs…).
+ */
+export function buildSnack(
+  menu: readonly MenuItem[],
+  hall: HallId,
+  meal: MealPeriod,
+  diets: DietTag[],
+  target: MacroTargets,
+  seed = 0,
+): PlateItem[] {
+  // Snacks skip full carb sides (rice, pasta): they're meal anchors, not snacks.
+  const pool = availableItems(menu, hall, meal, diets).filter(
+    (i) => i.role !== "carb" && i.kcal <= target.kcal,
+  );
+  if (!pool.length || target.kcal <= 0) return [];
+
+  // Prefer grab-and-go items from cold stations (fruit, salad bar, breakfast line, deli):
+  // berries, edamame, a boiled egg. Hot-line entrées and sides are only a fallback.
+  const portable = pool.filter((i) => GRAB_AND_GO.test(i.station));
+  const choices = portable.length ? portable : pool;
+
+  const aim = target.kcal * 0.7;
+  const portion = (i: MenuItem, kcal: number) =>
+    Math.min(2, Math.max(1, Math.round(kcal / i.kcal)));
+  const ranked = [...choices].sort(
+    (a, b) => Math.abs(a.kcal * portion(a, aim) - aim) - Math.abs(b.kcal * portion(b, aim) - aim),
+  );
+  const first = ranked[seed % Math.min(3, ranked.length)]!;
+  const snack: PlateItem[] = [{ id: "row-0", item: first, qty: portion(first, aim) }];
+
+  const left = target.kcal - totals(snack).kcal;
+  // A piece of fruit rounds out a snack best; otherwise the most protein that fits.
+  const isFruit = (i: MenuItem) => /fruit/i.test(i.station);
+  const second = choices
+    .filter((i) => i.role !== first.role && i.kcal <= left * 1.15)
+    .sort((a, b) => Number(isFruit(b)) - Number(isFruit(a)) || b.protein - a.protein)[0];
+  if (second && left >= 60) snack.push({ id: "row-1", item: second, qty: 1 });
+  return snack;
+}

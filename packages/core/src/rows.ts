@@ -7,8 +7,9 @@ import type {
   GoalId,
   HallId,
   LoggedMeal,
-  MealPeriod,
   Profile,
+  Slot,
+  SnackSlot,
 } from "./types";
 
 export interface ProfileRow {
@@ -20,6 +21,7 @@ export interface ProfileRow {
   weight_lb: number;
   goal: GoalId;
   high_protein: boolean;
+  snacks: SnackSlot[];
   diets: DietTag[];
   allergies: Allergen[];
   custom_allergies: string[];
@@ -33,7 +35,7 @@ export interface MealLogRow {
   user_id?: string;
   date: string;
   hall: HallId;
-  meal: MealPeriod;
+  meal: Slot;
   kcal: number;
   protein: number;
   carbs: number;
@@ -52,6 +54,7 @@ export function profileToRow(userId: string, p: Profile): ProfileRow {
     weight_lb: p.weightLb,
     goal: p.goal,
     high_protein: p.highProtein ?? false,
+    snacks: p.snacks ?? [],
     diets: p.diets,
     allergies: p.allergies,
     custom_allergies: p.customAllergies ?? [],
@@ -70,6 +73,7 @@ export function profileFromRow(r: ProfileRow): Profile {
     weightLb: Number(r.weight_lb),
     goal: r.goal,
     highProtein: r.high_protein,
+    snacks: r.snacks ?? [],
     diets: r.diets,
     allergies: r.allergies,
     customAllergies: r.custom_allergies,

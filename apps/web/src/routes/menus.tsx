@@ -16,6 +16,7 @@ import { HALLS, MEALS } from "@/lib/palate/halls";
 import { MENU } from "@/lib/palate/menu";
 import {
   CONFIRM_WITH_STAFF,
+  menuPeriod,
   allergenConflicts,
   allergenLabel,
   customAllergyMatches,
@@ -58,6 +59,8 @@ const FILTERS: { id: FilterId; label: string; test: (i: MenuItem) => boolean }[]
 
 function Menus() {
   const { hall, setHall, meal, setMeal, addLog, profile } = useStore();
+  // Menus are per hall meal; a selected snack shows the meal it's planned from.
+  const period = menuPeriod(meal);
   const allergies = profile?.allergies ?? [];
   const [filters, setFilters] = useState<FilterId[]>([]);
   const [custom, setCustom] = useState<MenuItem[]>([]);
@@ -67,7 +70,7 @@ function Menus() {
     const items = MENU.filter(
       (i) =>
         i.hall === hall &&
-        i.meals.includes(meal) &&
+        i.meals.includes(period) &&
         filters.every((f) => FILTERS.find((x) => x.id === f)?.test(i) ?? true),
     );
     const map = new Map<string, MenuItem[]>();
@@ -77,7 +80,7 @@ function Menus() {
       map.set(i.station, list);
     }
     return [...map.entries()];
-  }, [hall, meal, filters]);
+  }, [hall, period, filters]);
 
   const t = custom.reduce(
     (a, i) => ({
@@ -149,7 +152,7 @@ function Menus() {
             onClick={() => setMeal(m)}
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-bold transition-colors",
-              meal === m
+              period === m
                 ? "border-olive bg-olive text-primary-foreground"
                 : "border-foreground/20 text-muted-foreground",
             )}

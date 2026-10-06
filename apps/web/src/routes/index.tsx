@@ -9,10 +9,14 @@ import { SwipeArea } from "@/components/palate/SwipeArea";
 import { SeedlingAvatar } from "@/components/palate/SeedlingAvatar";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { PlateRow } from "@/components/palate/PlateRow";
-import { HALLS, MEALS } from "@/lib/palate/halls";
+import { HALLS } from "@/lib/palate/halls";
 import {
   GOALS,
+  SNACKS,
   buildPlate,
+  buildSnack,
+  isSnack,
+  menuPeriod,
   capPlate,
   effectiveGoal,
   fitCheck,
@@ -64,8 +68,21 @@ export const Route = createFileRoute("/")({
 });
 
 function Plate() {
-  const { ready, profile, hall, setHall, meal, setMeal, mealTarget, daily, consumedToday, addLog } =
-    useStore();
+  const {
+    ready,
+    profile,
+    hall,
+    setHall,
+    meal,
+    setMeal,
+    slots,
+    mealTarget,
+    daily,
+    consumedToday,
+    addLog,
+  } = useStore();
+  // Snacks draw on a nearby hall meal's menu.
+  const period = menuPeriod(meal);
   // Each new variation uses the next seed; the stack keeps the last 10 to swipe back through.
   const seed = useRef(0);
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
@@ -95,7 +112,8 @@ function Plate() {
     if (!mealTarget || !daily) return [];
     // The day's calorie target is a hard cap: the plate never plans past what's left of it.
     const left = remainingToday(daily, consumedToday).kcal;
-    return capPlate(buildPlate(menu, hall, meal, diets, mealTarget, seed.current), left);
+    const build = isSnack(meal) ? buildSnack : buildPlate;
+    return capPlate(build(menu, hall, period, diets, mealTarget, seed.current), left);
   };
 
   // A new hall, meal or budget starts a fresh stack.
@@ -168,8 +186,8 @@ function Plate() {
         ))}
       </div>
 
-      <div className="mb-4 flex gap-2">
-        {MEALS.map((m) => (
+      <div className="mb-4 flex flex-wrap gap-2">
+        {slots.map((m) => (
           <button
             key={m}
             onClick={() => setMeal(m)}
@@ -180,7 +198,7 @@ function Plate() {
                 : "border-foreground/20 text-muted-foreground",
             )}
           >
-            {m}
+            {isSnack(m) ? SNACKS[m].label : m}
           </button>
         ))}
       </div>
@@ -206,8 +224,15 @@ function Plate() {
           <div className="min-w-0">
             <p className="label-caps text-olive">The 1-Tap Plate</p>
             <h2 className="text-xl font-extrabold leading-tight">
-              Built for this {meal.toLowerCase()}
+              {isSnack(meal)
+                ? `A light ${meal.toLowerCase()}`
+                : `Built for this ${meal.toLowerCase()}`}
             </h2>
+            {isSnack(meal) && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Grab it on your way out of {SNACKS[meal].from.toLowerCase()}.
+              </p>
+            )}
           </div>
           <button
             onClick={nextPlate}
@@ -267,8 +292,8 @@ function Plate() {
                 row={row}
                 allergies={profile.allergies}
                 customAllergies={profile.customAllergies ?? []}
-                alternatives={alternatives(menu, plate, row.id, hall, meal, diets)}
-                onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, meal, diets))}
+                alternatives={alternatives(menu, plate, row.id, hall, period, diets)}
+                onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, period, diets))}
                 onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
                 onRemove={() => edit((prev) => removeRow(prev, row.id))}
                 onReplace={(item) => edit((prev) => replaceRow(prev, row.id, item))}
@@ -299,7 +324,7 @@ function Plate() {
           )}
           <p>
             <span className="font-bold">{profile.seedling?.name ?? "Seedling"}: </span>
-            {fitSummary(fit, meal)}
+            {fitSummary(fit, meal, slots)}
           </p>
         </div>
 

@@ -15,6 +15,7 @@ import {
   dailyTargets,
   logFromRow,
   logToRow,
+  daySlots,
   mealGuide,
   normalizeProfile,
   profileFromRow,
@@ -23,7 +24,7 @@ import {
   type LoggedMeal,
   type MacroTargets,
   type MealLogRow,
-  type MealPeriod,
+  type Slot,
   type Profile,
   type ProfileRow,
 } from "@palate/core";
@@ -103,8 +104,11 @@ interface Ctx {
   resetAll: () => Promise<void>;
   signOut: () => Promise<void>;
   daily: MacroTargets | null;
-  meal: MealPeriod;
-  setMeal: (m: MealPeriod) => void;
+  /** The slot being planned: a hall meal or a snack. */
+  meal: Slot;
+  setMeal: (m: Slot) => void;
+  /** Today's slots in order, including the user's snacks. */
+  slots: Slot[];
   hall: HallId;
   setHall: (h: HallId) => void;
   mealTarget: MacroTargets | null;
@@ -118,7 +122,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [log, setLog] = useState<LoggedMeal[]>([]);
-  const [meal, setMeal] = useState<MealPeriod>("Lunch");
+  const [meal, setMeal] = useState<Slot>("Lunch");
   const [hall, setHall] = useState<HallId>("village");
   const loadedFor = useRef<string | null>(null);
   const userId = session?.user.id ?? null;
@@ -234,6 +238,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const daily = useMemo(() => (profile ? dailyTargets(profile) : null), [profile]);
+  const snackKey = (profile?.snacks ?? []).join(",");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const slots = useMemo(() => daySlots(profile?.snacks), [snackKey]);
 
   const consumedToday = useMemo(() => {
     const d = today();
@@ -251,12 +258,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [log]);
 
   // Rolling guide: what's left of today, split over this meal and the unlogged meals after it.
+  // A snack that was turned off can't stay selected.
+  useEffect(() => {
+    if (!slots.includes(meal)) setMeal(currentMeal());
+  }, [slots, meal]);
+
   const mealTarget = useMemo(() => {
     if (!daily) return null;
     const d = today();
     const logged = log.filter((l) => l.date === d).map((l) => l.meal);
-    return mealGuide(daily, consumedToday, meal, logged);
-  }, [daily, consumedToday, log, meal]);
+    return mealGuide(daily, consumedToday, meal, logged, slots);
+  }, [daily, consumedToday, log, meal, slots]);
 
   const value: Ctx = {
     ready,
@@ -271,6 +283,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     daily,
     meal,
     setMeal,
+    slots,
     hall,
     setHall,
     mealTarget,
