@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Check } from "lucide-react";
+import type { PlateItem } from "@palate/core";
 import { Wordmark } from "@/components/palate/AppShell";
+import { Olive } from "@/components/palate/Olive";
+import { PlateIllustration } from "@/components/palate/PlateIllustration";
+import { MENU } from "@/lib/palate/menu";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -22,12 +26,23 @@ const POINTS = [
   "Plates leave out foods you skip and items labeled with your allergies",
 ];
 
+// A sample Village dinner for the hero: salmon, rice, greens and sweet potato.
+const HERO_PLATE: PlateItem[] = ["v-salmon", "v-cilantro-rice", "v-green-salad", "v-sweet-potato"]
+  .map((id) => MENU.find((m) => m.id === id))
+  .filter((item) => item !== undefined)
+  .map((item) => ({ id: item.id, item, qty: 1 }));
+
 function Welcome() {
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col px-5 pt-8 pb-10">
-      <Wordmark />
+      <PlateIllustration items={HERO_PLATE} />
 
-      <div className="mt-auto pt-12">
+      <div className="relative">
+        <Olive className="absolute -top-6 right-0 size-24" />
+        <Wordmark className="text-5xl" />
+      </div>
+
+      <div className="mt-4">
         <p className="inline-flex items-center gap-1.5 rounded-full bg-olive-soft px-3 py-1 text-xs font-bold text-olive">
           <Check className="size-3.5" aria-hidden /> For USC's dining hall warriors
         </p>

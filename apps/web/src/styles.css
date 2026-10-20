@@ -261,3 +261,55 @@
     animation: none;
   }
 }
+
+/* Olive motion, from the Olive asset pack (olive.css). Idle only on the landing page. */
+.olive {
+  transform-origin: 50% 92%;
+}
+.olive--idle {
+  animation: olive-breathe 3.8s ease-in-out infinite;
+}
+.olive--idle #leaf {
+  animation: olive-sway 3.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: bottom left;
+}
+.olive--idle #eyes {
+  animation: olive-blink 4.2s infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes olive-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.035, 0.965);
+  }
+}
+@keyframes olive-sway {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes olive-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .olive,
+  .olive * {
+    animation: none !important;
+  }
+}
