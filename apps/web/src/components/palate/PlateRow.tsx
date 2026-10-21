@@ -1,4 +1,5 @@
 import { Minus, Plus, RefreshCw, X } from "lucide-react";
+import { macroLine } from "@/lib/palate/macro-text";
 import {
   MAX_QTY,
   allergenConflicts,
@@ -16,6 +17,7 @@ interface Props {
   allergies: Allergen[];
   customAllergies: string[];
   alternatives: MenuItem[];
+  canSwap: boolean;
   onSwap: () => void;
   onQty: (qty: number) => void;
   onRemove: () => void;
@@ -30,6 +32,7 @@ export function PlateRow({
   allergies,
   customAllergies,
   alternatives,
+  canSwap,
   onSwap,
   onQty,
   onRemove,
@@ -56,7 +59,12 @@ export function PlateRow({
             <span className="truncate">{item.name}</span>
           </p>
           <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-            {item.kcal * qty} cal · {item.protein * qty}P · {item.carbs * qty}C · {item.fat * qty}F
+            {macroLine({
+              kcal: item.kcal * qty,
+              protein: item.protein * qty,
+              carbs: item.carbs * qty,
+              fat: item.fat * qty,
+            })}
           </p>
           {hits.length > 0 && (
             <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
@@ -108,13 +116,15 @@ export function PlateRow({
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={onSwap}
-          className="ml-auto flex h-8 shrink-0 items-center gap-1 rounded-full border border-foreground/25 px-2.5 text-[0.7rem] font-bold"
-        >
-          <RefreshCw className="size-3" /> Swap
-        </button>
+        {canSwap && (
+          <button
+            type="button"
+            onClick={onSwap}
+            className="ml-auto flex h-8 shrink-0 items-center gap-1 rounded-full border border-foreground/25 px-2.5 text-[0.7rem] font-bold"
+          >
+            <RefreshCw className="size-3" /> Swap
+          </button>
+        )}
         {alternatives.length > 0 && (
           <select
             value=""

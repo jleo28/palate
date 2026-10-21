@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AllergenNotice } from "@/components/palate/AllergenNotice";
+import { macroLine } from "@/lib/palate/macro-text";
 import { useMemo, useState } from "react";
 import { Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/menus")({
       {
         name: "description",
         content:
-          "Browse every station at USC Village, EVK and Parkside with calories and macros, filtered for high protein, vegan or under 500 calories.",
+          "Browse every station at USC Village, EVK and Parkside with calories and macros, filtered for high protein, vegan, vegetarian or low carb.",
       },
       { property: "og:title", content: "Hall Menus — Village, EVK & Parkside macros" },
       {
@@ -49,13 +50,12 @@ export const Route = createFileRoute("/menus")({
   component: Menus,
 });
 
-type FilterId = "high-protein" | "vegan" | "vegetarian" | "under-500" | "low-carb";
+type FilterId = "high-protein" | "vegan" | "vegetarian" | "low-carb";
 
 const FILTERS: { id: FilterId; label: string; test: (i: MenuItem) => boolean }[] = [
   { id: "high-protein", label: "High Protein", test: (i) => i.protein >= 10 },
   { id: "vegan", label: "Vegan", test: (i) => i.tags.includes("vegan") },
   { id: "vegetarian", label: "Vegetarian", test: (i) => i.tags.includes("vegetarian") },
-  { id: "under-500", label: "Under 500 kcal", test: (i) => i.kcal < 500 },
   { id: "low-carb", label: "Low Carb", test: (i) => i.carbs <= 10 },
 ];
 
@@ -226,7 +226,7 @@ function Menus() {
                         <span className="truncate">{i.name}</span>
                       </p>
                       <p className="mt-0.5 text-[0.72rem] text-muted-foreground">
-                        per {i.unit} · {i.kcal} cal · {i.protein}P · {i.carbs}C · {i.fat}F
+                        per {i.unit} · {macroLine(i)}
                       </p>
                       {hits.length > 0 && (
                         <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
@@ -272,9 +272,7 @@ function Menus() {
               <p className="label-caps text-muted-foreground">
                 Custom plate · {custom.length} items
               </p>
-              <p className="truncate font-display text-sm font-bold">
-                {t.kcal} cal · {t.protein}P · {t.carbs}C · {t.fat}F
-              </p>
+              <p className="truncate font-display text-sm font-bold">{macroLine(t)}</p>
             </button>
             <Button
               type="button"
@@ -365,8 +363,8 @@ function Menus() {
                       </div>
                       <div className="mt-3 flex items-center justify-between border-t border-foreground/10 pt-2.5">
                         <span className="text-xs font-semibold text-olive">
-                          {item.protein * quantity}P · {item.carbs * quantity}C ·{" "}
-                          {item.fat * quantity}F
+                          {item.protein * quantity}g protein · {item.carbs * quantity}g carbs ·{" "}
+                          {item.fat * quantity}g fat
                         </span>
                         <div className="flex items-center gap-1.5">
                           <Button
@@ -408,9 +406,9 @@ function Menus() {
             <div className="mb-3 grid grid-cols-4 gap-2 text-center">
               {[
                 ["Cal", t.kcal],
-                ["P", t.protein],
-                ["C", t.carbs],
-                ["F", t.fat],
+                ["Protein", t.protein],
+                ["Carbs", t.carbs],
+                ["Fat", t.fat],
               ].map(([label, value]) => (
                 <div key={label}>
                   <p className="font-display text-sm font-bold">{value}</p>
