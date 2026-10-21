@@ -1,9 +1,12 @@
 import { Link } from "@tanstack/react-router";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
+import { macroLine } from "@/lib/palate/macro-text";
 import { CheckCircle2 } from "lucide-react";
 import type { LoggedMeal } from "@palate/core";
 
 /** Shown instead of a plate when a hall meal is already logged today. */
 export function LoggedSlot({ entry }: { entry: LoggedMeal }) {
+  const hidden = useHideNumbers();
   return (
     <section className="card-edge rounded-3xl bg-card p-4">
       <p className="label-caps flex items-center gap-1.5 text-olive">
@@ -17,10 +20,7 @@ export function LoggedSlot({ entry }: { entry: LoggedMeal }) {
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-xs font-semibold text-olive">
-        {Math.round(entry.kcal)} cal · {Math.round(entry.protein)}P · {Math.round(entry.carbs)}C ·{" "}
-        {Math.round(entry.fat)}F
-      </p>
+      {!hidden && <p className="mt-3 text-xs font-semibold text-olive">{macroLine(entry)}</p>}
       <p className="mt-4 text-sm text-muted-foreground">
         Need to change something?{" "}
         <Link to="/card" className="font-bold text-olive underline">

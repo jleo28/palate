@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Flame, Snowflake, Pencil } from "lucide-react";
+import { Flame, Pause, Snowflake, Pencil } from "lucide-react";
 import {
   FREEZES_PER_MONTH,
   SPECIES,
@@ -9,12 +9,16 @@ import {
   type Streak,
 } from "@palate/core";
 import { SeedlingAvatar } from "./SeedlingAvatar";
+import { Switch } from "./Switch";
 
 interface Props {
   seedling: Seedling;
   daysShowedUp: number;
   checkedInToday: boolean;
   streak: Streak;
+  /** Tracking is paused: the streak holds still and nothing nudges. */
+  paused: boolean;
+  onPausedChange: (paused: boolean) => void;
   onChange: (next: Seedling) => void;
 }
 
@@ -30,7 +34,15 @@ const formatDays = (dates: string[]) =>
     .join(" and ");
 
 /** Seedling grows from showing up: any logged meal counts, and missed days never undo it. */
-export function SeedlingCard({ seedling, daysShowedUp, checkedInToday, streak, onChange }: Props) {
+export function SeedlingCard({
+  seedling,
+  daysShowedUp,
+  checkedInToday,
+  streak,
+  paused,
+  onPausedChange,
+  onChange,
+}: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(seedling.name);
   const input = useRef<HTMLInputElement>(null);
@@ -116,9 +128,17 @@ export function SeedlingCard({ seedling, daysShowedUp, checkedInToday, streak, o
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-foreground/10 pt-3 text-xs">
         <p className="flex items-center gap-1.5 font-bold">
-          <Flame className="size-4 text-olive" aria-hidden />
-          {streak.days > 0 ? `${streak.days}-day streak` : "Log a meal to start a streak"}
-          {streak.days > 0 && !streak.loggedToday && (
+          {paused ? (
+            <Pause className="size-4 text-muted-foreground" aria-hidden />
+          ) : (
+            <Flame className="size-4 text-olive" aria-hidden />
+          )}
+          {paused
+            ? `Streak paused${streak.days > 0 ? ` at ${streak.days} days` : ""}`
+            : streak.days > 0
+              ? `${streak.days}-day streak`
+              : "Log a meal to start a streak"}
+          {!paused && streak.days > 0 && !streak.loggedToday && !streak.restingToday && (
             <span className="font-medium text-muted-foreground">· log today to keep it going</span>
           )}
         </p>
@@ -133,6 +153,18 @@ export function SeedlingCard({ seedling, daysShowedUp, checkedInToday, streak, o
           </p>
         )}
       </div>
+
+      <Switch
+        label="Pause tracking"
+        hint={
+          paused
+            ? `Your streak is on hold and ${seedling.name} keeps every bit of growth.`
+            : "Take a break. Your streak holds and nothing resets."
+        }
+        checked={paused}
+        onChange={onPausedChange}
+        className="mt-3 border-t border-foreground/10 pt-3"
+      />
     </section>
   );
 }

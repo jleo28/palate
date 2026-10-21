@@ -1,4 +1,5 @@
 import type { Seedling } from "./seedling";
+import type { Wellbeing } from "./wellbeing";
 
 export type HallId = "village" | "evk" | "parkside";
 
@@ -81,6 +82,8 @@ export interface Profile {
   name: string;
   /** Assigned at sign-up. Older profiles get one on first load. */
   seedling?: Seedling;
+  /** Hide Numbers, skipped days and tracking pauses. */
+  wellbeing?: Wellbeing;
 }
 
 /** One food in a logged meal. Per-portion macros make it editable later; older logs lack them. */

@@ -105,6 +105,33 @@ function closestMatch(current: PlateItem, pool: readonly MenuItem[]) {
 const replace = (plate: readonly PlateItem[], rowId: string, fn: (row: PlateItem) => PlateItem) =>
   plate.map((row) => (row.id === rowId ? fn(row) : row));
 
+function swapPool(
+  menu: readonly MenuItem[],
+  plate: readonly PlateItem[],
+  current: PlateItem,
+  hall: HallId,
+  meal: MealPeriod,
+  diets: DietTag[],
+): MenuItem[] {
+  const onPlate = new Set(plate.map((row) => row.item.id));
+  return availableItems(menu, hall, meal, diets).filter(
+    (i) => i.role === current.item.role && !onPlate.has(i.id),
+  );
+}
+
+/** Whether Swap has anything to swap to, so the button can hide when it would do nothing. */
+export function canSwap(
+  menu: readonly MenuItem[],
+  plate: readonly PlateItem[],
+  rowId: string,
+  hall: HallId,
+  meal: MealPeriod,
+  diets: DietTag[],
+): boolean {
+  const current = plate.find((row) => row.id === rowId);
+  return !!current && swapPool(menu, plate, current, hall, meal, diets).length > 0;
+}
+
 /**
  * Swap one row for a macro-equivalent alternative in the same hall and role.
  * Never picks an item that's already on the plate, so rows can't collide.
@@ -120,10 +147,7 @@ export function swapItem(
   const current = plate.find((row) => row.id === rowId);
   if (!current) return [...plate];
 
-  const onPlate = new Set(plate.map((row) => row.item.id));
-  const pool = availableItems(menu, hall, meal, diets).filter(
-    (i) => i.role === current.item.role && !onPlate.has(i.id),
-  );
+  const pool = swapPool(menu, plate, current, hall, meal, diets);
   if (!pool.length) return [...plate];
 
   const { item, qty } = closestMatch(current, pool);
