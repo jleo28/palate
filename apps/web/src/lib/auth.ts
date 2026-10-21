@@ -14,7 +14,7 @@ export function authMessage(error: { message: string }) {
   if (m.includes("already registered"))
     return "There's already an account with that email. Sign in instead.";
   if (m.includes("rate limit"))
-    return "Too many emails sent just now. Wait a few minutes and try again.";
+    return "Lots of people are signing up right now, so our emails are paused. Wait a few minutes and try again.";
   if (m.includes("password")) return "Use a password with at least 8 characters.";
   return error.message;
 }
