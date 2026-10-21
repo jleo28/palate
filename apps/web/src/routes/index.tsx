@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { LogCelebration } from "@/components/palate/LogCelebration";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
@@ -74,6 +75,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Plate() {
+  const hidden = useHideNumbers();
   const {
     ready,
     profile,
@@ -180,7 +182,10 @@ function Plate() {
     if (!logged) return;
     setCelebrating(true);
     toast.success(`${meal} logged`, {
-      description: `${Math.round(t.kcal)} cal · ${t.protein}g protein${next ? ` · next up: ${next.toLowerCase()}` : " · that's the day"}`,
+      description: [
+        ...(hidden ? [] : [`${Math.round(t.kcal)} cal · ${t.protein}g protein`]),
+        next ? `next up: ${next.toLowerCase()}` : "that's the day",
+      ].join(" · "),
     });
   };
 

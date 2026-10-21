@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { macroLine } from "@/lib/palate/macro-text";
 import { Minus, Plus, Trash2, X } from "lucide-react";
 import {
@@ -45,6 +46,7 @@ function EditForm({
   onSave,
   onDelete,
 }: Omit<Props, "entry" | "onClose"> & { entry: LoggedMeal }) {
+  const hidden = useHideNumbers();
   const [draft, setDraft] = useState(entry);
   const [totals, setTotals] = useState({
     kcal: String(Math.round(entry.kcal)),
@@ -142,7 +144,9 @@ function EditForm({
         </div>
       )}
 
-      {byPortion && <p className="text-xs font-semibold text-olive">{macroLine(draft)}</p>}
+      {byPortion && !hidden && (
+        <p className="text-xs font-semibold text-olive">{macroLine(draft)}</p>
+      )}
 
       <div className="grid grid-cols-[auto_1fr] gap-2">
         <button

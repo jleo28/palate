@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
+import { MacroText } from "@/components/palate/MacroText";
 import { LogCelebration } from "@/components/palate/LogCelebration";
 import { AllergenNotice } from "@/components/palate/AllergenNotice";
 import { macroLine } from "@/lib/palate/macro-text";
@@ -61,6 +63,7 @@ const FILTERS: { id: FilterId; label: string; test: (i: MenuItem) => boolean }[]
 ];
 
 function Menus() {
+  const hidden = useHideNumbers();
   const { hall, setHall, meal, setMeal, addLog, profile } = useStore();
   // Menus are per hall meal; a selected snack shows the meal it's planned from.
   const period = menuPeriod(meal);
@@ -232,7 +235,8 @@ function Menus() {
                         <span className="truncate">{i.name}</span>
                       </p>
                       <p className="mt-0.5 text-[0.72rem] text-muted-foreground">
-                        per {i.unit} · {macroLine(i)}
+                        per {i.unit}
+                        <MacroText m={i} prefix=" · " />
                       </p>
                       {hits.length > 0 && (
                         <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
@@ -278,7 +282,9 @@ function Menus() {
               <p className="label-caps text-muted-foreground">
                 Custom plate · {custom.length} items
               </p>
-              <p className="truncate font-display text-sm font-bold">{macroLine(t)}</p>
+              <p className="truncate font-display text-sm font-bold">
+                {hidden ? `${custom.length} portions` : macroLine(t)}
+              </p>
             </button>
             <Button
               type="button"
@@ -299,8 +305,8 @@ function Menus() {
           <SheetHeader className="border-b border-foreground/15 px-5 py-5 text-left">
             <SheetTitle className="font-display text-2xl font-extrabold">Custom plate</SheetTitle>
             <SheetDescription>
-              {custom.length} {custom.length === 1 ? "portion" : "portions"} · {t.kcal} cal ·{" "}
-              {t.protein}g protein
+              {custom.length} {custom.length === 1 ? "portion" : "portions"}
+              {!hidden && ` · ${t.kcal} cal · ${t.protein}g protein`}
             </SheetDescription>
           </SheetHeader>
 
@@ -342,8 +348,8 @@ function Menus() {
                             <span className="truncate">{item.name}</span>
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            {quantity} {quantity === 1 ? item.unit : item.unitPlural} ·{" "}
-                            {item.kcal * quantity} cal
+                            {quantity} {quantity === 1 ? item.unit : item.unitPlural}
+                            {!hidden && ` · ${item.kcal * quantity} cal`}
                           </p>
                           {hits.length > 0 && (
                             <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
@@ -369,8 +375,8 @@ function Menus() {
                       </div>
                       <div className="mt-3 flex items-center justify-between border-t border-foreground/10 pt-2.5">
                         <span className="text-xs font-semibold text-olive">
-                          {item.protein * quantity}g protein · {item.carbs * quantity}g carbs ·{" "}
-                          {item.fat * quantity}g fat
+                          {!hidden &&
+                            `${item.protein * quantity}g protein · ${item.carbs * quantity}g carbs · ${item.fat * quantity}g fat`}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <Button

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import type { Macro, MacroTargets } from "@palate/core";
 
 export function MacroPill({
@@ -44,6 +45,7 @@ export function MacroRow({
   target?: MacroTargets;
   over?: Macro[];
 }) {
+  if (useHideNumbers()) return null;
   return (
     <div className="grid grid-cols-4 gap-2">
       <MacroPill label="Cal" value={t.kcal} target={target?.kcal} over={over.includes("kcal")} />
@@ -83,12 +85,14 @@ export function MacroBar({
   target: number;
   unit?: string;
 }) {
+  const hidden = useHideNumbers();
   const pct = Math.min(100, target ? (value / target) * 100 : 0);
   const left = Math.max(0, Math.round(target - value));
   const overBy = Math.round(value - target);
   // Over on calories is the day's cap (muted clay); over on a macro is a soft amber note.
   const isCalories = unit !== "g";
   const over = overBy > 0;
+  if (hidden) return null;
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between gap-2">
