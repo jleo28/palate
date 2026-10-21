@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
+import { AllergenNotice } from "@/components/palate/AllergenNotice";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
 import { SwipeArea } from "@/components/palate/SwipeArea";
@@ -40,7 +41,6 @@ import {
   totals,
   withoutSkipped,
   withoutAllergyConflicts,
-  CONFIRM_WITH_STAFF,
   type PlateItem,
 } from "@palate/core";
 import { MENU, portionLabel } from "@/lib/palate/menu";
@@ -318,12 +318,10 @@ function Plate() {
             </ul>
           )}
 
-          <p className="mt-2 text-[0.7rem] text-muted-foreground">
-            {profile.allergies.length || profile.customAllergies?.length
-              ? "We left out items USC lists with your allergies, but labels can be incomplete."
-              : "Allergen info comes from USC's labels, which can be incomplete."}{" "}
-            <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
-          </p>
+          <AllergenNotice
+            className="mt-2"
+            filtered={!!(profile.allergies.length || profile.customAllergies?.length)}
+          />
 
           <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
             <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />

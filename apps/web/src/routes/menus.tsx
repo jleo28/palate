@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AllergenNotice } from "@/components/palate/AllergenNotice";
 import { useMemo, useState } from "react";
 import { Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -130,6 +131,7 @@ function Menus() {
     <AppShell>
       <ScreenHeader title="Hall Menus" sub="Explore every station" />
       {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
+      <AllergenNotice className="mb-3" />
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (
@@ -257,11 +259,6 @@ function Menus() {
           </section>
         ))}
       </div>
-
-      <p className="mt-5 text-center text-[0.7rem] text-muted-foreground">
-        Allergen info comes from USC's labels, which can be incomplete.{" "}
-        <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
-      </p>
 
       {custom.length > 0 && (
         <div className="fixed inset-x-0 bottom-[76px] z-30 px-4">
