@@ -10,6 +10,7 @@ describe("profile rows", () => {
       snacks: ["Late-night snack"],
       customAllergies: ["coconut"],
       seedling: { species: "fern", tone: 4, seed: 99, name: "Fernie" },
+      wellbeing: { hideNumbers: true, skipped: ["2026-10-15"], pauses: [{ from: "2026-10-01" }] },
     });
     expect(profileFromRow(profileToRow("user-1", p))).toEqual(p);
   });
@@ -21,6 +22,7 @@ describe("profile rows", () => {
       high_protein: false,
       custom_allergies: [],
       seedling: null,
+      wellbeing: {},
     });
   });
 });

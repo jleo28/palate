@@ -8,6 +8,7 @@ describe("streak", () => {
     expect(streak([], today)).toEqual({
       days: 0,
       loggedToday: false,
+      restingToday: false,
       frozen: [],
       freezesLeft: FREEZES_PER_MONTH,
     });
@@ -60,5 +61,24 @@ describe("streak", () => {
   it("handles month and year boundaries", () => {
     const s = streak(["2026-12-31", "2027-01-01"], "2027-01-01");
     expect(s.days).toBe(2);
+  });
+});
+
+describe("streak with rest days", () => {
+  const rest = (days: string[]) => (d: string) => days.includes(d);
+
+  it("bridges rest days without counting them or spending a freeze", () => {
+    // 10-11..10-14 resting, so no freezes needed even though that's four missed days.
+    const s = streak(
+      ["2026-10-10", "2026-10-15"],
+      today,
+      rest(["2026-10-11", "2026-10-12", "2026-10-13", "2026-10-14"]),
+    );
+    expect(s).toMatchObject({ days: 2, frozen: [], freezesLeft: FREEZES_PER_MONTH });
+  });
+
+  it("marks today as resting when it's a rest day with no log", () => {
+    const s = streak(["2026-10-14"], today, rest([today]));
+    expect(s).toMatchObject({ days: 1, loggedToday: false, restingToday: true });
   });
 });
