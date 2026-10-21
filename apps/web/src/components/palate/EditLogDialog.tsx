@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { macroLine } from "@/lib/palate/macro-text";
 import { Minus, Plus, Trash2, X } from "lucide-react";
 import {
   MAX_QTY,
@@ -141,12 +142,7 @@ function EditForm({
         </div>
       )}
 
-      {byPortion && (
-        <p className="text-xs font-semibold text-olive">
-          {Math.round(draft.kcal)} cal · {Math.round(draft.protein)}P · {Math.round(draft.carbs)}C ·{" "}
-          {Math.round(draft.fat)}F
-        </p>
-      )}
+      {byPortion && <p className="text-xs font-semibold text-olive">{macroLine(draft)}</p>}
 
       <div className="grid grid-cols-[auto_1fr] gap-2">
         <button

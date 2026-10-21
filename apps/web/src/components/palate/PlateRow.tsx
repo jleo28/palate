@@ -1,4 +1,5 @@
 import { Minus, Plus, RefreshCw, X } from "lucide-react";
+import { macroLine } from "@/lib/palate/macro-text";
 import {
   MAX_QTY,
   allergenConflicts,
@@ -58,7 +59,12 @@ export function PlateRow({
             <span className="truncate">{item.name}</span>
           </p>
           <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-            {item.kcal * qty} cal · {item.protein * qty}P · {item.carbs * qty}C · {item.fat * qty}F
+            {macroLine({
+              kcal: item.kcal * qty,
+              protein: item.protein * qty,
+              carbs: item.carbs * qty,
+              fat: item.fat * qty,
+            })}
           </p>
           {hits.length > 0 && (
             <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">

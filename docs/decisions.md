@@ -31,3 +31,4 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 - 2026-10-01: Remove every remaining reference to the old name from the app, code and docs.
 - 2026-10-02: Production lives at https://palateusc.vercel.app (Vercel project renamed to Palate). The old address is retired.
 - 2026-10-06: Release 1.1.0 to production: accounts and Supabase, v1.1 features, snacks, streaks, one-meal-per-slot logging with edits in the macro bank, and the redrawn plate.
+- 2026-10-21: Spell out protein, carbs and fat instead of P, C and F. Remove the "Under 500 kcal" menu filter: no calorie-limit filters, for eating-disorder safety.

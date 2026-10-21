@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { macroLine } from "@/lib/palate/macro-text";
 import { CheckCircle2 } from "lucide-react";
 import type { LoggedMeal } from "@palate/core";
 
@@ -17,10 +18,7 @@ export function LoggedSlot({ entry }: { entry: LoggedMeal }) {
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-xs font-semibold text-olive">
-        {Math.round(entry.kcal)} cal · {Math.round(entry.protein)}P · {Math.round(entry.carbs)}C ·{" "}
-        {Math.round(entry.fat)}F
-      </p>
+      <p className="mt-3 text-xs font-semibold text-olive">{macroLine(entry)}</p>
       <p className="mt-4 text-sm text-muted-foreground">
         Need to change something?{" "}
         <Link to="/card" className="font-bold text-olive underline">
