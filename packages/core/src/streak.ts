@@ -7,6 +7,8 @@ export interface Streak {
   days: number;
   /** Something is logged today. Today never breaks a streak before it's over. */
   loggedToday: boolean;
+  /** Today is a skipped or paused day, so there's nothing to nudge about. */
+  restingToday: boolean;
   /** Days covered by an automatic freeze, newest first. */
   frozen: string[];
   /** Freezes still available this calendar month. */
@@ -25,9 +27,13 @@ const monthOf = (date: string) => date.slice(0, 7);
 /**
  * Walk back from today counting logged days. A missed day is covered by an automatic freeze
  * (two per calendar month), but only if an earlier logged day follows; freezes are never
- * spent on a gap the streak doesn't survive.
+ * spent on a gap the streak doesn't survive. Rest days (skipped or paused) bridge for free.
  */
-export function streak(loggedDates: readonly string[], today: string): Streak {
+export function streak(
+  loggedDates: readonly string[],
+  today: string,
+  isRest: (date: string) => boolean = () => false,
+): Streak {
   const logged = new Set(loggedDates);
   const earliest = [...logged].sort()[0];
   const used = new Map<string, number>();
@@ -44,6 +50,8 @@ export function streak(loggedDates: readonly string[], today: string): Streak {
       for (const day of pending) used.set(monthOf(day), (used.get(monthOf(day)) ?? 0) + 1);
       frozen.push(...pending);
       pending = [];
+    } else if (isRest(cursor)) {
+      // Bridges the gap without counting or spending a freeze.
     } else {
       const month = monthOf(cursor);
       const spent = (used.get(month) ?? 0) + pending.filter((p) => monthOf(p) === month).length;
@@ -56,6 +64,7 @@ export function streak(loggedDates: readonly string[], today: string): Streak {
   return {
     days,
     loggedToday,
+    restingToday: !loggedToday && isRest(today),
     frozen,
     freezesLeft: FREEZES_PER_MONTH - (used.get(monthOf(today)) ?? 0),
   };

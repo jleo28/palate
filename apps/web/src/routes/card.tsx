@@ -17,6 +17,10 @@ import {
   allergenLabel,
   daysShowedUp,
   effectiveGoal,
+  isPaused,
+  isRestDay,
+  setPaused,
+  setSkipped,
   streak,
   type LoggedMeal,
 } from "@palate/core";
@@ -86,6 +90,9 @@ function CardScreen() {
   const todaysLog = log.filter((l) => l.date === today);
   const showedUp = daysShowedUp(log);
   const checkedInToday = todaysLog.length > 0;
+  const skippedToday = !!profile.wellbeing?.skipped?.includes(today);
+  const setSkipToday = (skip: boolean) =>
+    void saveProfile({ ...profile, wellbeing: setSkipped(profile.wellbeing, today, skip) });
 
   return (
     <AppShell>
@@ -172,7 +179,12 @@ function CardScreen() {
           streak={streak(
             log.map((l) => l.date),
             today,
+            (d) => isRestDay(profile.wellbeing, d),
           )}
+          paused={isPaused(profile.wellbeing)}
+          onPausedChange={(pause) =>
+            void saveProfile({ ...profile, wellbeing: setPaused(profile.wellbeing, today, pause) })
+          }
           onChange={(seedling) => void saveProfile({ ...profile, seedling })}
         />
       )}
@@ -199,6 +211,26 @@ function CardScreen() {
         >
           <Plus className="size-4" /> Ate outside dining hall
         </Button>
+        {skippedToday ? (
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Taking today off from logging. Your streak is safe.{" "}
+            <button
+              type="button"
+              onClick={() => setSkipToday(false)}
+              className="font-bold text-olive underline"
+            >
+              Undo
+            </button>
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setSkipToday(true)}
+            className="mt-2 w-full py-2 text-center text-xs font-bold text-muted-foreground underline"
+          >
+            Skip logging today
+          </button>
+        )}
       </section>
 
       <OutsideMealDialog
