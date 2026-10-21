@@ -26,6 +26,7 @@ import {
   fitSummary,
   remainingToday,
   alternatives,
+  canSwap,
   back,
   canGoBack,
   currentPlate,
@@ -309,6 +310,7 @@ function Plate() {
                   allergies={profile.allergies}
                   customAllergies={profile.customAllergies ?? []}
                   alternatives={alternatives(menu, plate, row.id, hall, period, diets)}
+                  canSwap={canSwap(menu, plate, row.id, hall, period, diets)}
                   onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, period, diets))}
                   onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
                   onRemove={() => edit((prev) => removeRow(prev, row.id))}

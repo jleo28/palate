@@ -16,6 +16,7 @@ interface Props {
   allergies: Allergen[];
   customAllergies: string[];
   alternatives: MenuItem[];
+  canSwap: boolean;
   onSwap: () => void;
   onQty: (qty: number) => void;
   onRemove: () => void;
@@ -30,6 +31,7 @@ export function PlateRow({
   allergies,
   customAllergies,
   alternatives,
+  canSwap,
   onSwap,
   onQty,
   onRemove,
@@ -108,13 +110,15 @@ export function PlateRow({
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={onSwap}
-          className="ml-auto flex h-8 shrink-0 items-center gap-1 rounded-full border border-foreground/25 px-2.5 text-[0.7rem] font-bold"
-        >
-          <RefreshCw className="size-3" /> Swap
-        </button>
+        {canSwap && (
+          <button
+            type="button"
+            onClick={onSwap}
+            className="ml-auto flex h-8 shrink-0 items-center gap-1 rounded-full border border-foreground/25 px-2.5 text-[0.7rem] font-bold"
+          >
+            <RefreshCw className="size-3" /> Swap
+          </button>
+        )}
         {alternatives.length > 0 && (
           <select
             value=""
