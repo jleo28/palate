@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { MacroText } from "@/components/palate/MacroText";
+import { LogCelebration } from "@/components/palate/LogCelebration";
 import { AllergenNotice } from "@/components/palate/AllergenNotice";
 import { macroLine } from "@/lib/palate/macro-text";
 import { useMemo, useState } from "react";
@@ -70,6 +71,7 @@ function Menus() {
   const [filters, setFilters] = useState<FilterId[]>([]);
   const [custom, setCustom] = useState<MenuItem[]>([]);
   const [plateOpen, setPlateOpen] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
 
   const stations = useMemo(() => {
     const items = MENU.filter(
@@ -127,6 +129,7 @@ function Menus() {
     if (!logged) return;
     setCustom([]);
     setPlateOpen(false);
+    setCelebrating(true);
     toast.success(`${meal} logged`);
   };
 
@@ -134,6 +137,9 @@ function Menus() {
     <AppShell>
       <ScreenHeader title="Hall Menus" sub="Explore every station" />
       {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
+      {celebrating && profile?.seedling && (
+        <LogCelebration seedling={profile.seedling} onDone={() => setCelebrating(false)} />
+      )}
       <AllergenNotice className="mb-3" />
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
