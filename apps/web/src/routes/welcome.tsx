@@ -78,6 +78,11 @@ function Welcome() {
           I already have an account
         </Link>
       </p>
+      <p className="mt-2 text-center text-xs">
+        <Link to="/faq" className="font-semibold text-muted-foreground underline">
+          FAQs
+        </Link>
+      </p>
     </div>
   );
 }

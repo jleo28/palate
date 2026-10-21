@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import { ChevronRight, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
@@ -270,6 +270,13 @@ function CardScreen() {
           </div>
         </section>
       )}
+
+      <Link
+        to="/faq"
+        className="mt-5 flex items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-sm font-bold"
+      >
+        FAQs & support <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+      </Link>
     </AppShell>
   );
 }
