@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { LogCelebration } from "@/components/palate/LogCelebration";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
 import { toast } from "sonner";
@@ -98,6 +99,7 @@ function Plate() {
   const seed = useRef(0);
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
+  const [celebrating, setCelebrating] = useState(false);
   const plate = currentPlate(history);
   const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
 
@@ -162,6 +164,8 @@ function Plate() {
     );
   }
 
+  const stopCelebrating = () => setCelebrating(false);
+
   const logMeal = () => {
     const next = nextOpenSlot(slots, meal, [...loggedToday, meal]);
     const logged = addLog({
@@ -174,6 +178,7 @@ function Plate() {
       items: logItems(plate),
     });
     if (!logged) return;
+    setCelebrating(true);
     toast.success(`${meal} logged`, {
       description: `${Math.round(t.kcal)} cal · ${t.protein}g protein${next ? ` · next up: ${next.toLowerCase()}` : " · that's the day"}`,
     });
@@ -183,6 +188,9 @@ function Plate() {
     <AppShell>
       <ScreenHeader title="The Plate" sub={`Hey ${profile.name.split(" ")[0]} · USC`} />
       {profile.seedling && <SeedlingHint screen="plate" seedling={profile.seedling} />}
+      {celebrating && profile.seedling && (
+        <LogCelebration seedling={profile.seedling} onDone={stopCelebrating} />
+      )}
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (
