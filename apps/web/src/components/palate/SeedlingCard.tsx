@@ -9,6 +9,7 @@ import {
   type Streak,
 } from "@palate/core";
 import { SeedlingAvatar } from "./SeedlingAvatar";
+import { Switch } from "./Switch";
 
 interface Props {
   seedling: Seedling;
@@ -153,27 +154,17 @@ export function SeedlingCard({
         )}
       </div>
 
-      <label className="mt-3 flex items-center justify-between gap-3 border-t border-foreground/10 pt-3">
-        <span className="text-xs">
-          <span className="block font-bold">Pause tracking</span>
-          <span className="text-muted-foreground">
-            {paused
-              ? `Your streak is on hold and ${seedling.name} keeps every bit of growth.`
-              : "Take a break. Your streak holds and nothing resets."}
-          </span>
-        </span>
-        <input
-          type="checkbox"
-          role="switch"
-          checked={paused}
-          onChange={(e) => onPausedChange(e.target.checked)}
-          className="peer sr-only"
-        />
-        <span
-          aria-hidden
-          className="relative h-6 w-11 shrink-0 rounded-full bg-foreground/20 transition-colors after:absolute after:left-0.5 after:top-0.5 after:size-5 after:rounded-full after:bg-card after:transition-transform peer-checked:bg-olive peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-olive"
-        />
-      </label>
+      <Switch
+        label="Pause tracking"
+        hint={
+          paused
+            ? `Your streak is on hold and ${seedling.name} keeps every bit of growth.`
+            : "Take a break. Your streak holds and nothing resets."
+        }
+        checked={paused}
+        onChange={onPausedChange}
+        className="mt-3 border-t border-foreground/10 pt-3"
+      />
     </section>
   );
 }

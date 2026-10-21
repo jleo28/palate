@@ -1,4 +1,5 @@
 import { Minus, Plus, RefreshCw, X } from "lucide-react";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { macroLine } from "@/lib/palate/macro-text";
 import {
   MAX_QTY,
@@ -38,6 +39,7 @@ export function PlateRow({
   onRemove,
   onReplace,
 }: Props) {
+  const hidden = useHideNumbers();
   const { item, qty } = row;
   const hits = allergenConflicts(item, allergies);
   const possible = customAllergyMatches(item, customAllergies);
@@ -58,14 +60,16 @@ export function PlateRow({
             )}
             <span className="truncate">{item.name}</span>
           </p>
-          <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-            {macroLine({
-              kcal: item.kcal * qty,
-              protein: item.protein * qty,
-              carbs: item.carbs * qty,
-              fat: item.fat * qty,
-            })}
-          </p>
+          {!hidden && (
+            <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
+              {macroLine({
+                kcal: item.kcal * qty,
+                protein: item.protein * qty,
+                carbs: item.carbs * qty,
+                fat: item.fat * qty,
+              })}
+            </p>
+          )}
           {hits.length > 0 && (
             <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
               Contains {hits.map(allergenLabel).join(", ")}

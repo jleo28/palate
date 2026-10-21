@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
 
 /** Today's calories against the daily target. Past the target it turns muted clay, never red. */
 export function ProgressRing({
@@ -14,6 +15,7 @@ export function ProgressRing({
   const r = 22;
   const circumference = 2 * Math.PI * r;
   const over = pct > 1;
+  if (useHideNumbers()) return null;
 
   return (
     <div
