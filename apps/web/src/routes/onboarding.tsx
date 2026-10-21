@@ -107,11 +107,12 @@ function Onboarding() {
   }, [ready, session, profile, step, navigate]);
 
   const [name, setName] = useState(profile?.name ?? "");
-  const [age, setAge] = useState(String(profile?.age ?? 20));
-  const [gender, setGender] = useState<Profile["gender"]>(profile?.gender ?? "female");
-  const [ft, setFt] = useState(String(Math.floor((profile?.heightIn ?? 66) / 12)));
-  const [inch, setInch] = useState(String((profile?.heightIn ?? 66) % 12));
-  const [weight, setWeight] = useState(String(profile?.weightLb ?? 150));
+  // New users start with blank fields: no preset name, age, gender or body numbers.
+  const [age, setAge] = useState(profile ? String(profile.age) : "");
+  const [gender, setGender] = useState<Profile["gender"] | "">(profile?.gender ?? "");
+  const [ft, setFt] = useState(profile ? String(Math.floor(profile.heightIn / 12)) : "");
+  const [inch, setInch] = useState(profile ? String(profile.heightIn % 12) : "");
+  const [weight, setWeight] = useState(profile ? String(profile.weightLb) : "");
   const [goal, setGoal] = useState<GoalId>(profile?.goal ?? "maintain");
   const [highProtein, setHighProtein] = useState(profile?.highProtein ?? false);
   const [snacks, setSnacks] = useState<SnackSlot[]>(profile?.snacks ?? []);
@@ -123,8 +124,8 @@ function Onboarding() {
   const draft: Profile = {
     name: name.trim() || "Trojan",
     age: parseNumber(age, 20) || 20,
-    gender,
-    heightIn: heightIn(ft, inch),
+    gender: gender || "other",
+    heightIn: heightIn(ft, inch || "0"),
     weightLb: parseNumber(weight, 150) || 150,
     goal,
     highProtein,
@@ -136,6 +137,14 @@ function Onboarding() {
     hall,
     ...(profile?.seedling ? { seedling: profile.seedling } : {}),
   };
+
+  const basicsDone =
+    name.trim() !== "" &&
+    parseNumber(age, 0) >= 13 &&
+    gender !== "" &&
+    ft !== "" &&
+    heightIn(ft, inch || "0") >= 48 &&
+    parseNumber(weight, 0) >= 60;
 
   const daily = dailyTargets(draft);
   const perMeal = mealTargets(daily, "Lunch");
@@ -175,12 +184,7 @@ function Onboarding() {
 
           <div className="card-edge space-y-4 rounded-2xl bg-card p-4">
             <Field label="Name on card">
-              <input
-                className={inputCls}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Jasmine M."
-              />
+              <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Age">
@@ -197,6 +201,9 @@ function Onboarding() {
                   value={gender}
                   onChange={(e) => setGender(e.target.value as Profile["gender"])}
                 >
+                  <option value="" disabled>
+                    Select
+                  </option>
                   <option value="female">Female</option>
                   <option value="male">Male</option>
                   <option value="other">Other</option>
@@ -350,7 +357,8 @@ function Onboarding() {
           <button
             type="button"
             onClick={() => (step === 2 ? void finish() : setStep((s) => s + 1))}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px"
+            disabled={step === 0 && !basicsDone}
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
           >
             {step === 2 ? "Make my Palate card" : "Continue"}
             <ArrowRight className="size-5" />
