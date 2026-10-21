@@ -12,31 +12,31 @@ export const Route = createFileRoute("/faq")({
   component: Faq,
 });
 
-// TODO: swap in the team's FAQs from the class assignment.
+// From the team's class assignment.
 const FAQS: { q: string; a: string }[] = [
   {
-    q: "What is Palate?",
-    a: "Palate builds a balanced plate from today's menus at USC Village, EVK and Parkside, portioned in real hall servings like tongs and ladles.",
+    q: "Where do Palate’s numbers come from, and how accurate are they?",
+    a: "Each menu item is matched by hand to a USDA FoodData Central reference at one standard hall serving, then checked against weighed sample plates. Dining hall portions vary and cooking oils are hard to see, so every number is labeled as an estimate, and portions adjust to half or 1.5 servings. Items without an estimate yet show “not yet estimated” instead of being hidden.",
   },
   {
-    q: "Where do the menus come from?",
-    a: "From USC Hospitality's published menus, refreshed through the day. Stations sometimes change last minute, so what's on the line wins.",
+    q: "Why doesn’t USC publish this information itself?",
+    a: "USC Hospitality’s menus list allergens and dietary tags but no calories or macros, and general nutrition apps like MyFitnessPal don’t include dining hall menus. Palate fills that gap with its own estimates and is designed with eating-disorder safety in mind.",
   },
   {
-    q: "How accurate are the calories and macros?",
-    a: "They're estimates. USC doesn't publish nutrition, so we match items to a curated table and USDA data. Treat them as a guide, not a measurement.",
+    q: "Is Palate safe for students who struggle with food or tracking?",
+    a: "Palate is built to avoid the patterns that make tracking harmful. Recommendations never go below 1,500 calories a day, nothing turns red, BMI is never shown, and there are no badges for eating less. Streaks count days you log a plate, not days you hit a target, and two freezes are applied automatically each month.",
   },
   {
-    q: "Can I trust the allergen info?",
-    a: "Use it as a first filter only. It comes from USC's labels, which can be incomplete, and kitchens share equipment. Always confirm with dining staff before you eat.",
+    q: "How does Palate handle allergies and dietary restrictions?",
+    a: "Allergies and restrictions entered at sign-up are hard filters: excluded items never appear in a recommended plate. Palate relies on USC’s own allergen tags, so students with serious allergies should still confirm with dining staff.",
   },
   {
-    q: "What happens if I miss a day?",
-    a: "Nothing bad. Your Seedling never shrinks, and streaks get two automatic freezes a month. Eating is what matters, not the log.",
+    q: "What if I don’t care about macros?",
+    a: "Palate still works as a filtered menu for every hall, and students can give each plate a thumbs-up or thumbs-down on taste. In our survey, 90% named taste as a factor in what they eat, so dish-level ratings are next on the roadmap.",
   },
   {
-    q: "Do I have to log every meal?",
-    a: "No. Log what's useful to you. Palate is a helper for eating well in the halls, not a scorecard.",
+    q: "How will the team know Palate is working?",
+    a: "The key metric is builder adoption: 60% of logged plates starting from a Palate recommendation rather than manual entry. The team also tracks 30% of activated users logging on three or more days in their second week. If students use Palate only as a labeled menu, the roadmap shifts toward ratings and hall comparison.",
   },
 ];
 
