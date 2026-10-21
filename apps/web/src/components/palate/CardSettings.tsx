@@ -195,7 +195,7 @@ export function CardSettings({ profile, onSave, onStartOver, email, onSignOut }:
           onClick={() => onSave({ ...draft, goal: effectiveGoal(draft) })}
           className="h-12 w-full rounded-full bg-foreground text-base font-bold text-primary-foreground disabled:opacity-40"
         >
-          {dirty ? "Save changes" : "No changes yet"}
+          Save changes
         </button>
         <button
           type="button"

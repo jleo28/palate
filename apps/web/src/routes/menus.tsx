@@ -1,4 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
+import { MacroText } from "@/components/palate/MacroText";
+import { LogCelebration } from "@/components/palate/LogCelebration";
+import { AllergenNotice } from "@/components/palate/AllergenNotice";
+import { macroLine } from "@/lib/palate/macro-text";
 import { useMemo, useState } from "react";
 import { Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -34,7 +39,7 @@ export const Route = createFileRoute("/menus")({
       {
         name: "description",
         content:
-          "Browse every station at USC Village, EVK and Parkside with calories and macros, filtered for high protein, vegan or under 500 calories.",
+          "Browse every station at USC Village, EVK and Parkside with calories and macros, filtered for high protein, vegan, vegetarian or low carb.",
       },
       { property: "og:title", content: "Hall Menus — Village, EVK & Parkside macros" },
       {
@@ -48,17 +53,17 @@ export const Route = createFileRoute("/menus")({
   component: Menus,
 });
 
-type FilterId = "high-protein" | "vegan" | "vegetarian" | "under-500" | "low-carb";
+type FilterId = "high-protein" | "vegan" | "vegetarian" | "low-carb";
 
 const FILTERS: { id: FilterId; label: string; test: (i: MenuItem) => boolean }[] = [
   { id: "high-protein", label: "High Protein", test: (i) => i.protein >= 10 },
   { id: "vegan", label: "Vegan", test: (i) => i.tags.includes("vegan") },
   { id: "vegetarian", label: "Vegetarian", test: (i) => i.tags.includes("vegetarian") },
-  { id: "under-500", label: "Under 500 kcal", test: (i) => i.kcal < 500 },
   { id: "low-carb", label: "Low Carb", test: (i) => i.carbs <= 10 },
 ];
 
 function Menus() {
+  const hidden = useHideNumbers();
   const { hall, setHall, meal, setMeal, addLog, profile } = useStore();
   // Menus are per hall meal; a selected snack shows the meal it's planned from.
   const period = menuPeriod(meal);
@@ -66,6 +71,7 @@ function Menus() {
   const [filters, setFilters] = useState<FilterId[]>([]);
   const [custom, setCustom] = useState<MenuItem[]>([]);
   const [plateOpen, setPlateOpen] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
 
   const stations = useMemo(() => {
     const items = MENU.filter(
@@ -123,6 +129,7 @@ function Menus() {
     if (!logged) return;
     setCustom([]);
     setPlateOpen(false);
+    setCelebrating(true);
     toast.success(`${meal} logged`);
   };
 
@@ -130,6 +137,10 @@ function Menus() {
     <AppShell>
       <ScreenHeader title="Hall Menus" sub="Explore every station" />
       {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
+      {celebrating && profile?.seedling && (
+        <LogCelebration seedling={profile.seedling} onDone={() => setCelebrating(false)} />
+      )}
+      <AllergenNotice className="mb-3" />
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (
@@ -224,7 +235,8 @@ function Menus() {
                         <span className="truncate">{i.name}</span>
                       </p>
                       <p className="mt-0.5 text-[0.72rem] text-muted-foreground">
-                        per {i.unit} · {i.kcal} cal · {i.protein}P · {i.carbs}C · {i.fat}F
+                        per {i.unit}
+                        <MacroText m={i} prefix=" · " />
                       </p>
                       {hits.length > 0 && (
                         <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
@@ -258,11 +270,6 @@ function Menus() {
         ))}
       </div>
 
-      <p className="mt-5 text-center text-[0.7rem] text-muted-foreground">
-        Allergen info comes from USC's labels, which can be incomplete.{" "}
-        <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
-      </p>
-
       {custom.length > 0 && (
         <div className="fixed inset-x-0 bottom-[76px] z-30 px-4">
           <div className="card-edge mx-auto flex max-w-md items-center gap-2 rounded-2xl bg-card p-2 pl-4">
@@ -276,7 +283,7 @@ function Menus() {
                 Custom plate · {custom.length} items
               </p>
               <p className="truncate font-display text-sm font-bold">
-                {t.kcal} cal · {t.protein}P · {t.carbs}C · {t.fat}F
+                {hidden ? `${custom.length} portions` : macroLine(t)}
               </p>
             </button>
             <Button
@@ -298,8 +305,8 @@ function Menus() {
           <SheetHeader className="border-b border-foreground/15 px-5 py-5 text-left">
             <SheetTitle className="font-display text-2xl font-extrabold">Custom plate</SheetTitle>
             <SheetDescription>
-              {custom.length} {custom.length === 1 ? "portion" : "portions"} · {t.kcal} cal ·{" "}
-              {t.protein}g protein
+              {custom.length} {custom.length === 1 ? "portion" : "portions"}
+              {!hidden && ` · ${t.kcal} cal · ${t.protein}g protein`}
             </SheetDescription>
           </SheetHeader>
 
@@ -341,8 +348,8 @@ function Menus() {
                             <span className="truncate">{item.name}</span>
                           </p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            {quantity} {quantity === 1 ? item.unit : item.unitPlural} ·{" "}
-                            {item.kcal * quantity} cal
+                            {quantity} {quantity === 1 ? item.unit : item.unitPlural}
+                            {!hidden && ` · ${item.kcal * quantity} cal`}
                           </p>
                           {hits.length > 0 && (
                             <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
@@ -368,8 +375,8 @@ function Menus() {
                       </div>
                       <div className="mt-3 flex items-center justify-between border-t border-foreground/10 pt-2.5">
                         <span className="text-xs font-semibold text-olive">
-                          {item.protein * quantity}P · {item.carbs * quantity}C ·{" "}
-                          {item.fat * quantity}F
+                          {!hidden &&
+                            `${item.protein * quantity}g protein · ${item.carbs * quantity}g carbs · ${item.fat * quantity}g fat`}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <Button
@@ -411,9 +418,9 @@ function Menus() {
             <div className="mb-3 grid grid-cols-4 gap-2 text-center">
               {[
                 ["Cal", t.kcal],
-                ["P", t.protein],
-                ["C", t.carbs],
-                ["F", t.fat],
+                ["Protein", t.protein],
+                ["Carbs", t.carbs],
+                ["Fat", t.fat],
               ].map(([label, value]) => (
                 <div key={label}>
                   <p className="font-display text-sm font-bold">{value}</p>

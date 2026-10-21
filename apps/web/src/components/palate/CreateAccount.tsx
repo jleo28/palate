@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { MailCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { authMessage, primaryButton } from "@/lib/auth";
 import { Field } from "./AuthFields";
+
+// Supabase's default confirmation email. Update both if the template or sender changes.
+const EMAIL_SUBJECT = "Confirm Your Signup";
+const EMAIL_SENDER = "Supabase Auth";
 
 /**
  * Last onboarding step for new users. The setup is already saved in this browser, and it's
@@ -15,6 +19,8 @@ export function CreateAccount() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  // Guards against a double tap firing two sign-ups before the disabled state renders.
+  const sending = useRef(false);
 
   if (sentTo) {
     return (
@@ -26,6 +32,15 @@ export function CreateAccount() {
           to confirm, then sign in. Your setup is saved on this device and moves into your account
           when you do.
         </p>
+        <div className="rounded-xl bg-muted px-3 py-2 text-left text-sm">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Look for
+          </p>
+          <p className="font-semibold">“{EMAIL_SUBJECT}”</p>
+          <p className="text-muted-foreground">
+            from {EMAIL_SENDER}. Check spam if it's not there.
+          </p>
+        </div>
         <Link to="/sign-in" className="inline-block text-sm font-bold text-olive underline">
           I've confirmed, sign me in
         </Link>
@@ -45,6 +60,8 @@ export function CreateAccount() {
         className="space-y-3"
         onSubmit={async (e) => {
           e.preventDefault();
+          if (sending.current) return;
+          sending.current = true;
           setBusy(true);
           setError(null);
           const { data, error: err } = await supabase.auth.signUp({
@@ -52,6 +69,7 @@ export function CreateAccount() {
             password,
             options: { emailRedirectTo: `${window.location.origin}/` },
           });
+          sending.current = false;
           setBusy(false);
           if (err) return setError(authMessage(err));
           // With confirmations off, the session arrives now and onboarding moves on by itself.

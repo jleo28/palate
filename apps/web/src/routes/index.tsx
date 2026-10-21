@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useHideNumbers } from "@/lib/palate/hide-numbers";
+import { LogCelebration } from "@/components/palate/LogCelebration";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
+import { AllergenNotice } from "@/components/palate/AllergenNotice";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
 import { SwipeArea } from "@/components/palate/SwipeArea";
@@ -26,6 +29,7 @@ import {
   fitSummary,
   remainingToday,
   alternatives,
+  canSwap,
   back,
   canGoBack,
   currentPlate,
@@ -40,7 +44,6 @@ import {
   totals,
   withoutSkipped,
   withoutAllergyConflicts,
-  CONFIRM_WITH_STAFF,
   type PlateItem,
 } from "@palate/core";
 import { MENU, portionLabel } from "@/lib/palate/menu";
@@ -72,6 +75,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Plate() {
+  const hidden = useHideNumbers();
   const {
     ready,
     profile,
@@ -97,6 +101,7 @@ function Plate() {
   const seed = useRef(0);
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
+  const [celebrating, setCelebrating] = useState(false);
   const plate = currentPlate(history);
   const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
 
@@ -161,6 +166,8 @@ function Plate() {
     );
   }
 
+  const stopCelebrating = () => setCelebrating(false);
+
   const logMeal = () => {
     const next = nextOpenSlot(slots, meal, [...loggedToday, meal]);
     const logged = addLog({
@@ -173,8 +180,12 @@ function Plate() {
       items: logItems(plate),
     });
     if (!logged) return;
+    setCelebrating(true);
     toast.success(`${meal} logged`, {
-      description: `${Math.round(t.kcal)} cal · ${t.protein}g protein${next ? ` · next up: ${next.toLowerCase()}` : " · that's the day"}`,
+      description: [
+        ...(hidden ? [] : [`${Math.round(t.kcal)} cal · ${t.protein}g protein`]),
+        next ? `next up: ${next.toLowerCase()}` : "that's the day",
+      ].join(" · "),
     });
   };
 
@@ -182,6 +193,9 @@ function Plate() {
     <AppShell>
       <ScreenHeader title="The Plate" sub={`Hey ${profile.name.split(" ")[0]} · USC`} />
       {profile.seedling && <SeedlingHint screen="plate" seedling={profile.seedling} />}
+      {celebrating && profile.seedling && (
+        <LogCelebration seedling={profile.seedling} onDone={stopCelebrating} />
+      )}
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (
@@ -309,6 +323,7 @@ function Plate() {
                   allergies={profile.allergies}
                   customAllergies={profile.customAllergies ?? []}
                   alternatives={alternatives(menu, plate, row.id, hall, period, diets)}
+                  canSwap={canSwap(menu, plate, row.id, hall, period, diets)}
                   onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, period, diets))}
                   onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
                   onRemove={() => edit((prev) => removeRow(prev, row.id))}
@@ -318,12 +333,10 @@ function Plate() {
             </ul>
           )}
 
-          <p className="mt-2 text-[0.7rem] text-muted-foreground">
-            {profile.allergies.length || profile.customAllergies?.length
-              ? "We left out items USC lists with your allergies, but labels can be incomplete."
-              : "Allergen info comes from USC's labels, which can be incomplete."}{" "}
-            <span className="font-semibold text-foreground">{CONFIRM_WITH_STAFF}.</span>
-          </p>
+          <AllergenNotice
+            className="mt-2"
+            filtered={!!(profile.allergies.length || profile.customAllergies?.length)}
+          />
 
           <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
             <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />

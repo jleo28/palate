@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { availableItems, buildPlate, swapItem, totals } from "./plate";
+import { availableItems, buildPlate, canSwap, swapItem, totals } from "./plate";
 import { item, menu } from "./fixtures";
 
 const target = { kcal: 700, protein: 40, carbs: 80, fat: 20 };
@@ -131,5 +131,19 @@ describe("swapItem", () => {
     const plate = [row("a", 3, 2)];
     expect(swapItem(menu, plate, "a", "village", "Lunch", [])).toEqual(plate);
     expect(swapItem(menu, plate, "nope", "village", "Lunch", [])).toEqual(plate);
+  });
+});
+
+describe("canSwap", () => {
+  const row = (id: string, i: number) => ({ id, item: menu[i]!, qty: 1 });
+
+  it("is true when another item with the same role is free", () => {
+    expect(canSwap(menu, [row("a", 0)], "a", "village", "Lunch", [])).toBe(true);
+  });
+
+  // Regression: Swap showed on rows like the fruit bar with nothing to swap to, and did nothing.
+  it("is false when every same-role item is already on the plate", () => {
+    const plate = [row("a", 0), row("b", 1)]; // chicken + tofu, the only two proteins
+    expect(canSwap(menu, plate, "a", "village", "Lunch", [])).toBe(false);
   });
 });

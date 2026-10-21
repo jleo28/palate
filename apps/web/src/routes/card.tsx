@@ -1,9 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import { ChevronRight, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
+import { Switch } from "@/components/palate/Switch";
 import { SeedlingCard } from "@/components/palate/SeedlingCard";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,10 @@ import {
   allergenLabel,
   daysShowedUp,
   effectiveGoal,
+  isPaused,
+  isRestDay,
+  setPaused,
+  setSkipped,
   streak,
   type LoggedMeal,
 } from "@palate/core";
@@ -86,6 +91,10 @@ function CardScreen() {
   const todaysLog = log.filter((l) => l.date === today);
   const showedUp = daysShowedUp(log);
   const checkedInToday = todaysLog.length > 0;
+  const hideNumbers = !!profile.wellbeing?.hideNumbers;
+  const skippedToday = !!profile.wellbeing?.skipped?.includes(today);
+  const setSkipToday = (skip: boolean) =>
+    void saveProfile({ ...profile, wellbeing: setSkipped(profile.wellbeing, today, skip) });
 
   return (
     <AppShell>
@@ -124,10 +133,12 @@ function CardScreen() {
                   lb
                 </p>
               </div>
-              <div>
-                <p className="label-caps text-muted-foreground">Daily</p>
-                <p className="font-display font-bold">{daily.kcal} cal</p>
-              </div>
+              {!hideNumbers && (
+                <div>
+                  <p className="label-caps text-muted-foreground">Daily</p>
+                  <p className="font-display font-bold">{daily.kcal} cal</p>
+                </div>
+              )}
               <div className="col-span-2">
                 <p className="label-caps text-muted-foreground">Allergies</p>
                 <p
@@ -172,7 +183,12 @@ function CardScreen() {
           streak={streak(
             log.map((l) => l.date),
             today,
+            (d) => isRestDay(profile.wellbeing, d),
           )}
+          paused={isPaused(profile.wellbeing)}
+          onPausedChange={(pause) =>
+            void saveProfile({ ...profile, wellbeing: setPaused(profile.wellbeing, today, pause) })
+          }
           onChange={(seedling) => void saveProfile({ ...profile, seedling })}
         />
       )}
@@ -185,6 +201,20 @@ function CardScreen() {
             {todaysLog.length} {todaysLog.length === 1 ? "meal" : "meals"} logged
           </span>
         </div>
+        <Switch
+          label="Hide numbers"
+          hint="Show portions only, with no calories or macros anywhere."
+          checked={hideNumbers}
+          onChange={(on) =>
+            void saveProfile({ ...profile, wellbeing: { ...profile.wellbeing, hideNumbers: on } })
+          }
+          className="mb-3"
+        />
+        {hideNumbers && (
+          <p className="text-sm text-muted-foreground">
+            Numbers are hidden. Your plates still balance in the background.
+          </p>
+        )}
         <div className="space-y-3">
           <MacroBar label="Calories" value={consumedToday.kcal} target={daily.kcal} unit="" />
           <MacroBar label="Protein" value={consumedToday.protein} target={daily.protein} />
@@ -199,6 +229,26 @@ function CardScreen() {
         >
           <Plus className="size-4" /> Ate outside dining hall
         </Button>
+        {skippedToday ? (
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Taking today off from logging. Your streak is safe.{" "}
+            <button
+              type="button"
+              onClick={() => setSkipToday(false)}
+              className="font-bold text-olive underline"
+            >
+              Undo
+            </button>
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setSkipToday(true)}
+            className="mt-2 w-full py-2 text-center text-xs font-bold text-muted-foreground underline"
+          >
+            Skip logging today
+          </button>
+        )}
       </section>
 
       <OutsideMealDialog
@@ -255,7 +305,8 @@ function CardScreen() {
                     {l.items.map((i) => `${i.portion} ${i.name}`).join(", ")}
                   </p>
                   <p className="mt-0.5 text-[0.72rem] font-semibold text-olive">
-                    {Math.round(l.kcal)} cal · {Math.round(l.protein)}g protein
+                    {!hideNumbers &&
+                      `${Math.round(l.kcal)} cal · ${Math.round(l.protein)}g protein`}
                   </p>
                 </div>
                 <button
@@ -270,6 +321,13 @@ function CardScreen() {
           </div>
         </section>
       )}
+
+      <Link
+        to="/faq"
+        className="mt-5 flex items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-sm font-bold"
+      >
+        FAQs & support <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+      </Link>
     </AppShell>
   );
 }

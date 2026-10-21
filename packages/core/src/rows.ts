@@ -1,5 +1,6 @@
 /** Mapping between app types and the Supabase tables (see supabase/migrations). */
 import type { Seedling } from "./seedling";
+import type { Wellbeing } from "./wellbeing";
 import type {
   Allergen,
   DietTag,
@@ -28,6 +29,7 @@ export interface ProfileRow {
   dislikes: DislikeId[];
   hall: HallId;
   seedling: Seedling | null;
+  wellbeing: Wellbeing;
 }
 
 export interface MealLogRow {
@@ -61,6 +63,7 @@ export function profileToRow(userId: string, p: Profile): ProfileRow {
     dislikes: p.dislikes,
     hall: p.hall,
     seedling: p.seedling ?? null,
+    wellbeing: p.wellbeing ?? {},
   };
 }
 
@@ -80,6 +83,7 @@ export function profileFromRow(r: ProfileRow): Profile {
     dislikes: r.dislikes,
     hall: r.hall,
     ...(r.seedling ? { seedling: r.seedling } : {}),
+    wellbeing: r.wellbeing ?? {},
   };
 }
 
