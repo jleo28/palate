@@ -5,6 +5,7 @@ import type {
   Allergen,
   DietTag,
   DislikeId,
+  ActivityId,
   GoalId,
   HallId,
   LoggedMeal,
@@ -21,6 +22,7 @@ export interface ProfileRow {
   height_in: number;
   weight_lb: number;
   goal: GoalId;
+  activity: ActivityId;
   high_protein: boolean;
   snacks: SnackSlot[];
   diets: DietTag[];
@@ -55,6 +57,7 @@ export function profileToRow(userId: string, p: Profile): ProfileRow {
     height_in: p.heightIn,
     weight_lb: p.weightLb,
     goal: p.goal,
+    activity: p.activity ?? "moderate",
     high_protein: p.highProtein ?? false,
     snacks: p.snacks ?? [],
     diets: p.diets,
@@ -75,6 +78,7 @@ export function profileFromRow(r: ProfileRow): Profile {
     heightIn: r.height_in,
     weightLb: Number(r.weight_lb),
     goal: r.goal,
+    activity: r.activity ?? "moderate",
     highProtein: r.high_protein,
     snacks: r.snacks ?? [],
     diets: r.diets,

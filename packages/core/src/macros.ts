@@ -1,10 +1,21 @@
-import type { GoalId, Profile } from "./types";
+import type { ActivityId, GoalId, Profile } from "./types";
 
 export const GOALS: { id: GoalId; label: string; note: string }[] = [
   { id: "cut", label: "Cut", note: "A gentle deficit to lose slowly." },
   { id: "maintain", label: "Maintain", note: "Hold steady and eat balanced" },
   { id: "lean-bulk", label: "Lean Bulk", note: "Build slowly, with extra carbs" },
 ];
+
+/** Mifflin-St Jeor activity multipliers. */
+export const ACTIVITY: { id: ActivityId; label: string; note?: string; factor: number }[] = [
+  { id: "sitting", label: "Mostly sitting", factor: 1.2 },
+  { id: "light", label: "Light", note: "1–2 workouts/week", factor: 1.375 },
+  { id: "moderate", label: "Moderate", note: "3–4 workouts/week", factor: 1.55 },
+  { id: "very", label: "Very active", note: "5+ or a sport", factor: 1.725 },
+];
+
+/** Profiles saved before activity existed were planned at 1.5, closest to Moderate. */
+export const DEFAULT_ACTIVITY: ActivityId = "moderate";
 
 export const HIGH_PROTEIN_NOTE = "More protein at every meal, whatever your goal";
 
@@ -47,12 +58,13 @@ export function proteinWeightLb(p: Pick<Profile, "weightLb" | "heightIn">) {
   return (25 * m * m) / LB_TO_KG;
 }
 
-/** Mifflin-St Jeor with a light student activity factor (1.5). */
+/** Mifflin-St Jeor times the activity multiplier. */
 export function maintenanceKcal(p: Profile) {
   const kg = p.weightLb * LB_TO_KG;
   const cm = p.heightIn * 2.54;
   const sexConstant = p.gender === "male" ? 5 : p.gender === "female" ? -161 : -78;
-  return (10 * kg + 6.25 * cm - 5 * p.age + sexConstant) * 1.5;
+  const factor = ACTIVITY.find((a) => a.id === (p.activity ?? DEFAULT_ACTIVITY))!.factor;
+  return (10 * kg + 6.25 * cm - 5 * p.age + sexConstant) * factor;
 }
 
 const KCAL_ADJUST: Record<GoalId, number> = { cut: -0.18, maintain: 0, "lean-bulk": 0.12 };
