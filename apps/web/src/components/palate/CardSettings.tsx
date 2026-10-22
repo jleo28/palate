@@ -37,10 +37,20 @@ interface Props {
   onStartOver: () => void;
   email: string | undefined;
   onSignOut: () => void;
+  onDeleteAccount: () => Promise<boolean>;
 }
 
 /** The back of the card: goals and settings, edited as a draft until "Save changes". */
-export function CardSettings({ profile, onSave, onStartOver, email, onSignOut }: Props) {
+export function CardSettings({
+  profile,
+  onSave,
+  onStartOver,
+  email,
+  onSignOut,
+  onDeleteAccount,
+}: Props) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [draft, setDraft] = useState(profile);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [feet, setFeet] = useState(String(feetAndInches(profile.heightIn).feet));
@@ -220,6 +230,57 @@ export function CardSettings({ profile, onSave, onStartOver, email, onSignOut }:
           Sign out
         </button>
       </div>
+      <button
+        type="button"
+        onClick={() => setDeleteOpen(true)}
+        className="h-11 w-full rounded-full text-xs font-bold text-muted-foreground underline"
+      >
+        Delete account
+      </button>
+
+      <Dialog open={deleteOpen} onOpenChange={(open) => !deleting && setDeleteOpen(open)}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5">
+          <DialogHeader className="text-left">
+            <DialogTitle className="font-display text-xl">Delete your account?</DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2">
+                <p>This permanently deletes:</p>
+                <ul className="list-disc pl-5">
+                  <li>your account and sign-in ({email})</li>
+                  <li>your profile, goals and allergies</li>
+                  <li>every meal you've logged</li>
+                  <li>your Seedling and its growth</li>
+                  <li>any photos you've added</li>
+                </ul>
+                <p>It can't be undone. To just take a break, sign out instead.</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => setDeleteOpen(false)}
+              className="h-11 rounded-full border border-foreground/25 text-sm font-bold"
+            >
+              Keep it
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                const ok = await onDeleteAccount();
+                setDeleting(false);
+                if (ok) setDeleteOpen(false);
+              }}
+              className="h-11 rounded-full bg-foreground text-sm font-bold text-primary-foreground disabled:opacity-40"
+            >
+              {deleting ? "Deleting…" : "Delete forever"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5">

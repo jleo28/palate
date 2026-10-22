@@ -111,6 +111,8 @@ interface Ctx {
   /** Delete the profile and log (the account stays) and per-device state. */
   resetAll: () => Promise<void>;
   signOut: () => Promise<void>;
+  /** Permanently deletes the account and everything in it, then signs out. True on success. */
+  deleteAccount: () => Promise<boolean>;
   daily: MacroTargets | null;
   /** The slot being planned: a hall meal or a snack. */
   meal: Slot;
@@ -287,6 +289,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) {
+      console.error(error);
+      toast.error("Couldn't delete your account. Try again.");
+      return false;
+    }
+    for (const key of [KEY_PROFILE, KEY_LOG, ...DEVICE_KEYS]) localStorage.removeItem(key);
+    setProfile(null);
+    setLog([]);
+    // The session belongs to a user that no longer exists, so only clear it locally.
+    await supabase.auth.signOut({ scope: "local" });
+    return true;
+  }, []);
+
   const daily = useMemo(() => (profile ? dailyTargets(profile) : null), [profile]);
 
   const consumedToday = useMemo(() => {
@@ -335,6 +352,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateLog,
     resetAll,
     signOut,
+    deleteAccount,
     daily,
     meal,
     setMeal,
