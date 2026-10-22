@@ -52,6 +52,8 @@ import { useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
 
+const PORTION_TIP_KEY = "palate.portionTip.v1";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -102,6 +104,17 @@ function Plate() {
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [celebrating, setCelebrating] = useState(false);
+  // One-time tip on the first plate someone sees. Marked seen as soon as it shows.
+  const [showPortionTip, setShowPortionTip] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(PORTION_TIP_KEY)) return;
+      localStorage.setItem(PORTION_TIP_KEY, "1");
+      setShowPortionTip(true);
+    } catch {
+      // Storage blocked: skip the tip.
+    }
+  }, []);
   const plate = currentPlate(history);
   const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
 
@@ -307,6 +320,11 @@ function Plate() {
             </button>
           </div>
 
+          {showPortionTip && plate.length > 0 && (
+            <p className="mb-2 rounded-xl bg-olive-soft px-3 py-2 text-xs font-semibold text-olive">
+              This is your portion. Tap + for more anytime.
+            </p>
+          )}
           {plate.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-foreground/25 px-3 py-6 text-center text-sm text-muted-foreground">
               Your plate is empty. Tap Shuffle for a fresh one.
@@ -359,7 +377,7 @@ function Plate() {
 
           <button
             onClick={logMeal}
-            disabled={plate.length === 0}
+            disabled={!plate.some((r) => r.qty > 0)}
             className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
           >
             <Check className="size-5" /> Ate This Meal

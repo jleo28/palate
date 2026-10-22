@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { MAX_QTY, alternatives, removeRow, replaceRow, setQty } from "./plate";
+import { MAX_QTY, alternatives, removeRow, replaceRow, setQty, totals } from "./plate";
+import { logItems } from "./logs";
 import { withoutSkipped } from "./preferences";
 import { item, menu } from "./fixtures";
 
@@ -56,9 +57,16 @@ describe("setQty", () => {
     expect(setQty(plate, "b", 3)[1]!.qty).toBe(3);
   });
 
-  it(`clamps to 1–${MAX_QTY}`, () => {
-    expect(setQty(plate, "b", 0)[1]!.qty).toBe(1);
+  it(`clamps to 0–${MAX_QTY}`, () => {
+    expect(setQty(plate, "b", -1)[1]!.qty).toBe(0);
     expect(setQty(plate, "b", 99)[1]!.qty).toBe(MAX_QTY);
+  });
+
+  it("keeps a row at 0 on the plate, counting for nothing and left out of the log", () => {
+    const zeroed = setQty(plate, "b", 0);
+    expect(zeroed).toHaveLength(plate.length);
+    expect(totals(zeroed)).toEqual(totals(plate.filter((r) => r.id !== "b")));
+    expect(logItems(zeroed).map((i) => i.name)).not.toContain(plate[1]!.item.name);
   });
 });
 

@@ -6,14 +6,17 @@ const label = (qty: number, unit: string, unitPlural: string) =>
 
 /** Snapshot plate rows for the log, keeping per-portion macros so the meal can be edited. */
 export function logItems(rows: readonly PlateItem[]): LoggedItem[] {
-  return rows.map(({ item, qty }) => ({
-    name: item.name,
-    portion: label(qty, item.unit, item.unitPlural),
-    qty,
-    unit: item.unit,
-    unitPlural: item.unitPlural,
-    per: { kcal: item.kcal, protein: item.protein, carbs: item.carbs, fat: item.fat },
-  }));
+  // Rows turned down to 0 stay on the plate but aren't part of the meal.
+  return rows
+    .filter((r) => r.qty > 0)
+    .map(({ item, qty }) => ({
+      name: item.name,
+      portion: label(qty, item.unit, item.unitPlural),
+      qty,
+      unit: item.unit,
+      unitPlural: item.unitPlural,
+      per: { kcal: item.kcal, protein: item.protein, carbs: item.carbs, fat: item.fat },
+    }));
 }
 
 /** Portions can be edited when every item kept its per-portion macros (outside meals don't). */

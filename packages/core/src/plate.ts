@@ -130,7 +130,12 @@ export function buildPlate(
   });
 
   const chosen = choices[seed % choices.length]!;
-  return chosen.picks.map((x, n) => ({ id: `row-${n}`, item: x.item, qty: x.qty }));
+  return chosen.picks.map((x, n) => ({
+    id: `row-${n}`,
+    item: x.item,
+    qty: x.qty,
+    suggested: x.qty,
+  }));
 }
 
 export const MAX_QTY = 6;
@@ -203,7 +208,7 @@ export function swapItem(
   if (!pool.length) return [...plate];
 
   const { item, qty } = closestMatch(current, pool);
-  return replace(plate, rowId, (row) => ({ id: row.id, item, qty }));
+  return replace(plate, rowId, (row) => ({ id: row.id, item, qty, suggested: qty }));
 }
 
 /** Items that could replace a row: same station and role, not already on the plate. */
@@ -232,12 +237,15 @@ export function replaceRow(
   rowId: string,
   item: MenuItem,
 ): PlateItem[] {
-  return replace(plate, rowId, (row) => ({ id: row.id, item, qty: closestMatch(row, [item]).qty }));
+  return replace(plate, rowId, (row) => {
+    const { qty } = closestMatch(row, [item]);
+    return { id: row.id, item, qty, suggested: qty };
+  });
 }
 
-/** Set a row's portions, clamped to 1–MAX_QTY. */
+/** Set a row's portions, clamped to 0–MAX_QTY. A row at 0 stays on the plate but counts for nothing. */
 export function setQty(plate: readonly PlateItem[], rowId: string, qty: number): PlateItem[] {
-  const clamped = Math.min(MAX_QTY, Math.max(1, Math.round(qty)));
+  const clamped = Math.min(MAX_QTY, Math.max(0, qty));
   return replace(plate, rowId, (row) => ({ ...row, qty: clamped }));
 }
 
@@ -278,7 +286,8 @@ export function buildSnack(
     (a, b) => Math.abs(a.kcal * portion(a, aim) - aim) - Math.abs(b.kcal * portion(b, aim) - aim),
   );
   const first = ranked[seed % Math.min(3, ranked.length)]!;
-  const snack: PlateItem[] = [{ id: "row-0", item: first, qty: portion(first, aim) }];
+  const firstQty = portion(first, aim);
+  const snack: PlateItem[] = [{ id: "row-0", item: first, qty: firstQty, suggested: firstQty }];
 
   const left = target.kcal - totals(snack).kcal;
   // A piece of fruit rounds out a snack best; otherwise the most protein that fits.
@@ -286,6 +295,6 @@ export function buildSnack(
   const second = choices
     .filter((i) => i.role !== first.role && i.kcal <= left * 1.15)
     .sort((a, b) => Number(isFruit(b)) - Number(isFruit(a)) || b.protein - a.protein)[0];
-  if (second && left >= 60) snack.push({ id: "row-1", item: second, qty: 1 });
+  if (second && left >= 60) snack.push({ id: "row-1", item: second, qty: 1, suggested: 1 });
   return snack;
 }
