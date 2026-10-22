@@ -67,6 +67,7 @@ function CardScreen() {
     updateLog,
     resetAll,
     signOut,
+    deleteAccount,
     slots,
     loggedToday,
   } = useStore();
@@ -167,6 +168,14 @@ function CardScreen() {
               }}
               email={session?.user.email}
               onSignOut={() => void signOut().then(() => navigate({ to: "/welcome" }))}
+              onDeleteAccount={async () => {
+                const ok = await deleteAccount();
+                if (ok) {
+                  toast.success("Your account was deleted.");
+                  void navigate({ to: "/welcome" });
+                }
+                return ok;
+              }}
               onStartOver={() => {
                 void resetAll().then(() => navigate({ to: "/onboarding" }));
               }}
