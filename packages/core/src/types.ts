@@ -14,6 +14,7 @@ export type Slot = MealPeriod | SnackSlot;
 export type DietTag = "vegetarian" | "vegan" | "halal" | "gluten-free" | "dairy-free";
 
 export type GoalId = "cut" | "maintain" | "lean-bulk";
+export type ActivityId = "sitting" | "light" | "moderate" | "very";
 
 export type ItemRole = "protein" | "carb" | "veg" | "extra";
 
@@ -69,6 +70,8 @@ export interface Profile {
   heightIn: number;
   weightLb: number;
   goal: GoalId;
+  /** How active they are. Older profiles without one are planned as Moderate. */
+  activity?: ActivityId;
   /** Raises protein to 1.2 g/lb on top of any goal. */
   highProtein?: boolean;
   /** Snacks to save room for in the day. */

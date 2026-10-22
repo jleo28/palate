@@ -6,6 +6,7 @@ import { MacroRow } from "@/components/palate/MacroBits";
 import { GoalPicker } from "@/components/palate/GoalPicker";
 import { CreateAccount } from "@/components/palate/CreateAccount";
 import { SnackPicker } from "@/components/palate/SnackPicker";
+import { ActivityPicker } from "@/components/palate/ActivityPicker";
 import { AllergyPicker } from "@/components/palate/AllergyPicker";
 import {
   effectiveGoal,
@@ -16,6 +17,7 @@ import {
   perMealLine,
   type Allergen,
   type DietTag,
+  type ActivityId,
   type GoalId,
   type SnackSlot,
   type HallId,
@@ -115,6 +117,7 @@ function Onboarding() {
   const [inch, setInch] = useState(profile ? String(profile.heightIn % 12) : "");
   const [weight, setWeight] = useState(profile ? String(profile.weightLb) : "");
   const [goal, setGoal] = useState<GoalId>(profile?.goal ?? "maintain");
+  const [activity, setActivity] = useState<ActivityId | undefined>(profile?.activity);
   const [highProtein, setHighProtein] = useState(profile?.highProtein ?? false);
   const [snacks, setSnacks] = useState<SnackSlot[]>(profile?.snacks ?? []);
   const [diets, setDiets] = useState<DietTag[]>(profile?.diets ?? []);
@@ -129,6 +132,7 @@ function Onboarding() {
     heightIn: heightIn(ft, inch || "0"),
     weightLb: parseNumber(weight, 150) || 150,
     goal,
+    ...(activity ? { activity } : {}),
     highProtein,
     snacks,
     diets,
@@ -258,6 +262,8 @@ function Onboarding() {
             onGoal={setGoal}
             onHighProtein={setHighProtein}
           />
+
+          <ActivityPicker value={activity} onChange={setActivity} />
 
           <SnackPicker value={snacks} onChange={setSnacks} />
 
