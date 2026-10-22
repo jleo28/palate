@@ -10,7 +10,7 @@ import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { Button } from "@/components/ui/button";
 import { CardSettings } from "@/components/palate/CardSettings";
 import { PalateCard } from "@/components/palate/PalateCard";
-import { OutsideMealDialog } from "@/components/palate/OutsideMealDialog";
+import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
 import { EditLogDialog } from "@/components/palate/EditLogDialog";
 import { ProgressRing } from "@/components/palate/ProgressRing";
 import {
@@ -260,22 +260,17 @@ function CardScreen() {
         )}
       </section>
 
-      <OutsideMealDialog
+      <AteSomethingElseDialog
         open={outsideOpen}
         onOpenChange={setOutsideOpen}
+        hall={profile.hall}
         slots={slots}
         loggedToday={loggedToday}
-        onLog={({ name, meal, ...macros }) => {
-          const logged = addLog({
-            hall: profile.hall,
-            meal,
-            ...macros,
-            items: [{ name, portion: "Estimated" }],
-            source: "outside",
-          });
-          if (!logged) return;
+        start="manual"
+        onLog={(entry) => {
+          if (!addLog(entry)) return;
           setOutsideOpen(false);
-          toast.success(`Added to today's ${meal.toLowerCase()}`);
+          toast.success(`Added to today's ${entry.meal.toLowerCase()}`);
         }}
       />
 
