@@ -13,7 +13,8 @@ import {
   heightIn,
   parseNumber,
   dailyTargets,
-  mealTargets,
+  daySlots,
+  perMealLine,
   type Allergen,
   type DietTag,
   type ActivityId,
@@ -151,7 +152,6 @@ function Onboarding() {
     parseNumber(weight, 0) >= 60;
 
   const daily = dailyTargets(draft);
-  const perMeal = mealTargets(daily, "Lunch");
 
   const finish = async () => {
     await saveProfile({ ...draft, goal: effectiveGoal(draft) });
@@ -303,7 +303,7 @@ function Onboarding() {
             <p className="label-caps mb-2 text-muted-foreground">Daily target</p>
             <MacroRow t={daily} />
             <p className="mt-3 text-xs text-muted-foreground">
-              Roughly {perMeal.kcal} cal and {perMeal.protein}g protein per main meal.
+              {perMealLine(daily.kcal, daySlots(snacks))}
             </p>
           </div>
         </section>
