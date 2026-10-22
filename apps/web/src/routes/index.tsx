@@ -38,6 +38,7 @@ import {
   startHistory,
   type PlateHistory,
   removeRow,
+  restoreRow,
   replaceRow,
   setQty,
   swapItem,
@@ -117,6 +118,15 @@ function Plate() {
   }, []);
   const plate = currentPlate(history);
   const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
+
+  const removeWithUndo = (row: PlateItem) => {
+    const index = plate.findIndex((r) => r.id === row.id);
+    edit((prev) => removeRow(prev, row.id));
+    toast(`Removed ${row.item.name}`, {
+      duration: 5000,
+      action: { label: "Undo", onClick: () => edit((prev) => restoreRow(prev, row, index)) },
+    });
+  };
 
   useRequireProfile();
 
@@ -344,7 +354,7 @@ function Plate() {
                   canSwap={canSwap(menu, plate, row.id, hall, period, diets)}
                   onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, period, diets))}
                   onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
-                  onRemove={() => edit((prev) => removeRow(prev, row.id))}
+                  onRemove={() => removeWithUndo(row)}
                   onReplace={(item) => edit((prev) => replaceRow(prev, row.id, item))}
                 />
               ))}
