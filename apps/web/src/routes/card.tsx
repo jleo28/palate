@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Pencil, Plus } from "lucide-react";
+import { ChevronRight, Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
@@ -82,6 +82,7 @@ function CardScreen() {
     log,
     addLog,
     removeLog,
+    restoreLog,
     updateLog,
     resetAll,
     signOut,
@@ -118,6 +119,14 @@ function CardScreen() {
     (d) => isRestDay(profile.wellbeing, d),
     profile.cardSpends,
   );
+  // Removing never refunds a card spent on logging an earlier meal.
+  const removeWithUndo = (meal: LoggedMeal) => {
+    removeLog(meal.id);
+    toast(`Removed ${meal.meal.toLowerCase()}`, {
+      duration: 5000,
+      action: { label: "Undo", onClick: () => restoreLog(meal) },
+    });
+  };
   const skippedToday = !!profile.wellbeing?.skipped?.includes(today);
   const setSkipToday = (skip: boolean) =>
     void saveProfile({ ...profile, wellbeing: setSkipped(profile.wellbeing, today, skip) });
@@ -374,9 +383,16 @@ function CardScreen() {
                 <button
                   onClick={() => setEditing(l)}
                   aria-label={`Edit ${l.meal.toLowerCase()}`}
-                  className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 text-xs font-bold"
+                  className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 text-xs font-bold"
                 >
                   <Pencil className="size-3.5" /> Edit
+                </button>
+                <button
+                  onClick={() => removeWithUndo(l)}
+                  aria-label={`Remove ${l.meal.toLowerCase()}`}
+                  className="grid size-10 shrink-0 place-items-center rounded-full border border-foreground/25"
+                >
+                  <X className="size-4" />
                 </button>
               </div>
             ))}
