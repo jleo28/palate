@@ -3,6 +3,7 @@ import {
   capPlate,
   daySlots,
   fitCheck,
+  PAST_PLAN,
   fitSummary,
   mealGuide,
   perMealLine,
@@ -115,17 +116,16 @@ describe("fitCheck and fitSummary", () => {
     expect(fitSummary(fit, "Lunch")).toBe("This plate fits your lunch nicely.");
   });
 
-  it("names the macro that's over and by how much", () => {
+  it("offers portion guidance, never criticism, when a plate runs past the plan", () => {
     const fit = fitCheck({ kcal: 740, protein: 36, carbs: 105, fat: 20 }, guide, none, daily);
     expect(fit.over).toEqual([{ macro: "carbs", by: 20 }]);
-    expect(fitSummary(fit, "Lunch")).toBe(
-      "A bit heavy on carbs (+20 g). Dinner can balance it out.",
-    );
+    expect(fitSummary(fit, "Lunch")).toBe(PAST_PLAN);
+    expect(fitSummary(fit, "Lunch")).not.toMatch(/heavy|too|over|carbs/i);
   });
 
-  it("leads with calories before protein", () => {
-    const fit = fitCheck({ kcal: 820, protein: 50, carbs: 85, fat: 22 }, guide, none, daily);
-    expect(fitSummary(fit, "Dinner")).toBe("A bit heavy on calories (+120 cal).");
+  it("says the same when the day would go past its plan", () => {
+    const fit = fitCheck(guide, guide, { ...none, kcal: 1400 }, daily);
+    expect(fitSummary(fit, "Dinner")).toBe(PAST_PLAN);
   });
 
   it("ignores small overshoots", () => {
@@ -147,7 +147,7 @@ describe("fitCheck and fitSummary", () => {
 
   it("notices a plate that's light on protein", () => {
     const fit = fitCheck({ kcal: 650, protein: 20, carbs: 85, fat: 20 }, guide, none, daily);
-    expect(fitSummary(fit, "Dinner")).toMatch(/Light on protein/);
+    expect(fitSummary(fit, "Dinner")).toMatch(/more protein/);
   });
 });
 

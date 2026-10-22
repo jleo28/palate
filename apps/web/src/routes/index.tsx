@@ -371,7 +371,7 @@ function Plate() {
             )}
             <p>
               <span className="font-bold">{profile.seedling?.name ?? "Seedling"}: </span>
-              {fitSummary(fit, meal, slots)}
+              {fitSummary(fit, meal)}
             </p>
           </div>
 
