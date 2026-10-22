@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { daysShowedUp, daysTogether, isPaused, isRestDay, setPaused, streak } from "@palate/core";
+import {
+  daysShowedUp,
+  daysTogether,
+  isPaused,
+  isRestDay,
+  isSleepy,
+  setPaused,
+  streak,
+} from "@palate/core";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { SeedlingCard } from "@/components/palate/SeedlingCard";
 import { today as localToday } from "@/lib/palate/dates";
@@ -40,6 +48,14 @@ function SproutScreen() {
         daysShowedUp={daysShowedUp(log)}
         daysTogether={daysTogether(profile.createdOn, today)}
         checkedInToday={log.some((l) => l.date === today)}
+        sleepy={
+          !isPaused(profile.wellbeing) &&
+          isSleepy(
+            log.map((l) => l.date),
+            today,
+            (d) => isRestDay(profile.wellbeing, d),
+          )
+        }
         streak={currentStreak}
         paused={isPaused(profile.wellbeing)}
         onPausedChange={(pause) =>

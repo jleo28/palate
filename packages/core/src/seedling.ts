@@ -74,12 +74,16 @@ export function seedlingDetails(seed: number) {
   };
 }
 
-/** Growth comes from showing up (days with any meal logged), never from eating less. */
+/**
+ * Growth comes from showing up (days with any meal logged), never from eating less.
+ * `days` is the total days logged to reach each stage. Tune here.
+ */
 export const STAGES = [
   { name: "Seed", days: 0 },
   { name: "Sprout", days: 1 },
-  { name: "Leafy", days: 3 },
-  { name: "In bloom", days: 7 },
+  { name: "Sapling", days: 3 },
+  { name: "Plant", days: 7 },
+  { name: "Bloom", days: 14 },
 ] as const;
 
 export function growthStage(daysShowedUp: number) {
@@ -87,8 +91,41 @@ export function growthStage(daysShowedUp: number) {
   STAGES.forEach((stage, i) => {
     if (daysShowedUp >= stage.days) index = i;
   });
+  const current = STAGES[index]!;
   const next = STAGES[index + 1];
-  return { index, name: STAGES[index]!.name, toNext: next ? next.days - daysShowedUp : 0 };
+  return {
+    index,
+    name: current.name,
+    toNext: next ? next.days - daysShowedUp : 0,
+    /** 0–1 along the way to the next stage; 1 once fully grown. */
+    progress: next ? (daysShowedUp - current.days) / (next.days - current.days) : 1,
+    nextName: next?.name ?? null,
+  };
+}
+
+/** Days without logging before Seedling gets sleepy. Never sad, and a log wakes it right up. */
+export const SLEEPY_AFTER_DAYS = 2;
+
+/**
+ * Seedling is sleepy after SLEEPY_AFTER_DAYS or more full days with nothing logged. Rest days
+ * (skipped or paused) don't count as missed, and someone who hasn't logged yet isn't sleepy.
+ */
+export function isSleepy(
+  loggedDates: readonly string[],
+  today: string,
+  isRest: (date: string) => boolean = () => false,
+) {
+  const logged = new Set(loggedDates);
+  if (!logged.size || logged.has(today)) return false;
+  let missed = 0;
+  let cursor = today;
+  for (let i = 0; i < SLEEPY_AFTER_DAYS; i++) {
+    const [y, m, d] = cursor.split("-").map(Number) as [number, number, number];
+    cursor = new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
+    if (logged.has(cursor) || isRest(cursor)) return false;
+    missed++;
+  }
+  return missed >= SLEEPY_AFTER_DAYS;
 }
 
 /**

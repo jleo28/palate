@@ -145,17 +145,19 @@ const TOPS: Record<SpeciesId, ReactElement> = {
   ),
 };
 
-const STAGE_SCALE = [0.74, 0.84, 0.92, 1];
+const STAGE_SCALE = [0.7, 0.78, 0.86, 0.94, 1];
 
 interface Props {
   seedling: Seedling;
-  /** Growth stage 0–3. */
+  /** Growth stage 0–4 (see STAGES in @palate/core). */
   stage?: number;
+  /** A couple of days without logging: closed eyes and a little "z". Never sad. */
+  sleepy?: boolean;
   className?: string;
   celebrate?: boolean;
 }
 
-export function SeedlingAvatar({ seedling, stage = 3, className, celebrate }: Props) {
+export function SeedlingAvatar({ seedling, stage = 4, className, celebrate, sleepy }: Props) {
   const d = seedlingDetails(seedling.seed);
   const tone = TONES[seedling.tone] ?? TONES[0];
 
@@ -179,7 +181,20 @@ export function SeedlingAvatar({ seedling, stage = 3, className, celebrate }: Pr
           d="M35 50c2-10 14-16 35-16s33 6 35 16l-5 62c-1 12-15 17-30 17s-30-5-31-17Z"
         />
         <path {...ink} d="M51 127l-2 9m39-9 2 9" />
-        {d.eyes === "happy" ? (
+        {sleepy ? (
+          <>
+            <path {...ink} strokeWidth="3.5" d="M54 87c2 3 8 3 10 0m14 0c2 3 8 3 10 0" />
+            <text
+              x="98"
+              y="58"
+              className="fill-foreground/60 font-display"
+              fontSize="16"
+              fontWeight="700"
+            >
+              z
+            </text>
+          </>
+        ) : d.eyes === "happy" ? (
           <path {...ink} strokeWidth="3.5" d="M54 86c2-4 8-4 10 0m14 0c2-4 8-4 10 0" />
         ) : (
           <>
