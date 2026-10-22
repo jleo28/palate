@@ -17,7 +17,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { HALLS, MEALS } from "@/lib/palate/halls";
-import { MENU } from "@/lib/palate/menu";
+import { useHallMenu } from "@/lib/palate/use-menu";
 import {
   CONFIRM_WITH_STAFF,
   logItems,
@@ -71,8 +71,15 @@ function Menus() {
   const [custom, setCustom] = useState<MenuItem[]>([]);
   const [plateOpen, setPlateOpen] = useState(false);
 
+  const { items: hallItems, loading, sample, date } = useHallMenu(hall);
+  const dayLabel = new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+
   const stations = useMemo(() => {
-    const items = MENU.filter(
+    const items = hallItems.filter(
       (i) =>
         i.hall === hall &&
         i.meals.includes(period) &&
@@ -85,7 +92,7 @@ function Menus() {
       map.set(i.station, list);
     }
     return [...map.entries()];
-  }, [hall, period, filters]);
+  }, [hallItems, hall, period, filters]);
 
   const t = custom.reduce(
     (a, i) => ({
@@ -131,7 +138,12 @@ function Menus() {
 
   return (
     <AppShell>
-      <ScreenHeader title="Hall Menus" sub="Explore every station" />
+      <ScreenHeader title="Hall Menus" sub={`${dayLabel} · ${period}`} />
+      {sample && (
+        <p className="mb-2 inline-block rounded-full bg-foreground/5 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+          Sample menu · today's menu couldn't load
+        </p>
+      )}
       {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
       <AllergenNotice className="mb-3" />
 
@@ -191,7 +203,11 @@ function Menus() {
       <div className="space-y-5">
         {stations.length === 0 && (
           <p className="py-12 text-center text-sm text-muted-foreground">
-            Nothing on this line matches those filters. Try loosening one.
+            {loading
+              ? "Loading today's menu…"
+              : filters.length
+                ? "Nothing on this line matches those filters. Try loosening one."
+                : `${period} isn't on today's menu here.`}
           </p>
         )}
         {stations.map(([station, items]) => (

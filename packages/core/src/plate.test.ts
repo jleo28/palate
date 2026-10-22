@@ -180,3 +180,12 @@ describe("canSwap", () => {
     expect(canSwap(menu, plate, "a", "village", "Lunch", [])).toBe(false);
   });
 });
+
+describe("availableItems and components", () => {
+  it("never offers toppings or condiments for a generated plate", () => {
+    const ranch = item({ id: "ranch", role: "extra", kind: "component" });
+    expect(availableItems([...menu, ranch], "village", "Lunch", []).map((i) => i.id)).not.toContain(
+      "ranch",
+    );
+  });
+});

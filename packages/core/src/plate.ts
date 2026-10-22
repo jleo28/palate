@@ -8,7 +8,11 @@ export function availableItems(
   diets: DietTag[],
 ) {
   return menu.filter(
-    (i) => i.hall === hall && i.meals.includes(meal) && diets.every((d) => i.tags.includes(d)),
+    (i) =>
+      i.hall === hall &&
+      i.meals.includes(meal) &&
+      i.kind !== "component" &&
+      diets.every((d) => i.tags.includes(d)),
   );
 }
 

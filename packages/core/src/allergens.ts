@@ -58,6 +58,10 @@ export function hasAllergyConflict(
   allergies: Allergen[] | undefined,
   custom: string[] | undefined,
 ) {
+  // Unanalyzed items could contain anything, so they're out for anyone with an allergy set.
+  if (item.allergensUnknown && ((allergies?.length ?? 0) > 0 || (custom?.length ?? 0) > 0)) {
+    return true;
+  }
   return (
     allergenConflicts(item, allergies).length > 0 || customAllergyMatches(item, custom).length > 0
   );

@@ -3,7 +3,6 @@ import { Minus, Plus, Search } from "lucide-react";
 import {
   MAX_QTY,
   SNACKS,
-  availableItems,
   canLogSlot,
   firstOpenSlot,
   isSnack,
@@ -17,7 +16,8 @@ import {
   type Slot,
 } from "@palate/core";
 import { HALLS, currentMeal, hallName } from "@/lib/palate/halls";
-import { MENU, portionLabel } from "@/lib/palate/menu";
+import { portionLabel } from "@/lib/palate/menu";
+import { useHallMenu } from "@/lib/palate/use-menu";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -90,10 +90,14 @@ export function AteSomethingElseDialog({
   const [name, setName] = useState("");
   const [macros, setMacros] = useState(EMPTY);
 
+  const { items: hallItems } = useHallMenu(hall);
   const menu = useMemo(
     () =>
-      availableItems(MENU, hall, menuPeriod(meal), []).sort((a, b) => a.name.localeCompare(b.name)),
-    [hall, meal],
+      // Everything served, toppings and condiments included: this is what you actually had.
+      hallItems
+        .filter((i) => i.meals.includes(menuPeriod(meal)))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [hallItems, meal],
   );
   const q = query.trim().toLowerCase();
   const matches = q ? menu.filter((i) => `${i.name} ${i.station}`.toLowerCase().includes(q)) : menu;
