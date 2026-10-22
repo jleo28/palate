@@ -16,7 +16,7 @@ import {
   type PlateItem,
   type Slot,
 } from "@palate/core";
-import { currentMeal, hallName } from "@/lib/palate/halls";
+import { HALLS, currentMeal, hallName } from "@/lib/palate/halls";
 import { MENU, portionLabel } from "@/lib/palate/menu";
 import { cn } from "@/lib/utils";
 import {
@@ -43,8 +43,9 @@ const field =
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Gets a meal ready to log: hall items, or something from outside the halls. */
-  onLog: (entry: NewLog) => void;
+  /** Gets a meal ready to log: hall items, or something from outside the halls. `date` is set
+   * when logging an earlier day. */
+  onLog: (entry: NewLog, date?: string) => void;
   hall: HallId;
   /** Today's slots, including the user's snacks. */
   slots: Slot[];
@@ -52,7 +53,17 @@ interface Props {
   loggedToday: Slot[];
   /** Which tab opens first. */
   start?: "menu" | "manual";
+  /** Logging an earlier meal: the days that can be picked, and what's logged on each. */
+  backfill?: { days: string[]; loggedOn: (date: string) => Slot[] };
 }
+
+const dayLabel = (date: string) =>
+  new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 
 /**
  * "I ate something else": pick what you actually had from today's hall menu, or enter a meal
@@ -62,11 +73,15 @@ export function AteSomethingElseDialog({
   open,
   onOpenChange,
   onLog,
-  hall,
+  hall: homeHall,
   slots,
-  loggedToday,
+  loggedToday: loggedTodayProp,
   start = "menu",
+  backfill,
 }: Props) {
+  const [day, setDay] = useState(backfill?.days[0]);
+  const [hall, setHall] = useState(homeHall);
+  const loggedToday = backfill && day ? backfill.loggedOn(day) : loggedTodayProp;
   const openSlot = () => firstOpenSlot(slots, currentMeal(), loggedToday) ?? currentMeal();
   const [tab, setTab] = useState(start);
   const [meal, setMeal] = useState<Slot>(openSlot);
@@ -103,21 +118,24 @@ export function AteSomethingElseDialog({
   const manualReady = n(macros.kcal) > 0;
 
   const logPicked = () => {
-    onLog({ hall, meal, ...totals(picked), items: logItems(picked), source: "dining-hall" });
+    onLog({ hall, meal, ...totals(picked), items: logItems(picked), source: "dining-hall" }, day);
     reset();
   };
   const logManual = () => {
     const label = name.trim() || "Outside dining hall";
-    onLog({
-      hall,
-      meal,
-      kcal: n(macros.kcal),
-      protein: n(macros.protein),
-      carbs: n(macros.carbs),
-      fat: n(macros.fat),
-      items: [{ name: label, portion: "Estimated" }],
-      source: "outside",
-    });
+    onLog(
+      {
+        hall,
+        meal,
+        kcal: n(macros.kcal),
+        protein: n(macros.protein),
+        carbs: n(macros.carbs),
+        fat: n(macros.fat),
+        items: [{ name: label, portion: "Estimated" }],
+        source: "outside",
+      },
+      day,
+    );
     reset();
   };
 
@@ -141,6 +159,8 @@ export function AteSomethingElseDialog({
       open={open}
       onOpenChange={(next) => {
         if (next) {
+          setDay(backfill?.days[0]);
+          setHall(homeHall);
           setMeal(openSlot());
           setTab(start);
         }
@@ -149,11 +169,64 @@ export function AteSomethingElseDialog({
     >
       <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-sm flex-col gap-3 rounded-2xl p-5">
         <DialogHeader className="text-left">
-          <DialogTitle className="font-display text-xl">Ate something else?</DialogTitle>
+          <DialogTitle className="font-display text-xl">
+            {backfill ? "Log an earlier meal" : "Ate something else?"}
+          </DialogTitle>
           <DialogDescription>
-            Log what you actually had. It counts toward today like any other meal.
+            {backfill
+              ? "Uses one of this month's cards. It counts toward that day's streak."
+              : "Log what you actually had. It counts toward today like any other meal."}
           </DialogDescription>
         </DialogHeader>
+
+        {backfill && (
+          <>
+            <div role="radiogroup" aria-label="Which day" className="flex flex-wrap gap-1.5">
+              {backfill.days.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  role="radio"
+                  aria-checked={day === d}
+                  onClick={() => {
+                    setDay(d);
+                    setPicked([]);
+                  }}
+                  className={cn(
+                    "h-9 rounded-full border px-3 text-xs font-bold",
+                    day === d
+                      ? "border-olive bg-olive text-primary-foreground"
+                      : "border-foreground/20 text-muted-foreground",
+                  )}
+                >
+                  {dayLabel(d)}
+                </button>
+              ))}
+            </div>
+            <div role="radiogroup" aria-label="Which hall" className="flex flex-wrap gap-1.5">
+              {HALLS.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={hall === h.id}
+                  onClick={() => {
+                    setHall(h.id);
+                    setPicked([]);
+                  }}
+                  className={cn(
+                    "h-9 rounded-full border px-3 text-xs font-bold",
+                    hall === h.id
+                      ? "border-olive bg-olive text-primary-foreground"
+                      : "border-foreground/20 text-muted-foreground",
+                  )}
+                >
+                  {h.short}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         <div role="radiogroup" aria-label="Which meal" className="flex flex-wrap gap-1.5">
           {slots.map((m) => (

@@ -1,5 +1,6 @@
 import type { Seedling } from "./seedling";
 import type { Wellbeing } from "./wellbeing";
+import type { CardSpend } from "./streak";
 
 export type HallId = "village" | "evk" | "parkside";
 
@@ -90,6 +91,8 @@ export interface Profile {
   seedling?: Seedling;
   /** Hide Numbers, skipped days and tracking pauses. */
   wellbeing?: Wellbeing;
+  /** Cards spent on logging earlier meals. Kept here so removing that meal never refunds one. */
+  cardSpends?: CardSpend[];
 }
 
 /** One food in a logged meal. Per-portion macros make it editable later; older logs lack them. */

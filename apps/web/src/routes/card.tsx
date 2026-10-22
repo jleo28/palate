@@ -22,6 +22,8 @@ import {
   isRestDay,
   setPaused,
   setSkipped,
+  CARDS_PER_MONTH,
+  backfillDays,
   streak,
   type LoggedMeal,
 } from "@palate/core";
@@ -30,6 +32,22 @@ import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
+
+const shortDay = (date: string) =>
+  new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "UTC",
+  });
+
+/** The first of next month, e.g. "Nov 1". */
+const refillDate = (today: string) => {
+  const [y, m] = today.split("-").map(Number) as [number, number];
+  return new Date(Date.UTC(y, m, 1, 12)).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+};
 
 export const Route = createFileRoute("/card")({
   head: () => ({
@@ -73,6 +91,7 @@ function CardScreen() {
     loggedToday,
   } = useStore();
   const [outsideOpen, setOutsideOpen] = useState(false);
+  const [earlierOpen, setEarlierOpen] = useState(false);
   const [editing, setEditing] = useState<LoggedMeal | null>(null);
 
   useRequireProfile();
@@ -94,6 +113,12 @@ function CardScreen() {
   const showedUp = daysShowedUp(log);
   const checkedInToday = todaysLog.length > 0;
   const hideNumbers = !!profile.wellbeing?.hideNumbers;
+  const currentStreak = streak(
+    log.map((l) => l.date),
+    today,
+    (d) => isRestDay(profile.wellbeing, d),
+    profile.cardSpends,
+  );
   // Removing never refunds a card spent on logging an earlier meal.
   const removeWithUndo = (meal: LoggedMeal) => {
     removeLog(meal.id);
@@ -198,11 +223,7 @@ function CardScreen() {
           seedling={profile.seedling}
           daysShowedUp={showedUp}
           checkedInToday={checkedInToday}
-          streak={streak(
-            log.map((l) => l.date),
-            today,
-            (d) => isRestDay(profile.wellbeing, d),
-          )}
+          streak={currentStreak}
           paused={isPaused(profile.wellbeing)}
           onPausedChange={(pause) =>
             void saveProfile({ ...profile, wellbeing: setPaused(profile.wellbeing, today, pause) })
@@ -247,6 +268,20 @@ function CardScreen() {
         >
           <Plus className="size-4" /> Ate outside dining hall
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setEarlierOpen(true)}
+          disabled={currentStreak.cardsLeft === 0}
+          className="mt-2 h-11 w-full rounded-full font-bold"
+        >
+          <Plus className="size-4" /> Log an earlier meal
+        </Button>
+        <p className="mt-1.5 text-center text-xs text-muted-foreground">
+          {currentStreak.cardsLeft === 0
+            ? `You've used this month's ${CARDS_PER_MONTH} cards. They refill on ${refillDate(today)}.`
+            : `Uses a card · ${currentStreak.cardsLeft} of ${CARDS_PER_MONTH} left this month`}
+        </p>
         {skippedToday ? (
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Taking today off from logging. Your streak is safe.{" "}
@@ -280,6 +315,29 @@ function CardScreen() {
           if (!addLog(entry)) return;
           setOutsideOpen(false);
           toast.success(`Added to today's ${entry.meal.toLowerCase()}`);
+        }}
+      />
+
+      <AteSomethingElseDialog
+        open={earlierOpen}
+        onOpenChange={setEarlierOpen}
+        hall={profile.hall}
+        slots={slots}
+        loggedToday={[]}
+        backfill={{
+          days: backfillDays(today),
+          loggedOn: (d) => log.filter((l) => l.date === d).map((l) => l.meal),
+        }}
+        onLog={(entry, date) => {
+          if (!date || currentStreak.cardsLeft === 0) return;
+          if (!addLog(entry, date)) return;
+          // The card is spent for good, even if this meal is removed later.
+          void saveProfile({
+            ...profile,
+            cardSpends: [...(profile.cardSpends ?? []), { spentOn: today, forDate: date }],
+          });
+          setEarlierOpen(false);
+          toast.success(`${entry.meal} logged for ${shortDay(date)}`);
         }}
       />
 

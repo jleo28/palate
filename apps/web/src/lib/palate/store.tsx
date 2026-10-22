@@ -107,7 +107,8 @@ interface Ctx {
   saveProfile: (p: Profile) => Promise<void>;
   log: LoggedMeal[];
   /** Returns false when the slot can't be logged again today. */
-  addLog: (m: Omit<LoggedMeal, "id" | "date">) => boolean;
+  /** Log a meal for today, or for `date` (an earlier day, via a card). */
+  addLog: (m: Omit<LoggedMeal, "id" | "date">, date?: string) => boolean;
   /** Slots logged today, in log order. */
   loggedToday: Slot[];
   removeLog: (id: string) => void;
@@ -212,18 +213,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [log]);
 
   const addLog = useCallback(
-    (m: Omit<LoggedMeal, "id" | "date">) => {
+    (m: Omit<LoggedMeal, "id" | "date">, date = today()) => {
       // Breakfast, lunch and dinner once a day; change a logged meal from the macro bank.
-      if (!canLogSlot(m.meal, loggedToday)) {
-        toast.error(`${m.meal} is already logged today. Edit it in your macro bank.`);
+      const loggedThatDay = log.filter((l) => l.date === date).map((l) => l.meal);
+      if (!canLogSlot(m.meal, loggedThatDay)) {
+        toast.error(`${m.meal} is already logged that day. Edit it in your macro bank.`);
         return false;
       }
-      const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date: today() };
+      const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date };
       setLog((prev) => [entry, ...prev]);
       // Move on to the next slot that can still be logged.
       setMeal((current) =>
         current === m.meal
-          ? (nextOpenSlot(slots, m.meal, [...loggedToday, m.meal]) ?? current)
+          ? date === today()
+            ? (nextOpenSlot(slots, m.meal, [...loggedToday, m.meal]) ?? current)
+            : current
           : current,
       );
       void supabase
@@ -237,7 +241,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         });
       return true;
     },
-    [loggedToday, slots],
+    [log, loggedToday, slots],
   );
 
   const restoreLog = useCallback((m: LoggedMeal) => {
