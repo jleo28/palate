@@ -1,5 +1,6 @@
 import type { Seedling } from "./seedling";
 import type { Wellbeing } from "./wellbeing";
+import type { CardSpend } from "./streak";
 
 export type HallId = "village" | "evk" | "parkside";
 
@@ -14,6 +15,7 @@ export type Slot = MealPeriod | SnackSlot;
 export type DietTag = "vegetarian" | "vegan" | "halal" | "gluten-free" | "dairy-free";
 
 export type GoalId = "cut" | "maintain" | "lean-bulk";
+export type ActivityId = "sitting" | "light" | "moderate" | "very";
 
 export type ItemRole = "protein" | "carb" | "veg" | "extra";
 
@@ -54,13 +56,20 @@ export interface MenuItem {
   tags: DietTag[];
   /** Known allergens. Absent means none listed. */
   allergens?: Allergen[];
+  /** USC didn't analyze this item's allergens: unknown, never treated as safe. */
+  allergensUnknown?: boolean;
+  /** Toppings and condiments are "component": shown on menus, never on a generated plate. */
+  kind?: "dish" | "component";
 }
 
 export interface PlateItem {
   /** Stable row id within a plate. Survives swaps, so two rows never share an identity. */
   id: string;
   item: MenuItem;
+  /** Portions on the plate. 0 keeps the row (greyed out) so + can bring it back. */
   qty: number;
+  /** The portion the recommender suggested ("Your portion"). Missing for rows the user added. */
+  suggested?: number;
 }
 
 export interface Profile {
@@ -69,6 +78,8 @@ export interface Profile {
   heightIn: number;
   weightLb: number;
   goal: GoalId;
+  /** How active they are. Older profiles without one are planned as Moderate. */
+  activity?: ActivityId;
   /** Raises protein to 1.2 g/lb on top of any goal. */
   highProtein?: boolean;
   /** Snacks to save room for in the day. */
@@ -84,6 +95,8 @@ export interface Profile {
   seedling?: Seedling;
   /** Hide Numbers, skipped days and tracking pauses. */
   wellbeing?: Wellbeing;
+  /** Cards spent on logging earlier meals. Kept here so removing that meal never refunds one. */
+  cardSpends?: CardSpend[];
 }
 
 /** One food in a logged meal. Per-portion macros make it editable later; older logs lack them. */
@@ -109,4 +122,6 @@ export interface LoggedMeal {
   fat: number;
   items: LoggedItem[];
   source?: "dining-hall" | "outside";
+  /** The meal's photo in the meal-photos bucket ("<user id>/<file>"). */
+  photoPath?: string;
 }

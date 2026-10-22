@@ -1,24 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { MacroText } from "@/components/palate/MacroText";
-import { LogCelebration } from "@/components/palate/LogCelebration";
 import { AllergenNotice } from "@/components/palate/AllergenNotice";
-import { macroLine } from "@/lib/palate/macro-text";
 import { useMemo, useState } from "react";
-import { Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { Button } from "@/components/ui/button";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { HALLS, MEALS } from "@/lib/palate/halls";
-import { MENU } from "@/lib/palate/menu";
+import { useHallMenu } from "@/lib/palate/use-menu";
 import {
   CONFIRM_WITH_STAFF,
   logItems,
@@ -64,17 +55,22 @@ const FILTERS: { id: FilterId; label: string; test: (i: MenuItem) => boolean }[]
 
 function Menus() {
   const hidden = useHideNumbers();
-  const { hall, setHall, meal, setMeal, addLog, profile } = useStore();
+  const { hall, setHall, meal, setMeal, addToPlate, profile } = useStore();
+  const navigate = useNavigate();
   // Menus are per hall meal; a selected snack shows the meal it's planned from.
   const period = menuPeriod(meal);
   const allergies = profile?.allergies ?? [];
   const [filters, setFilters] = useState<FilterId[]>([]);
-  const [custom, setCustom] = useState<MenuItem[]>([]);
-  const [plateOpen, setPlateOpen] = useState(false);
-  const [celebrating, setCelebrating] = useState(false);
+
+  const { items: hallItems, loading, sample, date } = useHallMenu(hall);
+  const dayLabel = new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
 
   const stations = useMemo(() => {
-    const items = MENU.filter(
+    const items = hallItems.filter(
       (i) =>
         i.hall === hall &&
         i.meals.includes(period) &&
@@ -87,59 +83,21 @@ function Menus() {
       map.set(i.station, list);
     }
     return [...map.entries()];
-  }, [hall, period, filters]);
-
-  const t = custom.reduce(
-    (a, i) => ({
-      kcal: a.kcal + i.kcal,
-      protein: a.protein + i.protein,
-      carbs: a.carbs + i.carbs,
-      fat: a.fat + i.fat,
-    }),
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
-  );
-
-  const customRows = useMemo(() => {
-    const rows = new Map<string, { item: MenuItem; quantity: number }>();
-    for (const item of custom) {
-      const existing = rows.get(item.id);
-      rows.set(item.id, { item, quantity: (existing?.quantity ?? 0) + 1 });
-    }
-    return [...rows.values()];
-  }, [custom]);
-
-  const subtractOne = (id: string) => {
-    setCustom((prev) => {
-      const index = prev.findIndex((item) => item.id === id);
-      return index < 0 ? prev : [...prev.slice(0, index), ...prev.slice(index + 1)];
-    });
-  };
-
-  const clearItem = (id: string) => setCustom((prev) => prev.filter((item) => item.id !== id));
-
-  const logCustomPlate = () => {
-    const logged = addLog({
-      hall,
-      meal,
-      ...t,
-      items: logItems(
-        customRows.map(({ item, quantity }, n) => ({ id: String(n), item, qty: quantity })),
-      ),
-    });
-    if (!logged) return;
-    setCustom([]);
-    setPlateOpen(false);
-    setCelebrating(true);
-    toast.success(`${meal} logged`);
-  };
+  }, [hallItems, hall, period, filters]);
 
   return (
     <AppShell>
-      <ScreenHeader title="Hall Menus" sub="Explore every station" />
-      {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
-      {celebrating && profile?.seedling && (
-        <LogCelebration seedling={profile.seedling} onDone={() => setCelebrating(false)} />
+      <ScreenHeader title="Hall Menus" sub={`${dayLabel} · ${period}`} />
+      {sample && (
+        <p className="mb-2 inline-block rounded-full bg-foreground/5 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+          Sample menu · today's menu couldn't load
+        </p>
       )}
+      {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
+      <p className="mb-3 text-sm text-muted-foreground">
+        Want something else? Tap <Plus className="inline size-3.5 align-[-2px]" aria-label="plus" />{" "}
+        on anything to add it to your plate, then log it from The Plate.
+      </p>
       <AllergenNotice className="mb-3" />
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
@@ -198,7 +156,11 @@ function Menus() {
       <div className="space-y-5">
         {stations.length === 0 && (
           <p className="py-12 text-center text-sm text-muted-foreground">
-            Nothing on this line matches those filters. Try loosening one.
+            {loading
+              ? "Loading today's menu…"
+              : filters.length
+                ? "Nothing on this line matches those filters. Try loosening one."
+                : `${period} isn't on today's menu here.`}
           </p>
         )}
         {stations.map(([station, items]) => (
@@ -254,11 +216,13 @@ function Menus() {
                       variant="outline"
                       size="icon"
                       onClick={() => {
-                        setCustom((prev) => [...prev, i]);
-                        toast.success(`${i.name} added to custom plate`);
+                        addToPlate(i);
+                        toast.success(`${i.name} added to your plate`, {
+                          action: { label: "View", onClick: () => void navigate({ to: "/" }) },
+                        });
                       }}
-                      className="shrink-0 rounded-full"
-                      aria-label={`Add ${i.name} to custom plate`}
+                      className="size-10 shrink-0 rounded-full"
+                      aria-label={`Add ${i.name} to your plate`}
                     >
                       <Plus className="size-4" />
                     </Button>
@@ -269,176 +233,6 @@ function Menus() {
           </section>
         ))}
       </div>
-
-      {custom.length > 0 && (
-        <div className="fixed inset-x-0 bottom-[76px] z-30 px-4">
-          <div className="card-edge mx-auto flex max-w-md items-center gap-2 rounded-2xl bg-card p-2 pl-4">
-            <button
-              type="button"
-              onClick={() => setPlateOpen(true)}
-              className="min-w-0 flex-1 text-left"
-              aria-label="Open custom plate"
-            >
-              <p className="label-caps text-muted-foreground">
-                Custom plate · {custom.length} items
-              </p>
-              <p className="truncate font-display text-sm font-bold">
-                {hidden ? `${custom.length} portions` : macroLine(t)}
-              </p>
-            </button>
-            <Button
-              type="button"
-              onClick={() => setPlateOpen(true)}
-              className="h-11 shrink-0 rounded-full px-4"
-            >
-              <ShoppingBasket /> View
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <Sheet open={plateOpen} onOpenChange={setPlateOpen}>
-        <SheetContent
-          side="right"
-          className="flex w-[min(92vw,26rem)] flex-col border-foreground/20 bg-background p-0 sm:max-w-md"
-        >
-          <SheetHeader className="border-b border-foreground/15 px-5 py-5 text-left">
-            <SheetTitle className="font-display text-2xl font-extrabold">Custom plate</SheetTitle>
-            <SheetDescription>
-              {custom.length} {custom.length === 1 ? "portion" : "portions"}
-              {!hidden && ` · ${t.kcal} cal · ${t.protein}g protein`}
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-            {customRows.length === 0 ? (
-              <div className="grid h-full place-content-center text-center text-sm text-muted-foreground">
-                <ShoppingBasket className="mx-auto mb-2 size-7" />
-                Your custom plate is empty.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {customRows.map(({ item, quantity }) => {
-                  const hits = allergenConflicts(item, allergies);
-                  const possible = customAllergyMatches(item, profile?.customAllergies);
-                  const dislikes = dislikedMatches(item, profile?.dislikes);
-                  return (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl border border-foreground/15 bg-card p-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="flex items-center gap-1.5 font-display text-sm font-bold">
-                            {(hits.length > 0 || possible.length > 0) && (
-                              <span
-                                className="size-2 shrink-0 rounded-full bg-destructive"
-                                aria-label={`Allergen warning: contains ${hits.map(allergenLabel).join(", ")}`}
-                              />
-                            )}
-                            {dislikes.length > 0 && (
-                              <span
-                                className="shrink-0 text-base leading-none text-muted-foreground"
-                                aria-label={`Not preferred: ${dislikes.map((entry) => entry.label).join(", ")}`}
-                                title="Not preferred"
-                              >
-                                ~
-                              </span>
-                            )}
-                            <span className="truncate">{item.name}</span>
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {quantity} {quantity === 1 ? item.unit : item.unitPlural}
-                            {!hidden && ` · ${item.kcal * quantity} cal`}
-                          </p>
-                          {hits.length > 0 && (
-                            <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
-                              Contains {hits.map(allergenLabel).join(", ")}
-                            </p>
-                          )}
-                          {possible.length > 0 && (
-                            <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
-                              May contain {possible.join(", ")} · {CONFIRM_WITH_STAFF}
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => clearItem(item.id)}
-                          aria-label={`Remove all ${item.name}`}
-                          className="size-8 shrink-0 rounded-full text-muted-foreground"
-                        >
-                          <Trash2 />
-                        </Button>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between border-t border-foreground/10 pt-2.5">
-                        <span className="text-xs font-semibold text-olive">
-                          {!hidden &&
-                            `${item.protein * quantity}g protein · ${item.carbs * quantity}g carbs · ${item.fat * quantity}g fat`}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => subtractOne(item.id)}
-                            aria-label={`Subtract one ${item.name}`}
-                            className="size-8 rounded-full"
-                          >
-                            <Minus />
-                          </Button>
-                          <span
-                            className="w-6 text-center text-sm font-bold"
-                            aria-label={`${quantity} portions`}
-                          >
-                            {quantity}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setCustom((prev) => [...prev, item])}
-                            aria-label={`Add one ${item.name}`}
-                            className="size-8 rounded-full"
-                          >
-                            <Plus />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-foreground/15 bg-card p-4">
-            <div className="mb-3 grid grid-cols-4 gap-2 text-center">
-              {[
-                ["Cal", t.kcal],
-                ["Protein", t.protein],
-                ["Carbs", t.carbs],
-                ["Fat", t.fat],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <p className="font-display text-sm font-bold">{value}</p>
-                  <p className="label-caps text-muted-foreground">{label}</p>
-                </div>
-              ))}
-            </div>
-            <Button
-              type="button"
-              onClick={logCustomPlate}
-              disabled={custom.length === 0}
-              className="h-12 w-full rounded-full text-base font-bold"
-            >
-              Log custom plate
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
     </AppShell>
   );
 }

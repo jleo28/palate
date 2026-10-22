@@ -27,19 +27,22 @@ import {
   type LoggedMeal,
   type MacroTargets,
   type MealLogRow,
+  type MenuItem,
   type Slot,
   type Profile,
   type ProfileRow,
 } from "@palate/core";
 import { supabase } from "@/lib/supabase";
 import { today } from "./dates";
+import { VERIFIED_PATH } from "./paths";
 import { currentMeal } from "./halls";
 
 // Browser-only data: a signed-out onboarding draft, plus anything saved before accounts existed.
 // Imported into Supabase once, on the first sign-in, then removed.
 const KEY_PROFILE = "palate.profile.v1";
+const PHOTO_BUCKET = "meal-photos";
 const KEY_LOG = "palate.log.v1";
-const DEVICE_KEYS = ["palate.hints.v1", "palate.cardPeek.v1"];
+const DEVICE_KEYS = ["palate.hints.v1", "palate.cardPeek.v1", "palate.portionTip.v1"];
 
 function readLocal<T>(key: string): T | null {
   try {
@@ -65,6 +68,10 @@ async function loadUser(userId: string) {
 
   let profile = profileRes.data ? profileFromRow(profileRes.data) : null;
   let log = ((logRes.data ?? []) as MealLogRow[]).map(logFromRow);
+
+  // The email-confirmation tab only says thanks. The tab that signed up imports its own draft,
+  // so two tabs never both create the account.
+  if (window.location.pathname.startsWith(VERIFIED_PATH)) return { profile, log };
 
   const localProfile = readLocal<Profile>(KEY_PROFILE);
   const localLog = readLocal<LoggedMeal[]>(KEY_LOG) ?? [];
@@ -102,15 +109,32 @@ interface Ctx {
   saveProfile: (p: Profile) => Promise<void>;
   log: LoggedMeal[];
   /** Returns false when the slot can't be logged again today. */
-  addLog: (m: Omit<LoggedMeal, "id" | "date">) => boolean;
+  /** Log a meal for today, or for `date` (an earlier day, via a card). The new entry, or null. */
+  addLog: (m: Omit<LoggedMeal, "id" | "date">, date?: string) => LoggedMeal | null;
+  /** Queue a Hall Menus item for The Plate, which adds it to the plate you're on. */
+  addToPlate: (item: MenuItem) => void;
+  /** Items waiting to be added to the plate; The Plate adds them, then clears the queue. */
+  plateAdds: MenuItem[];
+  clearPlateAdds: () => void;
+  /** The meal just logged, for the "logged" pop-up. Null once it's dismissed. */
+  justLogged: LoggedMeal | null;
+  dismissLogged: () => void;
+  /** Thumbs up (1) or down (-1) on one item of a logged meal; null clears it. */
+  rateItem: (mealId: string, itemName: string, rating: 1 | -1 | null) => void;
+  /** Upload a photo and attach it to a logged meal. True on success. */
+  attachPhoto: (mealId: string, file: File) => Promise<boolean>;
   /** Slots logged today, in log order. */
   loggedToday: Slot[];
   removeLog: (id: string) => void;
+  /** Undo a removal: puts the same entry (same id) back. */
+  restoreLog: (m: LoggedMeal) => void;
   /** Save an edited logged meal (portions, items or totals). */
   updateLog: (m: LoggedMeal) => void;
   /** Delete the profile and log (the account stays) and per-device state. */
   resetAll: () => Promise<void>;
   signOut: () => Promise<void>;
+  /** Permanently deletes the account and everything in it, then signs out. True on success. */
+  deleteAccount: () => Promise<boolean>;
   daily: MacroTargets | null;
   /** The slot being planned: a hall meal or a snack. */
   meal: Slot;
@@ -203,18 +227,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [log]);
 
   const addLog = useCallback(
-    (m: Omit<LoggedMeal, "id" | "date">) => {
+    (m: Omit<LoggedMeal, "id" | "date">, date = today()) => {
       // Breakfast, lunch and dinner once a day; change a logged meal from the macro bank.
-      if (!canLogSlot(m.meal, loggedToday)) {
-        toast.error(`${m.meal} is already logged today. Edit it in your macro bank.`);
-        return false;
+      const loggedThatDay = log.filter((l) => l.date === date).map((l) => l.meal);
+      if (!canLogSlot(m.meal, loggedThatDay)) {
+        toast.error(`${m.meal} is already logged that day. Edit it in your macro bank.`);
+        return null;
       }
-      const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date: today() };
+      const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date };
       setLog((prev) => [entry, ...prev]);
       // Move on to the next slot that can still be logged.
       setMeal((current) =>
         current === m.meal
-          ? (nextOpenSlot(slots, m.meal, [...loggedToday, m.meal]) ?? current)
+          ? date === today()
+            ? (nextOpenSlot(slots, m.meal, [...loggedToday, m.meal]) ?? current)
+            : current
           : current,
       );
       void supabase
@@ -224,12 +251,86 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (!error) return;
           console.error(error);
           setLog((prev) => prev.filter((l) => l.id !== entry.id));
+          setJustLogged((j) => (j?.id === entry.id ? null : j));
           toast.error("Couldn't log that meal. Try again.");
         });
+      setJustLogged(entry);
+      return entry;
+    },
+    [log, loggedToday, slots],
+  );
+
+  const [justLogged, setJustLogged] = useState<LoggedMeal | null>(null);
+  const [plateAdds, setPlateAdds] = useState<MenuItem[]>([]);
+  const addToPlate = useCallback((item: MenuItem) => setPlateAdds((q) => [...q, item]), []);
+  const clearPlateAdds = useCallback(() => setPlateAdds([]), []);
+  const dismissLogged = useCallback(() => setJustLogged(null), []);
+
+  const rateItem = useCallback((mealId: string, itemName: string, rating: 1 | -1 | null) => {
+    const done = ({ error }: { error: unknown }) => {
+      if (!error) return;
+      console.error(error);
+      toast.error("Couldn't save that rating. Try again.");
+    };
+    if (rating === null) {
+      void supabase
+        .from("taste_ratings")
+        .delete()
+        .eq("meal_log_id", mealId)
+        .eq("item_name", itemName)
+        .then(done);
+      return;
+    }
+    void supabase
+      .from("taste_ratings")
+      .upsert(
+        { meal_log_id: mealId, item_name: itemName, rating },
+        { onConflict: "meal_log_id,item_name" },
+      )
+      .then(done);
+  }, []);
+
+  const attachPhoto = useCallback(
+    async (mealId: string, file: File) => {
+      if (!userId) return false;
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${userId}/${mealId}-${Date.now()}.${ext || "jpg"}`;
+      const upload = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .upload(path, file, { contentType: file.type || "image/jpeg" });
+      if (upload.error) {
+        console.error(upload.error);
+        toast.error("Couldn't upload that photo. Try a smaller one.");
+        return false;
+      }
+      const { error } = await supabase
+        .from("meal_logs")
+        .update({ photo_path: path })
+        .eq("id", mealId);
+      if (error) {
+        console.error(error);
+        void supabase.storage.from(PHOTO_BUCKET).remove([path]);
+        toast.error("Couldn't attach that photo. Try again.");
+        return false;
+      }
+      setLog((prev) => prev.map((l) => (l.id === mealId ? { ...l, photoPath: path } : l)));
       return true;
     },
-    [loggedToday, slots],
+    [userId],
   );
+
+  const restoreLog = useCallback((m: LoggedMeal) => {
+    setLog((prev) => (prev.some((l) => l.id === m.id) ? prev : [m, ...prev]));
+    void supabase
+      .from("meal_logs")
+      .insert(logToRow(m))
+      .then(({ error }) => {
+        if (!error) return;
+        console.error(error);
+        setLog((prev) => prev.filter((l) => l.id !== m.id));
+        toast.error("Couldn't bring that meal back. Try again.");
+      });
+  }, []);
 
   const updateLog = useCallback(
     (next: LoggedMeal) => {
@@ -287,6 +388,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    // Photos first: storage files can only be removed through the Storage API, not by the
+    // database function.
+    if (userId) {
+      const { data: files } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .list(userId, { limit: 1000 });
+      const paths = (files ?? []).map((f) => `${userId}/${f.name}`);
+      if (paths.length) {
+        const { error: photoError } = await supabase.storage.from(PHOTO_BUCKET).remove(paths);
+        if (photoError) {
+          console.error(photoError);
+          toast.error("Couldn't delete your photos. Try again.");
+          return false;
+        }
+      }
+    }
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) {
+      console.error(error);
+      toast.error("Couldn't delete your account. Try again.");
+      return false;
+    }
+    for (const key of [KEY_PROFILE, KEY_LOG, ...DEVICE_KEYS]) localStorage.removeItem(key);
+    setProfile(null);
+    setLog([]);
+    // The session belongs to a user that no longer exists, so only clear it locally.
+    await supabase.auth.signOut({ scope: "local" });
+    return true;
+  }, [userId]);
+
   const daily = useMemo(() => (profile ? dailyTargets(profile) : null), [profile]);
 
   const consumedToday = useMemo(() => {
@@ -332,9 +464,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addLog,
     loggedToday,
     removeLog,
+    justLogged,
+    dismissLogged,
+    addToPlate,
+    plateAdds,
+    clearPlateAdds,
+    rateItem,
+    attachPhoto,
+    restoreLog,
     updateLog,
     resetAll,
     signOut,
+    deleteAccount,
     daily,
     meal,
     setMeal,

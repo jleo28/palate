@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Pencil, Plus } from "lucide-react";
+import { ChevronRight, Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
@@ -10,7 +10,7 @@ import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { Button } from "@/components/ui/button";
 import { CardSettings } from "@/components/palate/CardSettings";
 import { PalateCard } from "@/components/palate/PalateCard";
-import { OutsideMealDialog } from "@/components/palate/OutsideMealDialog";
+import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
 import { EditLogDialog } from "@/components/palate/EditLogDialog";
 import { ProgressRing } from "@/components/palate/ProgressRing";
 import {
@@ -22,6 +22,8 @@ import {
   isRestDay,
   setPaused,
   setSkipped,
+  CARDS_PER_MONTH,
+  backfillDays,
   streak,
   type LoggedMeal,
 } from "@palate/core";
@@ -30,6 +32,16 @@ import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
+
+/** The first of next month, e.g. "Nov 1". */
+const refillDate = (today: string) => {
+  const [y, m] = today.split("-").map(Number) as [number, number];
+  return new Date(Date.UTC(y, m, 1, 12)).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+};
 
 export const Route = createFileRoute("/card")({
   head: () => ({
@@ -64,13 +76,16 @@ function CardScreen() {
     log,
     addLog,
     removeLog,
+    restoreLog,
     updateLog,
     resetAll,
     signOut,
+    deleteAccount,
     slots,
     loggedToday,
   } = useStore();
   const [outsideOpen, setOutsideOpen] = useState(false);
+  const [earlierOpen, setEarlierOpen] = useState(false);
   const [editing, setEditing] = useState<LoggedMeal | null>(null);
 
   useRequireProfile();
@@ -92,6 +107,20 @@ function CardScreen() {
   const showedUp = daysShowedUp(log);
   const checkedInToday = todaysLog.length > 0;
   const hideNumbers = !!profile.wellbeing?.hideNumbers;
+  const currentStreak = streak(
+    log.map((l) => l.date),
+    today,
+    (d) => isRestDay(profile.wellbeing, d),
+    profile.cardSpends,
+  );
+  // Removing never refunds a card spent on logging an earlier meal.
+  const removeWithUndo = (meal: LoggedMeal) => {
+    removeLog(meal.id);
+    toast(`Removed ${meal.meal.toLowerCase()}`, {
+      duration: 5000,
+      action: { label: "Undo", onClick: () => restoreLog(meal) },
+    });
+  };
   const skippedToday = !!profile.wellbeing?.skipped?.includes(today);
   const setSkipToday = (skip: boolean) =>
     void saveProfile({ ...profile, wellbeing: setSkipped(profile.wellbeing, today, skip) });
@@ -167,6 +196,14 @@ function CardScreen() {
               }}
               email={session?.user.email}
               onSignOut={() => void signOut().then(() => navigate({ to: "/welcome" }))}
+              onDeleteAccount={async () => {
+                const ok = await deleteAccount();
+                if (ok) {
+                  toast.success("Your account was deleted.");
+                  void navigate({ to: "/welcome" });
+                }
+                return ok;
+              }}
               onStartOver={() => {
                 void resetAll().then(() => navigate({ to: "/onboarding" }));
               }}
@@ -180,11 +217,7 @@ function CardScreen() {
           seedling={profile.seedling}
           daysShowedUp={showedUp}
           checkedInToday={checkedInToday}
-          streak={streak(
-            log.map((l) => l.date),
-            today,
-            (d) => isRestDay(profile.wellbeing, d),
-          )}
+          streak={currentStreak}
           paused={isPaused(profile.wellbeing)}
           onPausedChange={(pause) =>
             void saveProfile({ ...profile, wellbeing: setPaused(profile.wellbeing, today, pause) })
@@ -229,6 +262,20 @@ function CardScreen() {
         >
           <Plus className="size-4" /> Ate outside dining hall
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setEarlierOpen(true)}
+          disabled={currentStreak.cardsLeft === 0}
+          className="mt-2 h-11 w-full rounded-full font-bold"
+        >
+          <Plus className="size-4" /> Log an earlier meal
+        </Button>
+        <p className="mt-1.5 text-center text-xs text-muted-foreground">
+          {currentStreak.cardsLeft === 0
+            ? `You've used this month's ${CARDS_PER_MONTH} cards. They refill on ${refillDate(today)}.`
+            : `Uses a card · ${currentStreak.cardsLeft} of ${CARDS_PER_MONTH} left this month`}
+        </p>
         {skippedToday ? (
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Taking today off from logging. Your streak is safe.{" "}
@@ -251,22 +298,38 @@ function CardScreen() {
         )}
       </section>
 
-      <OutsideMealDialog
+      <AteSomethingElseDialog
         open={outsideOpen}
         onOpenChange={setOutsideOpen}
+        hall={profile.hall}
         slots={slots}
         loggedToday={loggedToday}
-        onLog={({ name, meal, ...macros }) => {
-          const logged = addLog({
-            hall: profile.hall,
-            meal,
-            ...macros,
-            items: [{ name, portion: "Estimated" }],
-            source: "outside",
-          });
-          if (!logged) return;
+        start="manual"
+        onLog={(entry) => {
+          if (!addLog(entry)) return;
           setOutsideOpen(false);
-          toast.success(`Added to today's ${meal.toLowerCase()}`);
+        }}
+      />
+
+      <AteSomethingElseDialog
+        open={earlierOpen}
+        onOpenChange={setEarlierOpen}
+        hall={profile.hall}
+        slots={slots}
+        loggedToday={[]}
+        backfill={{
+          days: backfillDays(today),
+          loggedOn: (d) => log.filter((l) => l.date === d).map((l) => l.meal),
+        }}
+        onLog={(entry, date) => {
+          if (!date || currentStreak.cardsLeft === 0) return;
+          if (!addLog(entry, date)) return;
+          // The card is spent for good, even if this meal is removed later.
+          void saveProfile({
+            ...profile,
+            cardSpends: [...(profile.cardSpends ?? []), { spentOn: today, forDate: date }],
+          });
+          setEarlierOpen(false);
         }}
       />
 
@@ -312,9 +375,16 @@ function CardScreen() {
                 <button
                   onClick={() => setEditing(l)}
                   aria-label={`Edit ${l.meal.toLowerCase()}`}
-                  className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 text-xs font-bold"
+                  className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 text-xs font-bold"
                 >
                   <Pencil className="size-3.5" /> Edit
+                </button>
+                <button
+                  onClick={() => removeWithUndo(l)}
+                  aria-label={`Remove ${l.meal.toLowerCase()}`}
+                  className="grid size-10 shrink-0 place-items-center rounded-full border border-foreground/25"
+                >
+                  <X className="size-4" />
                 </button>
               </div>
             ))}

@@ -6,15 +6,18 @@ import { MacroRow } from "@/components/palate/MacroBits";
 import { GoalPicker } from "@/components/palate/GoalPicker";
 import { CreateAccount } from "@/components/palate/CreateAccount";
 import { SnackPicker } from "@/components/palate/SnackPicker";
+import { ActivityPicker } from "@/components/palate/ActivityPicker";
 import { AllergyPicker } from "@/components/palate/AllergyPicker";
 import {
   effectiveGoal,
   heightIn,
   parseNumber,
   dailyTargets,
-  mealTargets,
+  daySlots,
+  perMealLine,
   type Allergen,
   type DietTag,
+  type ActivityId,
   type GoalId,
   type SnackSlot,
   type HallId,
@@ -114,6 +117,7 @@ function Onboarding() {
   const [inch, setInch] = useState(profile ? String(profile.heightIn % 12) : "");
   const [weight, setWeight] = useState(profile ? String(profile.weightLb) : "");
   const [goal, setGoal] = useState<GoalId>(profile?.goal ?? "maintain");
+  const [activity, setActivity] = useState<ActivityId | undefined>(profile?.activity);
   const [highProtein, setHighProtein] = useState(profile?.highProtein ?? false);
   const [snacks, setSnacks] = useState<SnackSlot[]>(profile?.snacks ?? []);
   const [diets, setDiets] = useState<DietTag[]>(profile?.diets ?? []);
@@ -128,6 +132,7 @@ function Onboarding() {
     heightIn: heightIn(ft, inch || "0"),
     weightLb: parseNumber(weight, 150) || 150,
     goal,
+    ...(activity ? { activity } : {}),
     highProtein,
     snacks,
     diets,
@@ -147,7 +152,6 @@ function Onboarding() {
     parseNumber(weight, 0) >= 60;
 
   const daily = dailyTargets(draft);
-  const perMeal = mealTargets(daily, "Lunch");
 
   const finish = async () => {
     await saveProfile({ ...draft, goal: effectiveGoal(draft) });
@@ -259,6 +263,8 @@ function Onboarding() {
             onHighProtein={setHighProtein}
           />
 
+          <ActivityPicker value={activity} onChange={setActivity} />
+
           <SnackPicker value={snacks} onChange={setSnacks} />
 
           <div>
@@ -297,7 +303,7 @@ function Onboarding() {
             <p className="label-caps mb-2 text-muted-foreground">Daily target</p>
             <MacroRow t={daily} />
             <p className="mt-3 text-xs text-muted-foreground">
-              Roughly {perMeal.kcal} cal and {perMeal.protein}g protein per main meal.
+              {perMealLine(daily.kcal, daySlots(snacks))}
             </p>
           </div>
         </section>

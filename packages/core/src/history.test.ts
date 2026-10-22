@@ -8,6 +8,7 @@ import {
   forward,
   startHistory,
 } from "./history";
+import { distinctPlates, nextOption, optionsHistory } from "./history";
 import { item } from "./fixtures";
 import type { PlateItem } from "./types";
 
@@ -60,5 +61,32 @@ describe("plate history", () => {
     expect(currentPlate(h)[0]!.qty).toBe(1);
     h = forward(h, () => plateOf(99));
     expect(currentPlate(h)[0]!.qty).toBe(3);
+  });
+});
+
+describe("plate options", () => {
+  const plateOf = (...ids: string[]) =>
+    ids.map((id, n) => ({ id: `row-${n}`, item: { id } as never, qty: 1 }));
+
+  it("keeps up to 3 different plates, skipping repeats and empties", () => {
+    const bySeed = [
+      plateOf("a", "b"),
+      plateOf("b", "a"),
+      [],
+      plateOf("c"),
+      plateOf("d"),
+      plateOf("e"),
+    ];
+    const options = distinctPlates((seed) => bySeed[seed] ?? []);
+    expect(options.map((p) => p.map((r) => r.item.id).join())).toEqual(["a,b", "c", "d"]);
+  });
+
+  it("returns a single option when the hall can only make one plate", () => {
+    expect(distinctPlates(() => plateOf("a"))).toHaveLength(1);
+  });
+
+  it("wraps from the last option back to the first", () => {
+    const h = optionsHistory([plateOf("a"), plateOf("b")]);
+    expect(nextOption(nextOption(h)).index).toBe(0);
   });
 });

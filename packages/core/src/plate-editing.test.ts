@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { MAX_QTY, alternatives, removeRow, replaceRow, setQty } from "./plate";
+import {
+  MAX_QTY,
+  addItem,
+  alternatives,
+  removeRow,
+  replaceRow,
+  restoreRow,
+  setQty,
+  totals,
+} from "./plate";
+import { logItems } from "./logs";
 import { withoutSkipped } from "./preferences";
 import { item, menu } from "./fixtures";
 
@@ -56,15 +66,31 @@ describe("setQty", () => {
     expect(setQty(plate, "b", 3)[1]!.qty).toBe(3);
   });
 
-  it(`clamps to 1–${MAX_QTY}`, () => {
-    expect(setQty(plate, "b", 0)[1]!.qty).toBe(1);
+  it(`clamps to 0–${MAX_QTY}`, () => {
+    expect(setQty(plate, "b", -1)[1]!.qty).toBe(0);
     expect(setQty(plate, "b", 99)[1]!.qty).toBe(MAX_QTY);
+  });
+
+  it("keeps a row at 0 on the plate, counting for nothing and left out of the log", () => {
+    const zeroed = setQty(plate, "b", 0);
+    expect(zeroed).toHaveLength(plate.length);
+    expect(totals(zeroed)).toEqual(totals(plate.filter((r) => r.id !== "b")));
+    expect(logItems(zeroed).map((i) => i.name)).not.toContain(plate[1]!.item.name);
   });
 });
 
 describe("removeRow", () => {
   it("removes only that row", () => {
     expect(removeRow(plate, "a").map((r) => r.id)).toEqual(["b"]);
+  });
+
+  it("can be undone, back in the same place with the same portion", () => {
+    const removed = plate[0]!;
+    expect(restoreRow(removeRow(plate, "a"), removed, 0)).toEqual(plate);
+  });
+
+  it("doesn't restore a row twice", () => {
+    expect(restoreRow(plate, plate[0]!, 0)).toEqual(plate);
   });
 });
 
@@ -79,5 +105,21 @@ describe("withoutSkipped", () => {
 
   it("keeps everything when nothing is skipped", () => {
     expect(withoutSkipped(menu, undefined)).toHaveLength(menu.length);
+  });
+});
+
+describe("addItem", () => {
+  it("adds a new row with one portion and a fresh id", () => {
+    const extra = item({ id: "kale", role: "veg" });
+    const next = addItem(plate, extra);
+    expect(next).toHaveLength(plate.length + 1);
+    expect(next.at(-1)).toMatchObject({ item: extra, qty: 1 });
+    expect(new Set(next.map((r) => r.id)).size).toBe(next.length);
+  });
+
+  it("adds a portion when the item is already on the plate", () => {
+    const next = addItem(plate, plate[0]!.item);
+    expect(next).toHaveLength(plate.length);
+    expect(next[0]!.qty).toBe(plate[0]!.qty + 1);
   });
 });

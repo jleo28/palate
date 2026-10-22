@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { capPlate, fitCheck, fitSummary, mealGuide, remainingToday } from "./budget";
+import {
+  capPlate,
+  daySlots,
+  fitCheck,
+  PAST_PLAN,
+  fitSummary,
+  mealGuide,
+  perMealLine,
+  remainingToday,
+  slotCalories,
+} from "./budget";
 import { totals } from "./plate";
 import { item } from "./fixtures";
 
@@ -106,17 +116,16 @@ describe("fitCheck and fitSummary", () => {
     expect(fitSummary(fit, "Lunch")).toBe("This plate fits your lunch nicely.");
   });
 
-  it("names the macro that's over and by how much", () => {
+  it("offers portion guidance, never criticism, when a plate runs past the plan", () => {
     const fit = fitCheck({ kcal: 740, protein: 36, carbs: 105, fat: 20 }, guide, none, daily);
     expect(fit.over).toEqual([{ macro: "carbs", by: 20 }]);
-    expect(fitSummary(fit, "Lunch")).toBe(
-      "A bit heavy on carbs (+20 g). Dinner can balance it out.",
-    );
+    expect(fitSummary(fit, "Lunch")).toBe(PAST_PLAN);
+    expect(fitSummary(fit, "Lunch")).not.toMatch(/heavy|too|over|carbs/i);
   });
 
-  it("leads with calories before protein", () => {
-    const fit = fitCheck({ kcal: 820, protein: 50, carbs: 85, fat: 22 }, guide, none, daily);
-    expect(fitSummary(fit, "Dinner")).toBe("A bit heavy on calories (+120 cal).");
+  it("says the same when the day would go past its plan", () => {
+    const fit = fitCheck(guide, guide, { ...none, kcal: 1400 }, daily);
+    expect(fitSummary(fit, "Dinner")).toBe(PAST_PLAN);
   });
 
   it("ignores small overshoots", () => {
@@ -138,6 +147,36 @@ describe("fitCheck and fitSummary", () => {
 
   it("notices a plate that's light on protein", () => {
     const fit = fitCheck({ kcal: 650, protein: 20, carbs: 85, fat: 20 }, guide, none, daily);
-    expect(fitSummary(fit, "Dinner")).toMatch(/Light on protein/);
+    expect(fitSummary(fit, "Dinner")).toMatch(/more protein/);
+  });
+});
+
+describe("slotCalories", () => {
+  it("adds up to the daily total, with or without snacks", () => {
+    for (const daily of [1500, 1817, 2333, 3005]) {
+      for (const snacks of [
+        [],
+        ["Afternoon snack"],
+        ["Afternoon snack", "Late-night snack"],
+      ] as const) {
+        const sum = slotCalories(daily, daySlots([...snacks])).reduce((t, s) => t + s.kcal, 0);
+        expect(sum).toBe(daily);
+      }
+    }
+  });
+});
+
+describe("perMealLine", () => {
+  it("describes the three meals", () => {
+    expect(perMealLine(2000, daySlots())).toBe(
+      "Roughly 560 cal at breakfast and 720 at lunch and dinner.",
+    );
+  });
+
+  it("includes snacks and still adds up", () => {
+    // 2000 with two snacks: breakfast 450, lunch 580, dinner 570, 200 per snack = 2000
+    expect(perMealLine(2000, daySlots(["Afternoon snack", "Late-night snack"]))).toBe(
+      "Roughly 450 cal at breakfast, 580 at lunch, 570 at dinner and 200 per snack.",
+    );
   });
 });

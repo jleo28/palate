@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Flame, Pause, Snowflake, Pencil } from "lucide-react";
 import {
-  FREEZES_PER_MONTH,
+  CARDS_PER_MONTH,
   SPECIES,
   growthStage,
   renameSeedling,
@@ -144,12 +144,12 @@ export function SeedlingCard({
         </p>
         <p className="flex items-center gap-1 text-muted-foreground">
           <Snowflake className="size-3.5" aria-hidden />
-          {streak.freezesLeft} of {FREEZES_PER_MONTH} freezes left this month
+          {streak.cardsLeft} of {CARDS_PER_MONTH} cards left this month
         </p>
         {streak.frozen.length > 0 && (
           <p className="basis-full text-muted-foreground">
-            {streak.frozen.length === 1 ? "A freeze" : "Freezes"} covered{" "}
-            {formatDays(streak.frozen)}, so your streak kept going.
+            {streak.frozen.length === 1 ? "A card" : "Cards"} covered {formatDays(streak.frozen)},
+            so your streak kept going.
           </p>
         )}
       </div>

@@ -12,15 +12,24 @@ import { profile } from "./fixtures";
 import type { GoalId, Profile } from "./types";
 
 describe("dailyTargets", () => {
-  it("applies Mifflin-St Jeor with a 1.5 activity factor", () => {
-    // BMR = 10(58.968) + 6.25(165.1) - 5(19) - 161 = 1365.6; × 1.5 = 2048 → 2050
-    expect(dailyTargets(profile())).toEqual({ kcal: 2050, protein: 104, carbs: 280, fat: 57 });
+  it("applies Mifflin-St Jeor with the Moderate multiplier by default", () => {
+    // BMR = 10(58.968) + 6.25(165.1) - 5(19) - 161 = 1365.6; × 1.55 = 2117 → 2120
+    expect(dailyTargets(profile())).toEqual({ kcal: 2120, protein: 104, carbs: 293, fat: 59 });
+  });
+
+  it("scales calories with activity level", () => {
+    const kcal = (activity?: NonNullable<Profile["activity"]>) =>
+      maintenanceKcal(profile(activity ? { activity } : {}));
+    expect(kcal("sitting")).toBeCloseTo(1365.6 * 1.2, 0);
+    expect(kcal("light")).toBeCloseTo(1365.6 * 1.375, 0);
+    expect(kcal("very")).toBeCloseTo(1365.6 * 1.725, 0);
+    expect(kcal(undefined)).toBe(kcal("moderate"));
   });
 
   it("uses the male constant and an 18% deficit on a cut", () => {
     const p = profile({ gender: "male", age: 20, heightIn: 70, weightLb: 170, goal: "cut" });
-    // BMR 1787.4 × 1.5 × 0.82 = 2198 → 2200 (deficit 482, under the 500 cap)
-    expect(dailyTargets(p)).toEqual({ kcal: 2200, protein: 170, carbs: 243, fat: 61 });
+    // BMR 1787.4 × 1.55 × 0.82 = 2272 → 2270 (deficit 499, under the 500 cap)
+    expect(dailyTargets(p)).toEqual({ kcal: 2270, protein: 170, carbs: 256, fat: 63 });
   });
 
   it("uses the midpoint constant for other genders", () => {
@@ -61,11 +70,16 @@ describe("dailyTargets", () => {
 });
 
 describe("high protein toggle", () => {
-  it("raises protein to 1.2 g/lb on any goal without changing calories", () => {
+  it("raises protein on any goal without changing calories", () => {
     const base = dailyTargets(profile({ weightLb: 150 }));
     const high = dailyTargets(profile({ weightLb: 150, highProtein: true }));
-    expect(high.protein).toBe(180);
+    expect(high.protein).toBeGreaterThan(base.protein);
     expect(high.kcal).toBe(base.kcal);
+  });
+
+  it("caps protein at 2.2 g/kg", () => {
+    // 165 lb = 74.8 kg. 1.2 g/lb would be 198 g; the cap is 164.6 g.
+    expect(dailyTargets(profile({ weightLb: 165, highProtein: true })).protein).toBe(165);
   });
 });
 
@@ -84,16 +98,16 @@ describe("guardrails", () => {
 
   it("caps the deficit at 500 kcal below maintenance", () => {
     const big = profile({ gender: "male", age: 20, heightIn: 74, weightLb: 250, goal: "cut" });
-    // Maintenance 3320.6; 18% would be a 598 kcal cut, so it caps at 2820.6 → 2820
-    expect(maintenanceKcal(big)).toBeCloseTo(3320.6, 0);
-    expect(dailyTargets(big).kcal).toBe(2820);
+    // Maintenance 3431.3; 18% would be a 618 kcal cut, so it caps at 2931.3 → 2930
+    expect(maintenanceKcal(big)).toBeCloseTo(3431.3, 0);
+    expect(dailyTargets(big).kcal).toBe(2930);
   });
 
-  it("never goes below 1,200 kcal for women and other genders", () => {
-    // Maintenance 1445; Cut would be 1190
-    const p = profile({ age: 30, heightIn: 56, weightLb: 85, goal: "cut" });
-    expect(dailyTargets(p).kcal).toBe(1200);
-    expect(dailyTargets({ ...p, gender: "other" }).kcal).toBeGreaterThanOrEqual(1200);
+  it("never goes below 1,500 kcal, whatever the gender", () => {
+    // 5'0", 100 lb, age 20, female: maintenance 1718; Cut would be 1410
+    const p = profile({ age: 20, heightIn: 60, weightLb: 100, goal: "cut" });
+    expect(dailyTargets(p).kcal).toBe(1500);
+    expect(dailyTargets({ ...p, gender: "other" }).kcal).toBeGreaterThanOrEqual(1500);
   });
 
   it("never goes below 1,500 kcal for men", () => {

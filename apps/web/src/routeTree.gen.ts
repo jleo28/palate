@@ -16,7 +16,9 @@ import { Route as MenusRouteImport } from './routes/menus'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as VerifiedRouteImport } from './routes/verified'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as ApiMenusRouteImport } from './routes/api/menus'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,9 +55,19 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifiedRoute = VerifiedRouteImport.update({
+  id: '/verified',
+  path: '/verified',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMenusRoute = ApiMenusRouteImport.update({
+  id: '/api/menus',
+  path: '/api/menus',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -67,7 +79,9 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
+  '/api/menus': typeof ApiMenusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,7 +91,9 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
+  '/api/menus': typeof ApiMenusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,7 +104,9 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
+  '/api/menus': typeof ApiMenusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,7 +118,9 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reset-password'
     | '/sign-in'
+    | '/verified'
     | '/welcome'
+    | '/api/menus'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -110,7 +130,9 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reset-password'
     | '/sign-in'
+    | '/verified'
     | '/welcome'
+    | '/api/menus'
   id:
     | '__root__'
     | '/'
@@ -120,7 +142,9 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reset-password'
     | '/sign-in'
+    | '/verified'
     | '/welcome'
+    | '/api/menus'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -131,7 +155,9 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignInRoute: typeof SignInRoute
+  VerifiedRoute: typeof VerifiedRoute
   WelcomeRoute: typeof WelcomeRoute
+  ApiMenusRoute: typeof ApiMenusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,11 +211,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verified': {
+      id: '/verified'
+      path: '/verified'
+      fullPath: '/verified'
+      preLoaderRoute: typeof VerifiedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/welcome': {
       id: '/welcome'
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/menus': {
+      id: '/api/menus'
+      path: '/api/menus'
+      fullPath: '/api/menus'
+      preLoaderRoute: typeof ApiMenusRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -203,7 +243,9 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignInRoute: SignInRoute,
+  VerifiedRoute: VerifiedRoute,
   WelcomeRoute: WelcomeRoute,
+  ApiMenusRoute: ApiMenusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

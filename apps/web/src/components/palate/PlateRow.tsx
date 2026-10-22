@@ -12,6 +12,7 @@ import {
   type PlateItem,
 } from "@palate/core";
 import { portionLabel } from "@/lib/palate/menu";
+import { cn } from "@/lib/utils";
 
 interface Props {
   row: PlateItem;
@@ -26,7 +27,7 @@ interface Props {
 }
 
 const iconButton =
-  "grid size-8 shrink-0 place-items-center rounded-full border border-foreground/25 disabled:opacity-35";
+  "grid size-10 shrink-0 place-items-center rounded-full border border-foreground/25 disabled:opacity-35";
 
 export function PlateRow({
   row,
@@ -40,14 +41,16 @@ export function PlateRow({
   onReplace,
 }: Props) {
   const hidden = useHideNumbers();
-  const { item, qty } = row;
+  const { item, qty, suggested } = row;
+  const off = qty === 0;
+  const over = suggested !== undefined && qty > suggested ? qty - suggested : 0;
   const hits = allergenConflicts(item, allergies);
   const possible = customAllergyMatches(item, customAllergies);
 
   return (
     <li className="px-3 py-2.5">
       <div className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
+        <div className={cn("min-w-0 flex-1 transition-opacity", off && "opacity-45")}>
           <p className="text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
             {item.station}
           </p>
@@ -61,13 +64,15 @@ export function PlateRow({
             <span className="truncate">{item.name}</span>
           </p>
           {!hidden && (
-            <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-              {macroLine({
-                kcal: item.kcal * qty,
-                protein: item.protein * qty,
-                carbs: item.carbs * qty,
-                fat: item.fat * qty,
-              })}
+            <p className="mt-0.5 min-h-4 text-[0.7rem] text-muted-foreground tabular-nums">
+              {off
+                ? "Not on this plate. Tap + to add it back."
+                : macroLine({
+                    kcal: item.kcal * qty,
+                    protein: item.protein * qty,
+                    carbs: item.carbs * qty,
+                    fat: item.fat * qty,
+                  })}
             </p>
           )}
           {hits.length > 0 && (
@@ -100,13 +105,18 @@ export function PlateRow({
           <button
             type="button"
             onClick={() => onQty(qty - 1)}
-            disabled={qty <= 1}
+            disabled={qty <= 0}
             aria-label="One portion less"
             className={iconButton}
           >
             <Minus className="size-3.5" />
           </button>
-          <span className="min-w-20 rounded-full bg-olive-soft px-2 py-1 text-center text-[0.7rem] font-bold text-olive">
+          <span
+            className={cn(
+              "min-w-24 rounded-full px-3 py-1.5 text-center text-[0.75rem] font-bold whitespace-nowrap tabular-nums",
+              off ? "bg-foreground/5 text-muted-foreground" : "bg-olive-soft text-olive",
+            )}
+          >
             {portionLabel(item, qty)}
           </span>
           <button
@@ -120,14 +130,26 @@ export function PlateRow({
           </button>
         </div>
 
-        {canSwap && (
-          <button
-            type="button"
-            onClick={onSwap}
-            className="ml-auto flex h-8 shrink-0 items-center gap-1 rounded-full border border-foreground/25 px-2.5 text-[0.7rem] font-bold"
-          >
-            <RefreshCw className="size-3" /> Swap
-          </button>
+        {/* Always takes its space, so rows don't shift when Swap isn't available. */}
+        <button
+          type="button"
+          onClick={onSwap}
+          disabled={!canSwap}
+          aria-hidden={!canSwap}
+          tabIndex={canSwap ? 0 : -1}
+          className={cn(
+            "ml-auto flex h-10 shrink-0 items-center gap-1 rounded-full border border-foreground/25 px-3 text-[0.75rem] font-bold",
+            !canSwap && "invisible",
+          )}
+        >
+          <RefreshCw className="size-3.5" /> Swap
+        </button>
+        {suggested !== undefined && (
+          <p className="basis-full text-[0.7rem] text-muted-foreground">
+            {over > 0
+              ? `${portionLabel(item, qty)} · ${over} over your portion`
+              : `Your portion: ${portionLabel(item, suggested)}`}
+          </p>
         )}
         {alternatives.length > 0 && (
           <select
@@ -137,7 +159,7 @@ export function PlateRow({
               if (next) onReplace(next);
             }}
             aria-label={`Choose something else from ${item.station}`}
-            className="h-8 basis-full rounded-full border border-foreground/25 bg-background px-3 text-[0.75rem] font-semibold"
+            className="h-10 basis-full rounded-full border border-foreground/25 bg-background px-3 text-[0.75rem] font-semibold"
           >
             <option value="" disabled>
               Something else from {item.station.toLowerCase()}…

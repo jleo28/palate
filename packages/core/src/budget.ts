@@ -117,35 +117,19 @@ export function fitCheck(
   };
 }
 
-const LABEL: Record<Macro, string> = {
-  kcal: "calories",
-  protein: "protein",
-  carbs: "carbs",
-  fat: "fat",
-};
-const unit = (m: Macro) => (m === "kcal" ? " cal" : " g");
+/** Shown whenever a plate (as built or as edited) runs past the plan. Guidance, never a verdict. */
+export const PAST_PLAN = "You can always add more. It just goes a bit past today's plan.";
 
-/** One plain-language line about how a plate fits, in Seedling's voice. */
-export function fitSummary(fit: Fit, meal: Slot, slots: readonly Slot[] = MEALS): string {
-  const nextMeal = slots[slots.indexOf(meal) + 1]?.toLowerCase();
+/**
+ * One plain-language line about the plate, in Seedling's voice. It never criticises the plate
+ * or names a macro that's "too high": it offers portion guidance instead.
+ */
+export function fitSummary(fit: Fit, meal: Slot): string {
   if (fit.capReached) {
-    return "You've reached today's calories. If you're still hungry, this is a balanced, lighter option.";
+    return "You've reached today's plan. If you're still hungry, this is a lighter option.";
   }
-  if (fit.dayOverCap) {
-    return "This plate goes a little past today's calories. A smaller side keeps the day on track.";
-  }
-  // Lead with what's most useful to adjust; extra protein is the least concerning.
-  const priority: Macro[] = ["fat", "carbs", "kcal", "protein"];
-  const top = [...fit.over].sort(
-    (a, b) => priority.indexOf(a.macro) - priority.indexOf(b.macro),
-  )[0];
-  if (top) {
-    const balance = nextMeal
-      ? ` ${nextMeal[0]!.toUpperCase()}${nextMeal.slice(1)} can balance it out.`
-      : "";
-    return `A bit heavy on ${LABEL[top.macro]} (+${top.by}${unit(top.macro)}).${balance}`;
-  }
-  if (fit.lowProtein) return "Light on protein. Another protein would round this plate out.";
+  if (fit.dayOverCap || fit.over.length > 0) return PAST_PLAN;
+  if (fit.lowProtein) return "Want more protein? Tap + on any protein.";
   return `This plate fits your ${meal.toLowerCase()} nicely.`;
 }
 
@@ -163,4 +147,31 @@ export function firstOpenSlot(slots: readonly Slot[], from: Slot, loggedToday: r
 /** Where to go after logging `slot`: the next slot that can still be logged. */
 export function nextOpenSlot(slots: readonly Slot[], slot: Slot, loggedToday: readonly Slot[]) {
   return slots.slice(slots.indexOf(slot) + 1).find((s) => canLogSlot(s, loggedToday)) ?? null;
+}
+
+/**
+ * The day's calories per slot, rounded to 10. Dinner absorbs the rounding, so the slots always
+ * add up to the daily total.
+ */
+export function slotCalories(dailyKcal: number, slots: readonly Slot[]) {
+  const out = slots.map((slot) => ({
+    slot,
+    kcal: Math.round((dailyKcal * slotShare(slot, slots)) / 10) * 10,
+  }));
+  const dinner = out.find((s) => s.slot === "Dinner");
+  if (dinner) dinner.kcal += dailyKcal - out.reduce((sum, s) => sum + s.kcal, 0);
+  return out;
+}
+
+/** "Roughly 560 cal at breakfast and 720 at lunch and dinner." Snacks are included when chosen. */
+export function perMealLine(dailyKcal: number, slots: readonly Slot[]) {
+  const cal = slotCalories(dailyKcal, slots);
+  const of = (s: Slot) => cal.find((c) => c.slot === s)!.kcal;
+  const parts = [`${of("Breakfast")} cal at breakfast`];
+  if (of("Lunch") === of("Dinner")) parts.push(`${of("Lunch")} at lunch and dinner`);
+  else parts.push(`${of("Lunch")} at lunch`, `${of("Dinner")} at dinner`);
+  const snack = cal.find((c) => isSnack(c.slot));
+  if (snack) parts.push(`${snack.kcal} per snack`);
+  const last = parts.pop()!;
+  return `Roughly ${parts.join(", ")} and ${last}.`;
 }

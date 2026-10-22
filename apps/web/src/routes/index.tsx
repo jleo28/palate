@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
-import { LogCelebration } from "@/components/palate/LogCelebration";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
+import { Camera, Check, ChevronLeft, ChevronRight, Plus, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
+import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
 import { AllergenNotice } from "@/components/palate/AllergenNotice";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
@@ -21,7 +21,6 @@ import {
   buildSnack,
   isSnack,
   logItems,
-  nextOpenSlot,
   menuPeriod,
   capPlate,
   effectiveGoal,
@@ -34,10 +33,14 @@ import {
   canGoBack,
   currentPlate,
   editCurrent,
-  forward,
+  distinctPlates,
+  nextOption,
+  optionsHistory,
   startHistory,
   type PlateHistory,
+  addItem,
   removeRow,
+  restoreRow,
   replaceRow,
   setQty,
   swapItem,
@@ -46,11 +49,14 @@ import {
   withoutAllergyConflicts,
   type PlateItem,
 } from "@palate/core";
-import { MENU, portionLabel } from "@/lib/palate/menu";
+import { portionLabel } from "@/lib/palate/menu";
+import { useHallMenu } from "@/lib/palate/use-menu";
 import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
+
+const PORTION_TIP_KEY = "palate.portionTip.v1";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -88,6 +94,9 @@ function Plate() {
     daily,
     consumedToday,
     addLog,
+    plateAdds,
+    clearPlateAdds,
+    attachPhoto,
     loggedToday,
     log,
   } = useStore();
@@ -97,13 +106,34 @@ function Plate() {
   const loggedEntry = !isSnack(meal)
     ? log.find((l) => l.date === localToday() && l.meal === meal)
     : undefined;
-  // Each new variation uses the next seed; the stack keeps the last 10 to swipe back through.
-  const seed = useRef(0);
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
-  const [celebrating, setCelebrating] = useState(false);
+  const [elseOpen, setElseOpen] = useState(false);
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
+  // One-time tip on the first plate someone sees. Marked seen as soon as it shows.
+  const [showPortionTip, setShowPortionTip] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(PORTION_TIP_KEY)) return;
+      localStorage.setItem(PORTION_TIP_KEY, "1");
+      setShowPortionTip(true);
+    } catch {
+      // Storage blocked: skip the tip.
+    }
+  }, []);
   const plate = currentPlate(history);
+  const hasOptions = history.plates.length > 1;
   const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
+
+  const removeWithUndo = (row: PlateItem) => {
+    const index = plate.findIndex((r) => r.id === row.id);
+    edit((prev) => removeRow(prev, row.id));
+    toast(`Removed ${row.item.name}`, {
+      duration: 5000,
+      action: { label: "Undo", onClick: () => edit((prev) => restoreRow(prev, row, index)) },
+    });
+  };
 
   useRequireProfile();
 
@@ -111,41 +141,45 @@ function Plate() {
   const dietKey = diets.join(",");
   const skipKey = (profile?.dislikes ?? []).join(",");
   const allergyKey = [...(profile?.allergies ?? []), ...(profile?.customAllergies ?? [])].join(",");
+  const { items: hallItems } = useHallMenu(hall);
   // Skipped foods and anything flagged for the user's allergies never go on a generated plate.
   const menu = useMemo(
     () =>
       withoutAllergyConflicts(
-        withoutSkipped(MENU, profile?.dislikes),
+        withoutSkipped(hallItems, profile?.dislikes),
         profile?.allergies,
         profile?.customAllergies,
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [skipKey, allergyKey],
+    [hallItems, skipKey, allergyKey],
   );
 
-  const freshPlate = () => {
+  const freshPlate = (seed: number) => {
     if (!mealTarget || !daily) return [];
     // The day's calorie target is a hard cap: the plate never plans past what's left of it.
     const left = remainingToday(daily, consumedToday).kcal;
     const build = isSnack(meal) ? buildSnack : buildPlate;
-    return capPlate(build(menu, hall, period, diets, mealTarget, seed.current), left);
+    return capPlate(build(menu, hall, period, diets, mealTarget, seed), left);
   };
 
-  // A new hall, meal or budget starts a fresh stack.
+  // A new hall, meal or budget builds a fresh set of up to 3 different plates.
   useEffect(() => {
-    seed.current = 0;
-    setHistory(startHistory(freshPlate()));
+    setHistory(optionsHistory(distinctPlates(freshPlate)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menu, hall, meal, dietKey, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
 
+  // Items tapped on Hall Menus join the plate you're on, once today's menu has loaded (a menu
+  // change rebuilds the plates). Declared after the rebuild so they're added on top of it.
+  useEffect(() => {
+    if (!plateAdds.length || !menu.length) return;
+    edit((prev) => plateAdds.reduce((p, item) => addItem(p, item), prev));
+    clearPlateAdds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plateAdds, menu.length]);
+
   const nextPlate = () => {
     setDirection("next");
-    setHistory((h) =>
-      forward(h, () => {
-        seed.current += 1;
-        return freshPlate();
-      }),
-    );
+    setHistory(nextOption);
   };
   const previousPlate = () => {
     setDirection("prev");
@@ -166,10 +200,7 @@ function Plate() {
     );
   }
 
-  const stopCelebrating = () => setCelebrating(false);
-
   const logMeal = () => {
-    const next = nextOpenSlot(slots, meal, [...loggedToday, meal]);
     const logged = addLog({
       hall,
       meal,
@@ -180,22 +211,17 @@ function Plate() {
       items: logItems(plate),
     });
     if (!logged) return;
-    setCelebrating(true);
-    toast.success(`${meal} logged`, {
-      description: [
-        ...(hidden ? [] : [`${Math.round(t.kcal)} cal · ${t.protein}g protein`]),
-        next ? `next up: ${next.toLowerCase()}` : "that's the day",
-      ].join(" · "),
-    });
+    // A photo taken before logging goes onto this meal.
+    if (pendingPhoto) {
+      void attachPhoto(logged.id, pendingPhoto);
+      setPendingPhoto(null);
+    }
   };
 
   return (
     <AppShell>
       <ScreenHeader title="The Plate" sub={`Hey ${profile.name.split(" ")[0]} · USC`} />
       {profile.seedling && <SeedlingHint screen="plate" seedling={profile.seedling} />}
-      {celebrating && profile.seedling && (
-        <LogCelebration seedling={profile.seedling} onDone={stopCelebrating} />
-      )}
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (
@@ -264,12 +290,14 @@ function Plate() {
                 </p>
               )}
             </div>
-            <button
-              onClick={nextPlate}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 py-1.5 text-xs font-bold"
-            >
-              <Shuffle className="size-3.5" /> Shuffle
-            </button>
+            {hasOptions && (
+              <button
+                onClick={nextPlate}
+                className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 text-xs font-bold"
+              >
+                <Shuffle className="size-3.5" /> Shuffle
+              </button>
+            )}
           </div>
 
           <SwipeArea onNext={nextPlate} onPrevious={previousPlate} label="Plate variations">
@@ -284,7 +312,13 @@ function Plate() {
             </div>
           </SwipeArea>
 
-          <div className="mb-3 flex items-center justify-center gap-3 text-[0.7rem] text-muted-foreground">
+          {/* Only one plate possible: no arrows or "1 of 1". */}
+          <div
+            className={cn(
+              "mb-3 flex items-center justify-center gap-3 text-[0.7rem] text-muted-foreground",
+              !hasOptions && "hidden",
+            )}
+          >
             <button
               type="button"
               onClick={previousPlate}
@@ -307,9 +341,16 @@ function Plate() {
             </button>
           </div>
 
+          {showPortionTip && plate.length > 0 && (
+            <p className="mb-2 rounded-xl bg-olive-soft px-3 py-2 text-xs font-semibold text-olive">
+              This is your portion. Tap + for more anytime.
+            </p>
+          )}
           {plate.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-foreground/25 px-3 py-6 text-center text-sm text-muted-foreground">
-              Your plate is empty. Tap Shuffle for a fresh one.
+              {hasOptions
+                ? "Your plate is empty. Swipe for another idea."
+                : "Your plate is empty. Try another hall or meal."}
             </p>
           ) : (
             <ul
@@ -326,12 +367,31 @@ function Plate() {
                   canSwap={canSwap(menu, plate, row.id, hall, period, diets)}
                   onSwap={() => edit((prev) => swapItem(menu, prev, row.id, hall, period, diets))}
                   onQty={(qty) => edit((prev) => setQty(prev, row.id, qty))}
-                  onRemove={() => edit((prev) => removeRow(prev, row.id))}
+                  onRemove={() => removeWithUndo(row)}
                   onReplace={(item) => edit((prev) => replaceRow(prev, row.id, item))}
                 />
               ))}
             </ul>
           )}
+
+          <button
+            type="button"
+            onClick={() => setElseOpen(true)}
+            className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-dashed border-foreground/30 text-sm font-bold text-muted-foreground"
+          >
+            <Plus className="size-4" aria-hidden /> I ate something else
+          </button>
+          <AteSomethingElseDialog
+            open={elseOpen}
+            onOpenChange={setElseOpen}
+            hall={hall}
+            slots={slots}
+            loggedToday={loggedToday}
+            onLog={(entry) => {
+              if (!addLog(entry)) return;
+              setElseOpen(false);
+            }}
+          />
 
           <AllergenNotice
             className="mt-2"
@@ -353,17 +413,43 @@ function Plate() {
             )}
             <p>
               <span className="font-bold">{profile.seedling?.name ?? "Seedling"}: </span>
-              {fitSummary(fit, meal, slots)}
+              {fitSummary(fit, meal)}
             </p>
           </div>
 
-          <button
-            onClick={logMeal}
-            disabled={plate.length === 0}
-            className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
-          >
-            <Check className="size-5" /> Ate This Meal
-          </button>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={logMeal}
+              disabled={!plate.some((r) => r.qty > 0)}
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
+            >
+              <Check className="size-5" /> Ate This Meal
+            </button>
+            <input
+              ref={photoInput}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                setPendingPhoto(e.target.files?.[0] ?? null);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => photoInput.current?.click()}
+              aria-label={pendingPhoto ? "Photo ready. Tap to retake" : "Take a photo of this meal"}
+              className={cn(
+                "grid size-12 shrink-0 place-items-center rounded-full border",
+                pendingPhoto
+                  ? "border-olive bg-olive text-primary-foreground"
+                  : "border-foreground/25",
+              )}
+            >
+              {pendingPhoto ? <Check className="size-5" /> : <Camera className="size-5" />}
+            </button>
+          </div>
         </section>
       )}
     </AppShell>

@@ -1,10 +1,12 @@
 /** Mapping between app types and the Supabase tables (see supabase/migrations). */
 import type { Seedling } from "./seedling";
 import type { Wellbeing } from "./wellbeing";
+import type { CardSpend } from "./streak";
 import type {
   Allergen,
   DietTag,
   DislikeId,
+  ActivityId,
   GoalId,
   HallId,
   LoggedMeal,
@@ -21,6 +23,7 @@ export interface ProfileRow {
   height_in: number;
   weight_lb: number;
   goal: GoalId;
+  activity: ActivityId;
   high_protein: boolean;
   snacks: SnackSlot[];
   diets: DietTag[];
@@ -30,6 +33,7 @@ export interface ProfileRow {
   hall: HallId;
   seedling: Seedling | null;
   wellbeing: Wellbeing;
+  card_spends: CardSpend[];
 }
 
 export interface MealLogRow {
@@ -44,6 +48,7 @@ export interface MealLogRow {
   fat: number;
   items: LoggedMeal["items"];
   source: NonNullable<LoggedMeal["source"]>;
+  photo_path?: string | null;
 }
 
 export function profileToRow(userId: string, p: Profile): ProfileRow {
@@ -55,6 +60,7 @@ export function profileToRow(userId: string, p: Profile): ProfileRow {
     height_in: p.heightIn,
     weight_lb: p.weightLb,
     goal: p.goal,
+    activity: p.activity ?? "moderate",
     high_protein: p.highProtein ?? false,
     snacks: p.snacks ?? [],
     diets: p.diets,
@@ -64,6 +70,7 @@ export function profileToRow(userId: string, p: Profile): ProfileRow {
     hall: p.hall,
     seedling: p.seedling ?? null,
     wellbeing: p.wellbeing ?? {},
+    card_spends: p.cardSpends ?? [],
   };
 }
 
@@ -75,6 +82,7 @@ export function profileFromRow(r: ProfileRow): Profile {
     heightIn: r.height_in,
     weightLb: Number(r.weight_lb),
     goal: r.goal,
+    activity: r.activity ?? "moderate",
     highProtein: r.high_protein,
     snacks: r.snacks ?? [],
     diets: r.diets,
@@ -84,6 +92,7 @@ export function profileFromRow(r: ProfileRow): Profile {
     hall: r.hall,
     ...(r.seedling ? { seedling: r.seedling } : {}),
     wellbeing: r.wellbeing ?? {},
+    cardSpends: r.card_spends ?? [],
   };
 }
 
@@ -102,6 +111,7 @@ export function logToRow(m: LoggedMeal): MealLogRow {
     fat: m.fat,
     items: m.items,
     source: m.source ?? "dining-hall",
+    photo_path: m.photoPath ?? null,
   };
 }
 
@@ -117,5 +127,6 @@ export function logFromRow(r: MealLogRow): LoggedMeal {
     fat: num(r.fat),
     items: r.items,
     source: r.source,
+    ...(r.photo_path ? { photoPath: r.photo_path } : {}),
   };
 }

@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { availableItems, buildPlate, canSwap, swapItem, totals } from "./plate";
+import {
+  MAX_SIDE_SERVINGS,
+  PLATE_FAT_TOLERANCE,
+  PLATE_KCAL_TOLERANCE,
+  availableItems,
+  buildPlate,
+  canSwap,
+  swapItem,
+  totals,
+} from "./plate";
+import type { MenuItem } from "./types";
 import { item, menu } from "./fixtures";
 
 const target = { kcal: 700, protein: 40, carbs: 80, fat: 20 };
@@ -40,35 +50,18 @@ describe("totals", () => {
 });
 
 describe("buildPlate", () => {
-  it("anchors on the highest-protein item, then adds a carb and a veg", () => {
-    const plate = buildPlate(menu, "village", "Lunch", [], target);
-    expect(plate.map((p) => p.item.role).slice(0, 3)).toEqual(["protein", "carb", "veg"]);
-    expect(plate[0]!.item.id).toBe("chicken");
+  it("builds a protein, a carb and a veg", () => {
+    const roles = buildPlate(menu, "village", "Lunch", [], target).map((p) => p.item.role);
+    expect(roles).toEqual(expect.arrayContaining(["protein", "carb", "veg"]));
   });
 
-  it("portions the anchor to about 65% of the protein target", () => {
-    const [anchor] = buildPlate(menu, "village", "Lunch", [], target);
-    // 40 g × 0.65 = 26 g → one 26 g tong of chicken
-    expect(anchor).toEqual({ id: "row-0", item: menu[0], qty: 1 });
-  });
-
-  it("keeps every quantity between 1 and 4", () => {
+  it("keeps mains between 1 and 4 and sides at most 1.5", () => {
     const huge = { kcal: 5000, protein: 400, carbs: 600, fat: 150 };
     for (const p of buildPlate(menu, "village", "Lunch", [], huge)) {
       expect(p.qty).toBeGreaterThanOrEqual(1);
-      expect(p.qty).toBeLessThanOrEqual(4);
+      const isSide = p.item.role === "veg" || p.item.role === "extra";
+      expect(p.qty).toBeLessThanOrEqual(isSide ? MAX_SIDE_SERVINGS : 4);
     }
-  });
-
-  it("tops up protein with a second, different protein when short", () => {
-    const plate = buildPlate(menu, "village", "Lunch", [], { ...target, protein: 120 });
-    const proteins = plate.filter((p) => p.item.role === "protein").map((p) => p.item.id);
-    expect(proteins).toEqual(["chicken", "tofu"]);
-  });
-
-  it("adds an extra when calories fall short", () => {
-    const plate = buildPlate(menu, "village", "Lunch", [], { ...target, kcal: 1500 });
-    expect(plate.some((p) => p.item.role === "extra")).toBe(true);
   });
 
   it("respects diet filters", () => {
@@ -76,17 +69,57 @@ describe("buildPlate", () => {
     expect(plate.every((p) => p.item.tags.includes("vegan"))).toBe(true);
   });
 
-  it("rotates choices with the seed", () => {
-    const two = [...menu, item({ id: "quinoa", role: "carb", carbs: 20 })];
-    const a = buildPlate(two, "village", "Lunch", [], target, 0);
-    const b = buildPlate(two, "village", "Lunch", [], target, 1);
-    expect(a.find((p) => p.item.role === "carb")!.item.id).not.toBe(
-      b.find((p) => p.item.role === "carb")!.item.id,
-    );
+  it("rotates between near-best plates with the seed", () => {
+    const more = [
+      ...menu,
+      item({ id: "quinoa", role: "carb", kcal: 120, protein: 4, carbs: 22, fat: 2 }),
+      item({ id: "turkey", role: "protein", kcal: 110, protein: 22, carbs: 0, fat: 2 }),
+    ];
+    const ids = (seed: number) =>
+      buildPlate(more, "village", "Lunch", [], target, seed)
+        .map((p) => p.item.id)
+        .sort()
+        .join();
+    expect(new Set([0, 1, 2].map(ids)).size).toBeGreaterThan(1);
   });
 
   it("returns an empty plate when nothing is served", () => {
     expect(buildPlate(menu, "parkside", "Lunch", [], target)).toEqual([]);
+  });
+
+  // Regression: a lean-bulk dinner came out at 820/1,100 cal and 10/43 g fat, padded with
+  // 4 scoops of honeydew. Village's real dinner menu (10/21 fixture numbers).
+  it("balances calories and fat on a bulking dinner, without filler", () => {
+    const v = (
+      id: string,
+      role: MenuItem["role"],
+      kcal: number,
+      protein: number,
+      carbs: number,
+      fat: number,
+    ) => item({ id, role, kcal, protein, carbs, fat, meals: ["Dinner"] });
+    const villageDinner = [
+      v("chicken", "protein", 120, 24, 0, 3),
+      v("carne-asada", "protein", 165, 20, 1, 9),
+      v("salmon", "protein", 230, 26, 0, 14),
+      v("tofu", "protein", 95, 11, 4, 5),
+      v("chickpeas", "protein", 105, 6, 16, 3),
+      v("rice", "carb", 180, 4, 38, 2),
+      v("sweet-potato", "carb", 110, 2, 24, 2),
+      v("penne", "carb", 200, 8, 41, 2),
+      v("broccoli", "veg", 45, 3, 6, 2),
+      v("spring-mix", "veg", 25, 2, 4, 0),
+      v("berries", "extra", 40, 1, 9, 0),
+    ];
+    const bulkDinner = { kcal: 1100, protein: 60, carbs: 140, fat: 43 };
+    const plate = buildPlate(villageDinner, "village", "Dinner", [], bulkDinner);
+    const t = totals(plate);
+
+    expect(Math.abs(t.kcal - 1100) / 1100).toBeLessThanOrEqual(PLATE_KCAL_TOLERANCE);
+    expect(Math.abs(t.fat - 43) / 43).toBeLessThanOrEqual(PLATE_FAT_TOLERANCE);
+    for (const p of plate.filter((p) => p.item.role === "veg" || p.item.role === "extra")) {
+      expect(p.qty).toBeLessThanOrEqual(MAX_SIDE_SERVINGS);
+    }
   });
 });
 
@@ -145,5 +178,14 @@ describe("canSwap", () => {
   it("is false when every same-role item is already on the plate", () => {
     const plate = [row("a", 0), row("b", 1)]; // chicken + tofu, the only two proteins
     expect(canSwap(menu, plate, "a", "village", "Lunch", [])).toBe(false);
+  });
+});
+
+describe("availableItems and components", () => {
+  it("never offers toppings or condiments for a generated plate", () => {
+    const ranch = item({ id: "ranch", role: "extra", kind: "component" });
+    expect(availableItems([...menu, ranch], "village", "Lunch", []).map((i) => i.id)).not.toContain(
+      "ranch",
+    );
   });
 });

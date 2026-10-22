@@ -16,7 +16,7 @@ export const Route = createFileRoute("/faq")({
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Where do Palate’s numbers come from, and how accurate are they?",
-    a: "Each menu item is matched by hand to a USDA FoodData Central reference at one standard hall serving, then checked against weighed sample plates. Dining hall portions vary and cooking oils are hard to see, so every number is labeled as an estimate, and portions adjust to half or 1.5 servings. Items without an estimate yet show “not yet estimated” instead of being hidden.",
+    a: "Menus come straight from USC Hospitality each day. USC doesn’t publish nutrition, so we estimate it. Most dishes are matched to the USDA’s FoodData Central database at a typical serving. When a dish is too unusual for a reliable USDA match, its calories and macros are estimated with AI (Claude), using the closest USDA foods as a reference. Allergen and diet labels always come from USC, never from an estimate. Portions and recipes vary, so every number is an estimate.",
   },
   {
     q: "Why doesn’t USC publish this information itself?",
