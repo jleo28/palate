@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { LogCelebration } from "@/components/palate/LogCelebration";
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Plus, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
+import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
 import { AllergenNotice } from "@/components/palate/AllergenNotice";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
@@ -105,6 +106,7 @@ function Plate() {
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [celebrating, setCelebrating] = useState(false);
+  const [elseOpen, setElseOpen] = useState(false);
   // One-time tip on the first plate someone sees. Marked seen as soon as it shows.
   const [showPortionTip, setShowPortionTip] = useState(false);
   useEffect(() => {
@@ -365,6 +367,27 @@ function Plate() {
               ))}
             </ul>
           )}
+
+          <button
+            type="button"
+            onClick={() => setElseOpen(true)}
+            className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-dashed border-foreground/30 text-sm font-bold text-muted-foreground"
+          >
+            <Plus className="size-4" aria-hidden /> I ate something else
+          </button>
+          <AteSomethingElseDialog
+            open={elseOpen}
+            onOpenChange={setElseOpen}
+            hall={hall}
+            slots={slots}
+            loggedToday={loggedToday}
+            onLog={(entry) => {
+              if (!addLog(entry)) return;
+              setElseOpen(false);
+              setCelebrating(true);
+              toast.success(`${entry.meal} logged`);
+            }}
+          />
 
           <AllergenNotice
             className="mt-2"
