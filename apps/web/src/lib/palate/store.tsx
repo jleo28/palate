@@ -33,6 +33,7 @@ import {
 } from "@palate/core";
 import { supabase } from "@/lib/supabase";
 import { today } from "./dates";
+import { VERIFIED_PATH } from "./paths";
 import { currentMeal } from "./halls";
 
 // Browser-only data: a signed-out onboarding draft, plus anything saved before accounts existed.
@@ -65,6 +66,10 @@ async function loadUser(userId: string) {
 
   let profile = profileRes.data ? profileFromRow(profileRes.data) : null;
   let log = ((logRes.data ?? []) as MealLogRow[]).map(logFromRow);
+
+  // The email-confirmation tab only says thanks. The tab that signed up imports its own draft,
+  // so two tabs never both create the account.
+  if (window.location.pathname.startsWith(VERIFIED_PATH)) return { profile, log };
 
   const localProfile = readLocal<Profile>(KEY_PROFILE);
   const localLog = readLocal<LoggedMeal[]>(KEY_LOG) ?? [];
