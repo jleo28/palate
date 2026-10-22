@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Camera, Check, Flame, ThumbsDown, ThumbsUp, Undo2 } from "lucide-react";
-import { isRestDay, nextOpenSlot, streak, SNACKS, isSnack } from "@palate/core";
+import { Award, Camera, Check, Flame, ThumbsDown, ThumbsUp, Undo2 } from "lucide-react";
+import { BADGES, isRestDay, newBadges, nextOpenSlot, streak, SNACKS, isSnack } from "@palate/core";
 import { useStore } from "@/lib/palate/store";
 import { today as localToday } from "@/lib/palate/dates";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,10 @@ function Sheet() {
   const loggedToday = log.filter((l) => l.date === today).map((l) => l.meal);
   const next = entry.date === today ? nextOpenSlot(slots, entry.meal, loggedToday) : null;
   const rateable = entry.source === "outside" ? [] : entry.items;
+  const earned = newBadges(
+    log.filter((l) => l.id !== entry.id),
+    log,
+  ).map((id) => BADGES.find((b) => b.id === id)!.name);
 
   const rate = (name: string, value: 1 | -1) => {
     const nextValue = ratings[name] === value ? null : value;
@@ -96,6 +100,12 @@ function Sheet() {
             </p>
           </div>
         </div>
+
+        {earned.length > 0 && (
+          <p className="mt-3 flex items-center gap-2 rounded-xl bg-olive-soft px-3 py-2 text-sm font-bold text-olive">
+            <Award className="size-4" aria-hidden /> New badge: {earned.join(", ")}
+          </p>
+        )}
 
         {rateable.length > 0 && (
           <div className="mt-4">

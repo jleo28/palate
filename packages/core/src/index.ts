@@ -1,4 +1,5 @@
 export * from "./allergens";
+export * from "./badges";
 export * from "./budget";
 export * from "./food-kind";
 export * from "./history";
