@@ -164,3 +164,30 @@ export function firstOpenSlot(slots: readonly Slot[], from: Slot, loggedToday: r
 export function nextOpenSlot(slots: readonly Slot[], slot: Slot, loggedToday: readonly Slot[]) {
   return slots.slice(slots.indexOf(slot) + 1).find((s) => canLogSlot(s, loggedToday)) ?? null;
 }
+
+/**
+ * The day's calories per slot, rounded to 10. Dinner absorbs the rounding, so the slots always
+ * add up to the daily total.
+ */
+export function slotCalories(dailyKcal: number, slots: readonly Slot[]) {
+  const out = slots.map((slot) => ({
+    slot,
+    kcal: Math.round((dailyKcal * slotShare(slot, slots)) / 10) * 10,
+  }));
+  const dinner = out.find((s) => s.slot === "Dinner");
+  if (dinner) dinner.kcal += dailyKcal - out.reduce((sum, s) => sum + s.kcal, 0);
+  return out;
+}
+
+/** "Roughly 560 cal at breakfast and 720 at lunch and dinner." Snacks are included when chosen. */
+export function perMealLine(dailyKcal: number, slots: readonly Slot[]) {
+  const cal = slotCalories(dailyKcal, slots);
+  const of = (s: Slot) => cal.find((c) => c.slot === s)!.kcal;
+  const parts = [`${of("Breakfast")} cal at breakfast`];
+  if (of("Lunch") === of("Dinner")) parts.push(`${of("Lunch")} at lunch and dinner`);
+  else parts.push(`${of("Lunch")} at lunch`, `${of("Dinner")} at dinner`);
+  const snack = cal.find((c) => isSnack(c.slot));
+  if (snack) parts.push(`${snack.kcal} per snack`);
+  const last = parts.pop()!;
+  return `Roughly ${parts.join(", ")} and ${last}.`;
+}
