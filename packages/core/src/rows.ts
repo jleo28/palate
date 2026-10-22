@@ -48,6 +48,7 @@ export interface MealLogRow {
   fat: number;
   items: LoggedMeal["items"];
   source: NonNullable<LoggedMeal["source"]>;
+  photo_path?: string | null;
 }
 
 export function profileToRow(userId: string, p: Profile): ProfileRow {
@@ -110,6 +111,7 @@ export function logToRow(m: LoggedMeal): MealLogRow {
     fat: m.fat,
     items: m.items,
     source: m.source ?? "dining-hall",
+    photo_path: m.photoPath ?? null,
   };
 }
 
@@ -125,5 +127,6 @@ export function logFromRow(r: MealLogRow): LoggedMeal {
     fat: num(r.fat),
     items: r.items,
     source: r.source,
+    ...(r.photo_path ? { photoPath: r.photo_path } : {}),
   };
 }
