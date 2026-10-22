@@ -253,6 +253,16 @@ export function setQty(plate: readonly PlateItem[], rowId: string, qty: number):
   return replace(plate, rowId, (row) => ({ ...row, qty: clamped }));
 }
 
+/** Add a menu item to a plate: one more portion if it's already there, else a new row. */
+export function addItem(plate: readonly PlateItem[], item: MenuItem): PlateItem[] {
+  const existing = plate.find((row) => row.item.id === item.id);
+  if (existing) return setQty(plate, existing.id, existing.qty + 1);
+  const ids = new Set(plate.map((row) => row.id));
+  let n = plate.length;
+  while (ids.has(`row-${n}`)) n++;
+  return [...plate, { id: `row-${n}`, item, qty: 1 }];
+}
+
 export function removeRow(plate: readonly PlateItem[], rowId: string): PlateItem[] {
   return plate.filter((row) => row.id !== rowId);
 }

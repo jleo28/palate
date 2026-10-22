@@ -38,6 +38,7 @@ import {
   optionsHistory,
   startHistory,
   type PlateHistory,
+  addItem,
   removeRow,
   restoreRow,
   replaceRow,
@@ -93,6 +94,8 @@ function Plate() {
     daily,
     consumedToday,
     addLog,
+    plateAdds,
+    clearPlateAdds,
     attachPhoto,
     loggedToday,
     log,
@@ -164,6 +167,15 @@ function Plate() {
     setHistory(optionsHistory(distinctPlates(freshPlate)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menu, hall, meal, dietKey, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
+
+  // Items tapped on Hall Menus join the plate you're on, once today's menu has loaded (a menu
+  // change rebuilds the plates). Declared after the rebuild so they're added on top of it.
+  useEffect(() => {
+    if (!plateAdds.length || !menu.length) return;
+    edit((prev) => plateAdds.reduce((p, item) => addItem(p, item), prev));
+    clearPlateAdds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plateAdds, menu.length]);
 
   const nextPlate = () => {
     setDirection("next");

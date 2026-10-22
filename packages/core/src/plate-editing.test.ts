@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { MAX_QTY, alternatives, removeRow, replaceRow, restoreRow, setQty, totals } from "./plate";
+import {
+  MAX_QTY,
+  addItem,
+  alternatives,
+  removeRow,
+  replaceRow,
+  restoreRow,
+  setQty,
+  totals,
+} from "./plate";
 import { logItems } from "./logs";
 import { withoutSkipped } from "./preferences";
 import { item, menu } from "./fixtures";
@@ -96,5 +105,21 @@ describe("withoutSkipped", () => {
 
   it("keeps everything when nothing is skipped", () => {
     expect(withoutSkipped(menu, undefined)).toHaveLength(menu.length);
+  });
+});
+
+describe("addItem", () => {
+  it("adds a new row with one portion and a fresh id", () => {
+    const extra = item({ id: "kale", role: "veg" });
+    const next = addItem(plate, extra);
+    expect(next).toHaveLength(plate.length + 1);
+    expect(next.at(-1)).toMatchObject({ item: extra, qty: 1 });
+    expect(new Set(next.map((r) => r.id)).size).toBe(next.length);
+  });
+
+  it("adds a portion when the item is already on the plate", () => {
+    const next = addItem(plate, plate[0]!.item);
+    expect(next).toHaveLength(plate.length);
+    expect(next[0]!.qty).toBe(plate[0]!.qty + 1);
   });
 });

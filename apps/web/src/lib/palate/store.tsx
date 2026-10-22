@@ -27,6 +27,7 @@ import {
   type LoggedMeal,
   type MacroTargets,
   type MealLogRow,
+  type MenuItem,
   type Slot,
   type Profile,
   type ProfileRow,
@@ -110,6 +111,11 @@ interface Ctx {
   /** Returns false when the slot can't be logged again today. */
   /** Log a meal for today, or for `date` (an earlier day, via a card). The new entry, or null. */
   addLog: (m: Omit<LoggedMeal, "id" | "date">, date?: string) => LoggedMeal | null;
+  /** Queue a Hall Menus item for The Plate, which adds it to the plate you're on. */
+  addToPlate: (item: MenuItem) => void;
+  /** Items waiting to be added to the plate; The Plate adds them, then clears the queue. */
+  plateAdds: MenuItem[];
+  clearPlateAdds: () => void;
   /** The meal just logged, for the "logged" pop-up. Null once it's dismissed. */
   justLogged: LoggedMeal | null;
   dismissLogged: () => void;
@@ -255,6 +261,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const [justLogged, setJustLogged] = useState<LoggedMeal | null>(null);
+  const [plateAdds, setPlateAdds] = useState<MenuItem[]>([]);
+  const addToPlate = useCallback((item: MenuItem) => setPlateAdds((q) => [...q, item]), []);
+  const clearPlateAdds = useCallback(() => setPlateAdds([]), []);
   const dismissLogged = useCallback(() => setJustLogged(null), []);
 
   const rateItem = useCallback((mealId: string, itemName: string, rating: 1 | -1 | null) => {
@@ -457,6 +466,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     removeLog,
     justLogged,
     dismissLogged,
+    addToPlate,
+    plateAdds,
+    clearPlateAdds,
     rateItem,
     attachPhoto,
     restoreLog,
