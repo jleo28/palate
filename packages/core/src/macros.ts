@@ -1,7 +1,7 @@
 import type { GoalId, Profile } from "./types";
 
 export const GOALS: { id: GoalId; label: string; note: string }[] = [
-  { id: "cut", label: "Cut", note: "A gentle deficit, never more than 500 cal a day" },
+  { id: "cut", label: "Cut", note: "A gentle deficit to lose slowly." },
   { id: "maintain", label: "Maintain", note: "Hold steady and eat balanced" },
   { id: "lean-bulk", label: "Lean Bulk", note: "Build slowly, with extra carbs" },
 ];
@@ -15,12 +15,10 @@ export interface MacroTargets {
   fat: number;
 }
 
-/** Daily calories never go below these, whatever the goal. */
-export const CALORIE_FLOOR: Record<Profile["gender"], number> = {
-  female: 1200,
-  other: 1200,
-  male: 1500,
-};
+/** Daily calories never go below this, whatever the goal or body. Applied last. */
+export const CALORIE_FLOOR = 1500;
+/** Protein never goes above this many grams per kg of bodyweight, even with High Protein. */
+export const PROTEIN_CAP_G_PER_KG = 2.2;
 export const MAX_DEFICIT = 500;
 
 const LB_TO_KG = 0.4536;
@@ -65,10 +63,12 @@ export function dailyTargets(p: Profile): MacroTargets {
   const goal = effectiveGoal(p);
   const tdee = maintenanceKcal(p);
   const adjusted = Math.max(tdee * (1 + KCAL_ADJUST[goal]), tdee - MAX_DEFICIT);
-  const kcal = Math.max(CALORIE_FLOOR[p.gender], Math.round(adjusted / 10) * 10);
+  const kcal = Math.max(CALORIE_FLOOR, Math.round(adjusted / 10) * 10);
 
   const perLb = p.highProtein ? HIGH_PROTEIN_PER_LB : PROTEIN_PER_LB[goal];
-  const protein = Math.round(proteinWeightLb(p) * perLb);
+  const protein = Math.round(
+    Math.min(proteinWeightLb(p) * perLb, p.weightLb * LB_TO_KG * PROTEIN_CAP_G_PER_KG),
+  );
   const fat = Math.round((kcal * (goal === "lean-bulk" ? 0.27 : 0.25)) / 9);
   const carbs = Math.max(60, Math.round((kcal - protein * 4 - fat * 9) / 4));
 
