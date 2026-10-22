@@ -34,6 +34,8 @@ export interface ProfileRow {
   seedling: Seedling | null;
   wellbeing: Wellbeing;
   card_spends: CardSpend[];
+  /** Set by the database; read-only. */
+  created_at?: string;
 }
 
 export interface MealLogRow {
@@ -93,6 +95,7 @@ export function profileFromRow(r: ProfileRow): Profile {
     ...(r.seedling ? { seedling: r.seedling } : {}),
     wellbeing: r.wellbeing ?? {},
     cardSpends: r.card_spends ?? [],
+    ...(r.created_at ? { createdOn: r.created_at.slice(0, 10) } : {}),
   };
 }
 
