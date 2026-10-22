@@ -10,6 +10,7 @@ import {
 } from "@palate/core";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { SeedlingCard } from "@/components/palate/SeedlingCard";
+import { Badges, WeeklyRecap } from "@/components/palate/BadgesAndRecap";
 import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/sprout")({
 
 /** Your companion, its growth, your streak and this month's cards. */
 function SproutScreen() {
-  const { ready, profile, log, saveProfile } = useStore();
+  const { ready, session, profile, log, saveProfile } = useStore();
   useRequireProfile();
 
   if (!ready || !profile?.seedling) {
@@ -63,6 +64,8 @@ function SproutScreen() {
         }
         onChange={(seedling) => void saveProfile({ ...profile, seedling })}
       />
+      <WeeklyRecap log={log} today={today} signedIn={!!session} />
+      <Badges log={log} />
     </AppShell>
   );
 }
