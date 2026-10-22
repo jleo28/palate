@@ -95,6 +95,8 @@ export interface Profile {
   seedling?: Seedling;
   /** Hide Numbers, skipped days and tracking pauses. */
   wellbeing?: Wellbeing;
+  /** YYYY-MM-DD the account was created (from the database; missing before sign-up). */
+  createdOn?: string;
   /** Cards spent on logging earlier meals. Kept here so removing that meal never refunds one. */
   cardSpends?: CardSpend[];
 }

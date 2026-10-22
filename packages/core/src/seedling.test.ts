@@ -8,6 +8,7 @@ import {
   growthStage,
   renameSeedling,
   seedlingDetails,
+  daysTogether,
 } from "./seedling";
 
 describe("Seedling assignment", () => {
@@ -77,5 +78,18 @@ describe("growth", () => {
   it("counts distinct days with any log, and gaps don't undo it", () => {
     const log = [{ date: "2026-09-01" }, { date: "2026-09-01" }, { date: "2026-09-20" }];
     expect(daysShowedUp(log)).toBe(2);
+  });
+});
+
+describe("daysTogether", () => {
+  it("reads 1 on sign-up day", () => {
+    expect(daysTogether("2026-10-22", "2026-10-22")).toBe(1);
+  });
+  it("counts calendar days, including the first", () => {
+    expect(daysTogether("2026-10-20", "2026-10-22")).toBe(3);
+    expect(daysTogether("2026-09-30", "2026-10-01")).toBe(2);
+  });
+  it("treats a missing date as day one", () => {
+    expect(daysTogether(undefined, "2026-10-22")).toBe(1);
   });
 });

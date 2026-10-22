@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
 import { Switch } from "@/components/palate/Switch";
-import { SeedlingCard } from "@/components/palate/SeedlingCard";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { Button } from "@/components/ui/button";
 import { CardSettings } from "@/components/palate/CardSettings";
@@ -16,11 +15,8 @@ import { ProgressRing } from "@/components/palate/ProgressRing";
 import {
   GOALS,
   allergenLabel,
-  daysShowedUp,
   effectiveGoal,
-  isPaused,
   isRestDay,
-  setPaused,
   setSkipped,
   CARDS_PER_MONTH,
   backfillDays,
@@ -104,8 +100,6 @@ function CardScreen() {
     ...(profile.customAllergies ?? []),
   ];
   const todaysLog = log.filter((l) => l.date === today);
-  const showedUp = daysShowedUp(log);
-  const checkedInToday = todaysLog.length > 0;
   const hideNumbers = !!profile.wellbeing?.hideNumbers;
   const currentStreak = streak(
     log.map((l) => l.date),
@@ -211,20 +205,6 @@ function CardScreen() {
           </>
         }
       />
-
-      {profile.seedling && (
-        <SeedlingCard
-          seedling={profile.seedling}
-          daysShowedUp={showedUp}
-          checkedInToday={checkedInToday}
-          streak={currentStreak}
-          paused={isPaused(profile.wellbeing)}
-          onPausedChange={(pause) =>
-            void saveProfile({ ...profile, wellbeing: setPaused(profile.wellbeing, today, pause) })
-          }
-          onChange={(seedling) => void saveProfile({ ...profile, seedling })}
-        />
-      )}
 
       {/* Macro bank */}
       <section className="mt-5 rounded-2xl border border-foreground/15 bg-card p-4">

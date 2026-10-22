@@ -16,6 +16,7 @@ import { Route as MenusRouteImport } from './routes/menus'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SproutRouteImport } from './routes/sprout'
 import { Route as VerifiedRouteImport } from './routes/verified'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as ApiMenusRouteImport } from './routes/api/menus'
@@ -55,6 +56,11 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SproutRoute = SproutRouteImport.update({
+  id: '/sprout',
+  path: '/sprout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VerifiedRoute = VerifiedRouteImport.update({
   id: '/verified',
   path: '/verified',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/sprout': typeof SproutRoute
   '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
   '/api/menus': typeof ApiMenusRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/sprout': typeof SproutRoute
   '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
   '/api/menus': typeof ApiMenusRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/sprout': typeof SproutRoute
   '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
   '/api/menus': typeof ApiMenusRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reset-password'
     | '/sign-in'
+    | '/sprout'
     | '/verified'
     | '/welcome'
     | '/api/menus'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reset-password'
     | '/sign-in'
+    | '/sprout'
     | '/verified'
     | '/welcome'
     | '/api/menus'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reset-password'
     | '/sign-in'
+    | '/sprout'
     | '/verified'
     | '/welcome'
     | '/api/menus'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignInRoute: typeof SignInRoute
+  SproutRoute: typeof SproutRoute
   VerifiedRoute: typeof VerifiedRoute
   WelcomeRoute: typeof WelcomeRoute
   ApiMenusRoute: typeof ApiMenusRoute
@@ -211,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sprout': {
+      id: '/sprout'
+      path: '/sprout'
+      fullPath: '/sprout'
+      preLoaderRoute: typeof SproutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verified': {
       id: '/verified'
       path: '/verified'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignInRoute: SignInRoute,
+  SproutRoute: SproutRoute,
   VerifiedRoute: VerifiedRoute,
   WelcomeRoute: WelcomeRoute,
   ApiMenusRoute: ApiMenusRoute,

@@ -13,7 +13,10 @@ import { Switch } from "./Switch";
 
 interface Props {
   seedling: Seedling;
+  /** Days with a logged meal: drives growth. */
   daysShowedUp: number;
+  /** Calendar days since sign-up, day one included. */
+  daysTogether: number;
   checkedInToday: boolean;
   streak: Streak;
   /** Tracking is paused: the streak holds still and nothing nudges. */
@@ -37,6 +40,7 @@ const formatDays = (dates: string[]) =>
 export function SeedlingCard({
   seedling,
   daysShowedUp,
+  daysTogether,
   checkedInToday,
   streak,
   paused,
@@ -114,7 +118,7 @@ export function SeedlingCard({
               : `${seedling.name} grows a little each day you log a meal, any meal.`}
           </p>
           <p className="mt-2 text-xs font-bold text-olive">
-            {daysShowedUp} {daysShowedUp === 1 ? "day" : "days"} together
+            {daysTogether} {daysTogether === 1 ? "day" : "days"} together
             {stage.toNext > 0 ? ` · ${stage.toNext} more to grow` : ""}
           </p>
         </div>
