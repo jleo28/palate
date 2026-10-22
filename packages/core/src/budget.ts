@@ -117,35 +117,19 @@ export function fitCheck(
   };
 }
 
-const LABEL: Record<Macro, string> = {
-  kcal: "calories",
-  protein: "protein",
-  carbs: "carbs",
-  fat: "fat",
-};
-const unit = (m: Macro) => (m === "kcal" ? " cal" : " g");
+/** Shown whenever a plate (as built or as edited) runs past the plan. Guidance, never a verdict. */
+export const PAST_PLAN = "You can always add more. It just goes a bit past today's plan.";
 
-/** One plain-language line about how a plate fits, in Seedling's voice. */
-export function fitSummary(fit: Fit, meal: Slot, slots: readonly Slot[] = MEALS): string {
-  const nextMeal = slots[slots.indexOf(meal) + 1]?.toLowerCase();
+/**
+ * One plain-language line about the plate, in Seedling's voice. It never criticises the plate
+ * or names a macro that's "too high": it offers portion guidance instead.
+ */
+export function fitSummary(fit: Fit, meal: Slot): string {
   if (fit.capReached) {
-    return "You've reached today's calories. If you're still hungry, this is a balanced, lighter option.";
+    return "You've reached today's plan. If you're still hungry, this is a lighter option.";
   }
-  if (fit.dayOverCap) {
-    return "This plate goes a little past today's calories. A smaller side keeps the day on track.";
-  }
-  // Lead with what's most useful to adjust; extra protein is the least concerning.
-  const priority: Macro[] = ["fat", "carbs", "kcal", "protein"];
-  const top = [...fit.over].sort(
-    (a, b) => priority.indexOf(a.macro) - priority.indexOf(b.macro),
-  )[0];
-  if (top) {
-    const balance = nextMeal
-      ? ` ${nextMeal[0]!.toUpperCase()}${nextMeal.slice(1)} can balance it out.`
-      : "";
-    return `A bit heavy on ${LABEL[top.macro]} (+${top.by}${unit(top.macro)}).${balance}`;
-  }
-  if (fit.lowProtein) return "Light on protein. Another protein would round this plate out.";
+  if (fit.dayOverCap || fit.over.length > 0) return PAST_PLAN;
+  if (fit.lowProtein) return "Want more protein? Tap + on any protein.";
   return `This plate fits your ${meal.toLowerCase()} nicely.`;
 }
 
