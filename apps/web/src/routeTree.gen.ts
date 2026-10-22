@@ -18,6 +18,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as VerifiedRouteImport } from './routes/verified'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as ApiMenusRouteImport } from './routes/api/menus'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMenusRoute = ApiMenusRouteImport.update({
+  id: '/api/menus',
+  path: '/api/menus',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
+  '/api/menus': typeof ApiMenusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
+  '/api/menus': typeof ApiMenusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/verified': typeof VerifiedRoute
   '/welcome': typeof WelcomeRoute
+  '/api/menus': typeof ApiMenusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/verified'
     | '/welcome'
+    | '/api/menus'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/verified'
     | '/welcome'
+    | '/api/menus'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/verified'
     | '/welcome'
+    | '/api/menus'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   VerifiedRoute: typeof VerifiedRoute
   WelcomeRoute: typeof WelcomeRoute
+  ApiMenusRoute: typeof ApiMenusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/menus': {
+      id: '/api/menus'
+      path: '/api/menus'
+      fullPath: '/api/menus'
+      preLoaderRoute: typeof ApiMenusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   VerifiedRoute: VerifiedRoute,
   WelcomeRoute: WelcomeRoute,
+  ApiMenusRoute: ApiMenusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

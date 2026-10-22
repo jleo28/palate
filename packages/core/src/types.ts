@@ -56,6 +56,10 @@ export interface MenuItem {
   tags: DietTag[];
   /** Known allergens. Absent means none listed. */
   allergens?: Allergen[];
+  /** USC didn't analyze this item's allergens: unknown, never treated as safe. */
+  allergensUnknown?: boolean;
+  /** Toppings and condiments are "component": shown on menus, never on a generated plate. */
+  kind?: "dish" | "component";
 }
 
 export interface PlateItem {

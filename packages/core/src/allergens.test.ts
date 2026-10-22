@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allergenConflicts, allergenLabel, itemAllergens } from "./allergens";
+import { allergenConflicts, allergenLabel, hasAllergyConflict, itemAllergens } from "./allergens";
 import { dislikedMatches } from "./preferences";
 import { item, menu } from "./fixtures";
 
@@ -31,5 +31,16 @@ describe("dislikedMatches", () => {
 
   it("returns nothing when the user has no dislikes", () => {
     expect(dislikedMatches(menu[0]!, undefined)).toEqual([]);
+  });
+});
+
+describe("unanalyzed allergens", () => {
+  const stew = item({ id: "stew", allergensUnknown: true });
+  it("are out for anyone with an allergy set", () => {
+    expect(hasAllergyConflict(stew, ["soy"], [])).toBe(true);
+    expect(hasAllergyConflict(stew, [], ["coconut"])).toBe(true);
+  });
+  it("don't affect anyone without allergies", () => {
+    expect(hasAllergyConflict(stew, [], [])).toBe(false);
   });
 });

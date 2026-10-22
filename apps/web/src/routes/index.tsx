@@ -48,7 +48,8 @@ import {
   withoutAllergyConflicts,
   type PlateItem,
 } from "@palate/core";
-import { MENU, portionLabel } from "@/lib/palate/menu";
+import { portionLabel } from "@/lib/palate/menu";
+import { useHallMenu } from "@/lib/palate/use-menu";
 import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
@@ -137,16 +138,17 @@ function Plate() {
   const dietKey = diets.join(",");
   const skipKey = (profile?.dislikes ?? []).join(",");
   const allergyKey = [...(profile?.allergies ?? []), ...(profile?.customAllergies ?? [])].join(",");
+  const { items: hallItems } = useHallMenu(hall);
   // Skipped foods and anything flagged for the user's allergies never go on a generated plate.
   const menu = useMemo(
     () =>
       withoutAllergyConflicts(
-        withoutSkipped(MENU, profile?.dislikes),
+        withoutSkipped(hallItems, profile?.dislikes),
         profile?.allergies,
         profile?.customAllergies,
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [skipKey, allergyKey],
+    [hallItems, skipKey, allergyKey],
   );
 
   const freshPlate = (seed: number) => {

@@ -11,4 +11,6 @@ export * from "./seedling";
 export * from "./streak";
 export * from "./types";
 export * from "./units";
+export * from "./usc-menu";
+export * from "./usda-match";
 export * from "./wellbeing";
