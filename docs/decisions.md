@@ -35,3 +35,4 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 - 2026-10-21: "Skip logging today" and "Pause Tracking" make rest days: they bridge a streak without counting toward it or spending a freeze, and Seedling keeps all its growth.
 - 2026-10-21: Release 1.2.0 to production: welcome page, sign-up and swap fixes, spelled-out macros, allergen notice, FAQs and support, Skip logging today, Pause tracking, Hide Numbers, and the logging celebration.
 - 2026-10-21: Sign-up starts with blank fields (no preset name, age, gender, height or weight), and Continue waits until they are filled in.
+- 2026-10-21: The calorie floor is 1,500 kcal for everyone, applied after all adjustments (replaces 1,200/1,500 by gender). High Protein is capped at 2.2 g/kg. The Cut card reads "A gentle deficit to lose slowly."; the 500 kcal deficit cap stays in the maths.

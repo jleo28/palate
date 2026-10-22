@@ -61,11 +61,16 @@ describe("dailyTargets", () => {
 });
 
 describe("high protein toggle", () => {
-  it("raises protein to 1.2 g/lb on any goal without changing calories", () => {
+  it("raises protein on any goal without changing calories", () => {
     const base = dailyTargets(profile({ weightLb: 150 }));
     const high = dailyTargets(profile({ weightLb: 150, highProtein: true }));
-    expect(high.protein).toBe(180);
+    expect(high.protein).toBeGreaterThan(base.protein);
     expect(high.kcal).toBe(base.kcal);
+  });
+
+  it("caps protein at 2.2 g/kg", () => {
+    // 165 lb = 74.8 kg. 1.2 g/lb would be 198 g; the cap is 164.6 g.
+    expect(dailyTargets(profile({ weightLb: 165, highProtein: true })).protein).toBe(165);
   });
 });
 
@@ -89,11 +94,11 @@ describe("guardrails", () => {
     expect(dailyTargets(big).kcal).toBe(2820);
   });
 
-  it("never goes below 1,200 kcal for women and other genders", () => {
-    // Maintenance 1445; Cut would be 1190
-    const p = profile({ age: 30, heightIn: 56, weightLb: 85, goal: "cut" });
-    expect(dailyTargets(p).kcal).toBe(1200);
-    expect(dailyTargets({ ...p, gender: "other" }).kcal).toBeGreaterThanOrEqual(1200);
+  it("never goes below 1,500 kcal, whatever the gender", () => {
+    // 5'0", 100 lb, age 20, female: maintenance 1718; Cut would be 1410
+    const p = profile({ age: 20, heightIn: 60, weightLb: 100, goal: "cut" });
+    expect(dailyTargets(p).kcal).toBe(1500);
+    expect(dailyTargets({ ...p, gender: "other" }).kcal).toBeGreaterThanOrEqual(1500);
   });
 
   it("never goes below 1,500 kcal for men", () => {
