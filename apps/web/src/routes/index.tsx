@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { LogCelebration } from "@/components/palate/LogCelebration";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
@@ -34,7 +34,9 @@ import {
   canGoBack,
   currentPlate,
   editCurrent,
-  forward,
+  distinctPlates,
+  nextOption,
+  optionsHistory,
   startHistory,
   type PlateHistory,
   removeRow,
@@ -100,8 +102,6 @@ function Plate() {
   const loggedEntry = !isSnack(meal)
     ? log.find((l) => l.date === localToday() && l.meal === meal)
     : undefined;
-  // Each new variation uses the next seed; the stack keeps the last 10 to swipe back through.
-  const seed = useRef(0);
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [celebrating, setCelebrating] = useState(false);
@@ -117,6 +117,7 @@ function Plate() {
     }
   }, []);
   const plate = currentPlate(history);
+  const hasOptions = history.plates.length > 1;
   const edit = (fn: (p: PlateItem[]) => PlateItem[]) => setHistory((h) => editCurrent(h, fn));
 
   const removeWithUndo = (row: PlateItem) => {
@@ -146,29 +147,23 @@ function Plate() {
     [skipKey, allergyKey],
   );
 
-  const freshPlate = () => {
+  const freshPlate = (seed: number) => {
     if (!mealTarget || !daily) return [];
     // The day's calorie target is a hard cap: the plate never plans past what's left of it.
     const left = remainingToday(daily, consumedToday).kcal;
     const build = isSnack(meal) ? buildSnack : buildPlate;
-    return capPlate(build(menu, hall, period, diets, mealTarget, seed.current), left);
+    return capPlate(build(menu, hall, period, diets, mealTarget, seed), left);
   };
 
-  // A new hall, meal or budget starts a fresh stack.
+  // A new hall, meal or budget builds a fresh set of up to 3 different plates.
   useEffect(() => {
-    seed.current = 0;
-    setHistory(startHistory(freshPlate()));
+    setHistory(optionsHistory(distinctPlates(freshPlate)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menu, hall, meal, dietKey, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
 
   const nextPlate = () => {
     setDirection("next");
-    setHistory((h) =>
-      forward(h, () => {
-        seed.current += 1;
-        return freshPlate();
-      }),
-    );
+    setHistory(nextOption);
   };
   const previousPlate = () => {
     setDirection("prev");
@@ -287,12 +282,14 @@ function Plate() {
                 </p>
               )}
             </div>
-            <button
-              onClick={nextPlate}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 py-1.5 text-xs font-bold"
-            >
-              <Shuffle className="size-3.5" /> Shuffle
-            </button>
+            {hasOptions && (
+              <button
+                onClick={nextPlate}
+                className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-foreground/25 px-3 text-xs font-bold"
+              >
+                <Shuffle className="size-3.5" /> Shuffle
+              </button>
+            )}
           </div>
 
           <SwipeArea onNext={nextPlate} onPrevious={previousPlate} label="Plate variations">
@@ -307,7 +304,13 @@ function Plate() {
             </div>
           </SwipeArea>
 
-          <div className="mb-3 flex items-center justify-center gap-3 text-[0.7rem] text-muted-foreground">
+          {/* Only one plate possible: no arrows or "1 of 1". */}
+          <div
+            className={cn(
+              "mb-3 flex items-center justify-center gap-3 text-[0.7rem] text-muted-foreground",
+              !hasOptions && "hidden",
+            )}
+          >
             <button
               type="button"
               onClick={previousPlate}
@@ -337,7 +340,9 @@ function Plate() {
           )}
           {plate.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-foreground/25 px-3 py-6 text-center text-sm text-muted-foreground">
-              Your plate is empty. Tap Shuffle for a fresh one.
+              {hasOptions
+                ? "Your plate is empty. Swipe for another idea."
+                : "Your plate is empty. Try another hall or meal."}
             </p>
           ) : (
             <ul

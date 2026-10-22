@@ -37,3 +37,39 @@ export function editCurrent(
   const plates = h.plates.map((p, i) => (i === h.index ? edit(p) : p));
   return { plates, index: h.index };
 }
+
+/** How many plate options to offer per meal. */
+export const PLATE_OPTIONS = 3;
+
+/**
+ * Up to `max` different plates (by their foods), trying successive seeds. Fewer come back when
+ * the hall can't make that many different plates; empty plates are dropped.
+ */
+export function distinctPlates(
+  make: (seed: number) => PlateItem[],
+  max = PLATE_OPTIONS,
+  tries = max * 3,
+): PlateItem[][] {
+  const seen = new Set<string>();
+  const out: PlateItem[][] = [];
+  for (let seed = 0; seed < tries && out.length < max; seed++) {
+    const plate = make(seed);
+    const key = plate
+      .map((r) => r.item.id)
+      .sort()
+      .join();
+    if (!plate.length || seen.has(key)) continue;
+    seen.add(key);
+    out.push(plate);
+  }
+  return out;
+}
+
+/** A stack holding every option at once, starting on the first. */
+export const optionsHistory = (options: PlateItem[][]): PlateHistory =>
+  options.length ? { plates: options, index: 0 } : startHistory([]);
+
+/** Next option, wrapping back to the first. */
+export function nextOption(h: PlateHistory): PlateHistory {
+  return { ...h, index: (h.index + 1) % Math.max(1, h.plates.length) };
+}
