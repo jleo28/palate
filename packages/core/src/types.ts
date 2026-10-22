@@ -118,4 +118,6 @@ export interface LoggedMeal {
   fat: number;
   items: LoggedItem[];
   source?: "dining-hall" | "outside";
+  /** The meal's photo in the meal-photos bucket ("<user id>/<file>"). */
+  photoPath?: string;
 }

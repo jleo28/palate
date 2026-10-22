@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { UtensilsCrossed, BookOpen, IdCard } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { MealLoggedSheet } from "./MealLoggedSheet";
 
 const TABS = [
   { to: "/", label: "The Plate", icon: UtensilsCrossed },
@@ -15,6 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-md px-4 pb-28 pt-5">{children}</div>
+      <MealLoggedSheet />
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/15 bg-card/95 backdrop-blur">
         <div className="mx-auto grid max-w-md grid-cols-3">

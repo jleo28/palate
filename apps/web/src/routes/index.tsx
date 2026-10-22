@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
-import { LogCelebration } from "@/components/palate/LogCelebration";
-import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Plus, Shuffle } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Camera, Check, ChevronLeft, ChevronRight, Plus, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
@@ -22,7 +21,6 @@ import {
   buildSnack,
   isSnack,
   logItems,
-  nextOpenSlot,
   menuPeriod,
   capPlate,
   effectiveGoal,
@@ -94,6 +92,7 @@ function Plate() {
     daily,
     consumedToday,
     addLog,
+    attachPhoto,
     loggedToday,
     log,
   } = useStore();
@@ -105,8 +104,9 @@ function Plate() {
     : undefined;
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
-  const [celebrating, setCelebrating] = useState(false);
   const [elseOpen, setElseOpen] = useState(false);
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
   // One-time tip on the first plate someone sees. Marked seen as soon as it shows.
   const [showPortionTip, setShowPortionTip] = useState(false);
   useEffect(() => {
@@ -186,10 +186,7 @@ function Plate() {
     );
   }
 
-  const stopCelebrating = () => setCelebrating(false);
-
   const logMeal = () => {
-    const next = nextOpenSlot(slots, meal, [...loggedToday, meal]);
     const logged = addLog({
       hall,
       meal,
@@ -200,22 +197,17 @@ function Plate() {
       items: logItems(plate),
     });
     if (!logged) return;
-    setCelebrating(true);
-    toast.success(`${meal} logged`, {
-      description: [
-        ...(hidden ? [] : [`${Math.round(t.kcal)} cal · ${t.protein}g protein`]),
-        next ? `next up: ${next.toLowerCase()}` : "that's the day",
-      ].join(" · "),
-    });
+    // A photo taken before logging goes onto this meal.
+    if (pendingPhoto) {
+      void attachPhoto(logged.id, pendingPhoto);
+      setPendingPhoto(null);
+    }
   };
 
   return (
     <AppShell>
       <ScreenHeader title="The Plate" sub={`Hey ${profile.name.split(" ")[0]} · USC`} />
       {profile.seedling && <SeedlingHint screen="plate" seedling={profile.seedling} />}
-      {celebrating && profile.seedling && (
-        <LogCelebration seedling={profile.seedling} onDone={stopCelebrating} />
-      )}
 
       <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
         {HALLS.map((h) => (
@@ -384,8 +376,6 @@ function Plate() {
             onLog={(entry) => {
               if (!addLog(entry)) return;
               setElseOpen(false);
-              setCelebrating(true);
-              toast.success(`${entry.meal} logged`);
             }}
           />
 
@@ -413,13 +403,39 @@ function Plate() {
             </p>
           </div>
 
-          <button
-            onClick={logMeal}
-            disabled={!plate.some((r) => r.qty > 0)}
-            className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
-          >
-            <Check className="size-5" /> Ate This Meal
-          </button>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={logMeal}
+              disabled={!plate.some((r) => r.qty > 0)}
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
+            >
+              <Check className="size-5" /> Ate This Meal
+            </button>
+            <input
+              ref={photoInput}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                setPendingPhoto(e.target.files?.[0] ?? null);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => photoInput.current?.click()}
+              aria-label={pendingPhoto ? "Photo ready. Tap to retake" : "Take a photo of this meal"}
+              className={cn(
+                "grid size-12 shrink-0 place-items-center rounded-full border",
+                pendingPhoto
+                  ? "border-olive bg-olive text-primary-foreground"
+                  : "border-foreground/25",
+              )}
+            >
+              {pendingPhoto ? <Check className="size-5" /> : <Camera className="size-5" />}
+            </button>
+          </div>
         </section>
       )}
     </AppShell>

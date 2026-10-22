@@ -33,12 +33,6 @@ import { useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
 
-const shortDay = (date: string) =>
-  new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
-    weekday: "long",
-    timeZone: "UTC",
-  });
-
 /** The first of next month, e.g. "Nov 1". */
 const refillDate = (today: string) => {
   const [y, m] = today.split("-").map(Number) as [number, number];
@@ -314,7 +308,6 @@ function CardScreen() {
         onLog={(entry) => {
           if (!addLog(entry)) return;
           setOutsideOpen(false);
-          toast.success(`Added to today's ${entry.meal.toLowerCase()}`);
         }}
       />
 
@@ -337,7 +330,6 @@ function CardScreen() {
             cardSpends: [...(profile.cardSpends ?? []), { spentOn: today, forDate: date }],
           });
           setEarlierOpen(false);
-          toast.success(`${entry.meal} logged for ${shortDay(date)}`);
         }}
       />
 
