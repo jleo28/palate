@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { UtensilsCrossed, BookOpen, IdCard } from "lucide-react";
+import { UtensilsCrossed, BookOpen, IdCard, Sprout } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { MealLoggedSheet } from "./MealLoggedSheet";
@@ -7,6 +7,7 @@ import { MealLoggedSheet } from "./MealLoggedSheet";
 const TABS = [
   { to: "/", label: "The Plate", icon: UtensilsCrossed },
   { to: "/menus", label: "Hall Menus", icon: BookOpen },
+  { to: "/sprout", label: "Sprout", icon: Sprout },
   { to: "/card", label: "My Palate", icon: IdCard },
 ] as const;
 
@@ -19,7 +20,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <MealLoggedSheet />
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/15 bg-card/95 backdrop-blur">
-        <div className="mx-auto grid max-w-md grid-cols-3">
+        <div className="mx-auto grid max-w-md grid-cols-4">
           {TABS.map((t) => {
             const active = pathname === t.to;
             const Icon = t.icon;

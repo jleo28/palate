@@ -34,10 +34,6 @@ const FAQS: { q: string; a: string }[] = [
     q: "What if I don’t care about macros?",
     a: "Palate still works as a filtered menu for every hall, and students can give each plate a thumbs-up or thumbs-down on taste. In our survey, 90% named taste as a factor in what they eat, so dish-level ratings are next on the roadmap.",
   },
-  {
-    q: "How will the team know Palate is working?",
-    a: "The key metric is builder adoption: 60% of logged plates starting from a Palate recommendation rather than manual entry. The team also tracks 30% of activated users logging on three or more days in their second week. If students use Palate only as a labeled menu, the roadmap shifts toward ratings and hall comparison.",
-  },
 ];
 
 const RESOURCES = [

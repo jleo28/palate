@@ -8,6 +8,8 @@ import {
   growthStage,
   renameSeedling,
   seedlingDetails,
+  daysTogether,
+  isSleepy,
 } from "./seedling";
 
 describe("Seedling assignment", () => {
@@ -67,15 +69,54 @@ describe("seedlingDetails", () => {
 });
 
 describe("growth", () => {
-  it("grows with days showed up", () => {
-    expect(growthStage(0)).toMatchObject({ name: "Seed", toNext: 1 });
+  it("grows through five stages with days showed up", () => {
+    expect(growthStage(0)).toMatchObject({ name: "Seed", toNext: 1, nextName: "Sprout" });
     expect(growthStage(1)).toMatchObject({ name: "Sprout", toNext: 2 });
-    expect(growthStage(3).name).toBe("Leafy");
-    expect(growthStage(30)).toMatchObject({ name: "In bloom", toNext: 0 });
+    expect(growthStage(3).name).toBe("Sapling");
+    expect(growthStage(7).name).toBe("Plant");
+    expect(growthStage(30)).toMatchObject({
+      name: "Bloom",
+      toNext: 0,
+      progress: 1,
+      nextName: null,
+    });
+  });
+
+  it("reports progress toward the next stage", () => {
+    // Sapling at 3 days, Plant at 7: 5 days is halfway.
+    expect(growthStage(5).progress).toBe(0.5);
   });
 
   it("counts distinct days with any log, and gaps don't undo it", () => {
     const log = [{ date: "2026-09-01" }, { date: "2026-09-01" }, { date: "2026-09-20" }];
     expect(daysShowedUp(log)).toBe(2);
+  });
+});
+
+describe("daysTogether", () => {
+  it("reads 1 on sign-up day", () => {
+    expect(daysTogether("2026-10-22", "2026-10-22")).toBe(1);
+  });
+  it("counts calendar days, including the first", () => {
+    expect(daysTogether("2026-10-20", "2026-10-22")).toBe(3);
+    expect(daysTogether("2026-09-30", "2026-10-01")).toBe(2);
+  });
+  it("treats a missing date as day one", () => {
+    expect(daysTogether(undefined, "2026-10-22")).toBe(1);
+  });
+});
+
+describe("isSleepy", () => {
+  const today = "2026-10-22";
+  it("is sleepy after two full days without a log", () => {
+    expect(isSleepy(["2026-10-19"], today)).toBe(true);
+  });
+  it("isn't sleepy after one missed day, or once something's logged today", () => {
+    expect(isSleepy(["2026-10-20"], today)).toBe(false);
+    expect(isSleepy(["2026-10-19", today], today)).toBe(false);
+  });
+  it("doesn't count rest days, and new users aren't sleepy", () => {
+    expect(isSleepy(["2026-10-19"], today, (d) => d === "2026-10-21")).toBe(false);
+    expect(isSleepy([], today)).toBe(false);
   });
 });

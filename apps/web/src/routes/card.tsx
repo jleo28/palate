@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { MacroBar } from "@/components/palate/MacroBits";
 import { Switch } from "@/components/palate/Switch";
-import { SeedlingCard } from "@/components/palate/SeedlingCard";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { Button } from "@/components/ui/button";
 import { CardSettings } from "@/components/palate/CardSettings";
@@ -16,11 +15,8 @@ import { ProgressRing } from "@/components/palate/ProgressRing";
 import {
   GOALS,
   allergenLabel,
-  daysShowedUp,
   effectiveGoal,
-  isPaused,
   isRestDay,
-  setPaused,
   setSkipped,
   CARDS_PER_MONTH,
   backfillDays,
@@ -42,6 +38,9 @@ const refillDate = (today: string) => {
     timeZone: "UTC",
   });
 };
+
+// Placeholder until the team's form is ready.
+const FEEDBACK_URL = "https://forms.gle/palate-feedback";
 
 export const Route = createFileRoute("/card")({
   head: () => ({
@@ -104,8 +103,6 @@ function CardScreen() {
     ...(profile.customAllergies ?? []),
   ];
   const todaysLog = log.filter((l) => l.date === today);
-  const showedUp = daysShowedUp(log);
-  const checkedInToday = todaysLog.length > 0;
   const hideNumbers = !!profile.wellbeing?.hideNumbers;
   const currentStreak = streak(
     log.map((l) => l.date),
@@ -180,8 +177,6 @@ function CardScreen() {
                 </p>
               </div>
             </div>
-
-            <div className="mt-5 h-6 rounded-md bg-foreground" />
           </>
         }
         back={
@@ -211,20 +206,6 @@ function CardScreen() {
           </>
         }
       />
-
-      {profile.seedling && (
-        <SeedlingCard
-          seedling={profile.seedling}
-          daysShowedUp={showedUp}
-          checkedInToday={checkedInToday}
-          streak={currentStreak}
-          paused={isPaused(profile.wellbeing)}
-          onPausedChange={(pause) =>
-            void saveProfile({ ...profile, wellbeing: setPaused(profile.wellbeing, today, pause) })
-          }
-          onChange={(seedling) => void saveProfile({ ...profile, seedling })}
-        />
-      )}
 
       {/* Macro bank */}
       <section className="mt-5 rounded-2xl border border-foreground/15 bg-card p-4">
@@ -398,6 +379,20 @@ function CardScreen() {
       >
         FAQs & support <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
       </Link>
+      <a
+        href={FEEDBACK_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 flex items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-sm font-bold"
+      >
+        <span>
+          Give feedback
+          <span className="block text-xs font-medium text-muted-foreground">
+            Or join a 15-min interview with the team
+          </span>
+        </span>
+        <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+      </a>
     </AppShell>
   );
 }

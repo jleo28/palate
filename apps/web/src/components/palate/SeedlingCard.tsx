@@ -8,14 +8,20 @@ import {
   type Seedling,
   type Streak,
 } from "@palate/core";
+import { cn } from "@/lib/utils";
 import { SeedlingAvatar } from "./SeedlingAvatar";
 import { Switch } from "./Switch";
 
 interface Props {
   seedling: Seedling;
+  /** Days with a logged meal: drives growth. */
   daysShowedUp: number;
+  /** Calendar days since sign-up, day one included. */
+  daysTogether: number;
   checkedInToday: boolean;
   streak: Streak;
+  /** A couple of days without logging: Seedling dozes until the next log. */
+  sleepy: boolean;
   /** Tracking is paused: the streak holds still and nothing nudges. */
   paused: boolean;
   onPausedChange: (paused: boolean) => void;
@@ -37,7 +43,9 @@ const formatDays = (dates: string[]) =>
 export function SeedlingCard({
   seedling,
   daysShowedUp,
+  daysTogether,
   checkedInToday,
+  sleepy,
   streak,
   paused,
   onPausedChange,
@@ -52,6 +60,8 @@ export function SeedlingCard({
     if (editing) input.current?.select();
   }, [editing]);
   const stage = growthStage(daysShowedUp);
+  // Tapping Seedling makes it hop; the key restarts the animation on every tap.
+  const [hops, setHops] = useState(0);
   const species = SPECIES.find((s) => s.id === seedling.species)?.label;
 
   const save = () => {
@@ -111,19 +121,53 @@ export function SeedlingCard({
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {checkedInToday
               ? `Thanks for checking in today. ${seedling.name} is soaking it up.`
-              : `${seedling.name} grows a little each day you log a meal, any meal.`}
+              : sleepy
+                ? `Missed you! Log anything and ${seedling.name} will perk right up.`
+                : `${seedling.name} grows a little each day you log a meal, any meal.`}
           </p>
           <p className="mt-2 text-xs font-bold text-olive">
-            {daysShowedUp} {daysShowedUp === 1 ? "day" : "days"} together
-            {stage.toNext > 0 ? ` · ${stage.toNext} more to grow` : ""}
+            {daysTogether} {daysTogether === 1 ? "day" : "days"} together
           </p>
         </div>
-        <SeedlingAvatar
-          seedling={seedling}
-          stage={stage.index}
-          celebrate={checkedInToday}
-          className="h-28 w-28 justify-self-center"
-        />
+        <button
+          type="button"
+          onClick={() => setHops((n) => n + 1)}
+          aria-label={`Give ${seedling.name} a tap`}
+          className="justify-self-center rounded-full"
+        >
+          <SeedlingAvatar
+            key={hops}
+            seedling={seedling}
+            stage={stage.index}
+            celebrate={checkedInToday && hops === 0}
+            sleepy={sleepy}
+            className={cn("h-28 w-28", hops > 0 && "pet-hop")}
+          />
+        </button>
+      </div>
+
+      <div className="mt-3">
+        <div className="mb-1 flex justify-between text-[0.7rem] font-semibold text-muted-foreground">
+          <span>{stage.name}</span>
+          <span>
+            {stage.nextName
+              ? `${stage.toNext} more ${stage.toNext === 1 ? "day" : "days"} to ${stage.nextName}`
+              : "Fully grown"}
+          </span>
+        </div>
+        <div
+          className="h-2.5 overflow-hidden rounded-full bg-foreground/10"
+          role="progressbar"
+          aria-label={`Growth toward ${stage.nextName ?? "full bloom"}`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(stage.progress * 100)}
+        >
+          <div
+            className="h-full rounded-full bg-olive transition-[width] duration-500"
+            style={{ width: `${Math.max(4, stage.progress * 100)}%` }}
+          />
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-foreground/10 pt-3 text-xs">
