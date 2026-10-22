@@ -78,10 +78,17 @@ const MEAT =
   /\b(beef|pork|chicken|turkey|sausage|chorizo|ham|bacon|lamb|veal|fish|shrimp|salmon|tuna|meat|pepperoni|salami)\b/i;
 const MEAT_FREE = /\b(meatless|vegetarian|vegan|tofu|soy|veggie|plant)\b/i;
 
+/** Words that turn a food into a different dish: "bacon" vs "bacon bits", "fruit" vs "fruit smoothie". */
+const FORM_WORDS = new Set(
+  "bit smoothie juice soup sandwich casserole pie dip stuffed salad cake cookie bar chip baby frozen dried canned powder sauce gravy dressing".split(
+    " ",
+  ),
+);
+
 /**
  * Whether a USDA food is a confident match for a dish: it shares the dish's main noun (its last
- * significant word) and at least half of its significant words, and a plant-based dish never
- * matches a meat food.
+ * significant word) and at least half of its significant words, it doesn't add a word that makes
+ * it a different dish, and a plant-based dish never matches a meat food.
  */
 export function isConfidentMatch(dish: string, usdaDescription: string) {
   const d = words(dish);
@@ -91,6 +98,8 @@ export function isConfidentMatch(dish: string, usdaDescription: string) {
   if (!u.has(head)) return false;
   const shared = d.filter((w) => u.has(w)).length;
   if (shared < Math.ceil(d.length / 2)) return false;
+  const dishWords = new Set(d);
+  if ([...u].some((w) => FORM_WORDS.has(w) && !dishWords.has(w))) return false;
   if (PLANT_BASED.test(dish) && MEAT.test(usdaDescription) && !MEAT_FREE.test(usdaDescription)) {
     return false;
   }
@@ -100,11 +109,34 @@ export function isConfidentMatch(dish: string, usdaDescription: string) {
 const nutrient = (food: FdcFood, number: string) =>
   food.foodNutrients?.find((n) => n.nutrientNumber === number)?.value ?? 0;
 
-/** USDA's own "typical serving" weight, else the first listed measure, else 100 g. */
-function servingGrams(food: FdcFood) {
-  const measures = food.foodMeasures ?? [];
+/** Countable single portions, as USDA words them: "1 slice", "1 piece, NFS", "1 link". */
+const PIECE =
+  /^1 (slice|piece|link|patty|strip|nugget|egg|pancake|waffle|muffin|bagel|roll|biscuit|taco|burrito|sandwich|wrap|fillet|drumstick|thigh|breast|wing|sausage)\b/i;
+const PLURALS: Record<string, string> = { patty: "patties", sandwich: "sandwiches" };
+/** A "typical serving" heavier than this is a whole dish (a whole pizza), not one plateful. */
+const MAX_SERVING_GRAMS = 350;
+const MIN_PIECE_GRAMS = 25;
+
+/** One hall-sized portion: a single piece when USDA lists one, else its typical serving. */
+export function servingFor(food: FdcFood): { grams: number; unit: string; unitPlural: string } {
+  const measures = (food.foodMeasures ?? []).filter((m) => (m.gramWeight ?? 0) > 0);
+  // A single fry or carrot strip isn't a portion: tiny pieces only count for slices, links and eggs.
+  const piece = measures.find((m) => {
+    const text = m.disseminationText ?? "";
+    const match = PIECE.exec(text);
+    if (!match || /medium|large|small|whole/i.test(text)) return false;
+    return m.gramWeight! >= MIN_PIECE_GRAMS || /^(slice|link|egg)$/i.test(match[1]!);
+  });
+  if (piece) {
+    const unit = PIECE.exec(piece.disseminationText!)![1]!.toLowerCase();
+    return { grams: piece.gramWeight!, unit, unitPlural: PLURALS[unit] ?? `${unit}s` };
+  }
   const typical = measures.find((m) => /quantity not specified/i.test(m.disseminationText ?? ""));
-  return typical?.gramWeight ?? measures.find((m) => m.gramWeight)?.gramWeight ?? 100;
+  const cup = measures.find((m) => /^1 cup\b/i.test(m.disseminationText ?? ""));
+  let grams = typical?.gramWeight ?? cup?.gramWeight ?? measures[0]?.gramWeight ?? 100;
+  if (grams > MAX_SERVING_GRAMS)
+    grams = cup?.gramWeight && cup.gramWeight <= MAX_SERVING_GRAMS ? cup.gramWeight : 250;
+  return { grams, unit: "serving", unitPlural: "servings" };
 }
 
 /** Plate role from USDA's food category, falling back to which macro dominates. */
@@ -138,7 +170,8 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
 
 /** One serving of a USDA food as a menu estimate. */
 export function estimateFromFdc(food: FdcFood): NutritionEstimate {
-  const factor = servingGrams(food) / 100;
+  const serving = servingFor(food);
+  const factor = serving.grams / 100;
   const kcal = Math.round(nutrient(food, "208") * factor);
   const protein = r1(nutrient(food, "203") * factor);
   const carbs = r1(nutrient(food, "205") * factor);
@@ -148,8 +181,8 @@ export function estimateFromFdc(food: FdcFood): NutritionEstimate {
     protein,
     carbs,
     fat,
-    unit: "serving",
-    unitPlural: "servings",
+    unit: serving.unit,
+    unitPlural: serving.unitPlural,
     role: roleFor(food.foodCategory, kcal, protein, carbs),
     source: "usda",
     fdcId: food.fdcId,
@@ -157,7 +190,11 @@ export function estimateFromFdc(food: FdcFood): NutritionEstimate {
   };
 }
 
-/** The first confident match among USDA's search results (they come best-first). */
+/** Among USDA's confident matches, the one adding the fewest words the dish doesn't have. */
 export function bestMatch(dish: string, foods: readonly FdcFood[]) {
-  return foods.find((f) => isConfidentMatch(dish, f.description)) ?? null;
+  const d = new Set(words(dish));
+  const extra = (f: FdcFood) => words(f.description).filter((w) => !d.has(w)).length;
+  const confident = foods.filter((f) => isConfidentMatch(dish, f.description));
+  // Stable: USDA's own ranking breaks ties.
+  return confident.sort((a, b) => extra(a) - extra(b))[0] ?? null;
 }

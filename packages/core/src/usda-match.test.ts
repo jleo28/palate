@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { bestMatch, estimateFromFdc, isConfidentMatch, type FdcFood } from "./usda-match";
+import {
+  bestMatch,
+  estimateFromFdc,
+  isConfidentMatch,
+  servingFor,
+  type FdcFood,
+} from "./usda-match";
 
 import searchJson from "./fixtures-usc/fdc-garlic-mashed-potatoes.json";
 
@@ -17,8 +23,9 @@ describe("isConfidentMatch", () => {
     expect(isConfidentMatch("Jackfruit, Mushroom, and Lentil Pot Roast", "Beef, pot roast")).toBe(
       false,
     );
+    // "casserole" makes it a different dish.
     expect(isConfidentMatch("Garlic Mashed Potatoes", "Sweet potato, casserole or mashed")).toBe(
-      true,
+      false,
     );
     expect(isConfidentMatch("Oyster Mushroom Etouffee", "Shrimp etouffee")).toBe(false);
   });
@@ -44,5 +51,60 @@ describe("estimateFromFdc", () => {
       source: "usda",
       fdcId: 2709492,
     });
+  });
+});
+
+describe("different-dish words", () => {
+  it("rejects matches that turn the food into another dish", () => {
+    expect(isConfidentMatch("Bacon", "Bacon bits")).toBe(false);
+    expect(isConfidentMatch("Assorted Fruits", "Fruit smoothie, with whole fruit and dairy")).toBe(
+      false,
+    );
+    expect(isConfidentMatch("Pepperoni Pizza", "Pizza with pepperoni, stuffed crust")).toBe(false);
+    expect(
+      isConfidentMatch(
+        "Pepperoni Pizza",
+        "Pizza with pepperoni, from restaurant or fast food, medium crust",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("servingFor", () => {
+  it("uses one piece when USDA lists one, not a whole pizza", () => {
+    const pizza: FdcFood = {
+      fdcId: 1,
+      description: "Pizza with pepperoni",
+      foodMeasures: [
+        { disseminationText: '1 medium pizza (11-12" diameter)', gramWeight: 883 },
+        { disseminationText: "1 piece, NFS", gramWeight: 164 },
+        { disseminationText: "Quantity not specified", gramWeight: 328 },
+      ],
+    };
+    expect(servingFor(pizza)).toEqual({ grams: 164, unit: "piece", unitPlural: "pieces" });
+  });
+
+  it("ignores tiny pieces like a single fry", () => {
+    const fries: FdcFood = {
+      fdcId: 3,
+      description: "French fries",
+      foodMeasures: [
+        { disseminationText: "1 piece", gramWeight: 5 },
+        { disseminationText: "Quantity not specified", gramWeight: 117 },
+      ],
+    };
+    expect(servingFor(fries)).toEqual({ grams: 117, unit: "serving", unitPlural: "servings" });
+  });
+
+  it("caps an oversized typical serving at a cup", () => {
+    const stew: FdcFood = {
+      fdcId: 2,
+      description: "Stew",
+      foodMeasures: [
+        { disseminationText: "Quantity not specified", gramWeight: 600 },
+        { disseminationText: "1 cup", gramWeight: 245 },
+      ],
+    };
+    expect(servingFor(stew).grams).toBe(245);
   });
 });

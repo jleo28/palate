@@ -90,7 +90,7 @@ export function isHeader(name: string) {
 
 /** Toppings, condiments and sides-of-a-side: shown on menus, never put on a generated plate. */
 const COMPONENT_WORDS =
-  /\b(dressing|vinaigrette|sauce|gravy|syrup|salsa|jelly|jam|preserves|mayo|mayonnaise|sour cream|cream cheese|butter balls?|whipped topping|powdered sugar|oil blend|oil|vinegar|chocolate chips|sprinkles|raisins|croutons|lemon wedges?|pickle chips|pickled jalapenos|seed butter|hummus)\b/i;
+  /\b(dressing|vinaigrette|sauce|gravy|syrup|salsa|jelly|jam|preserves|mayo|mayonnaise|sour cream|cream cheese|butter balls?|whipped topping|powdered sugar|oil blend|oil|vinegar|chocolate chips|sprinkles|raisins|croutons|(?:lemon|lime) wedges?|pickle chips|pickled jalapenos|seed butter|hummus|aioli|pesto)\b/i;
 const PREP_WORDS =
   /^(chopped|sliced|shredded|crumbled|diced|minced|grated|pickled|assorted sliced)\b/i;
 

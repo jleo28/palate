@@ -1,1 +1,862 @@
-{}
+{
+  "arroz con gandules": {
+    "kcal": 260,
+    "protein": 7,
+    "carbs": 45,
+    "fat": 6,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "assorted hand fruit": {
+    "kcal": 80,
+    "protein": 1,
+    "carbs": 21,
+    "fat": 0.3,
+    "unit": "piece",
+    "unitPlural": "pieces",
+    "role": "extra",
+    "source": "ai"
+  },
+  "assorted sliced cheese": {
+    "kcal": 100,
+    "protein": 6,
+    "carbs": 0.5,
+    "fat": 8,
+    "unit": "slice",
+    "unitPlural": "slices",
+    "role": "extra",
+    "source": "ai"
+  },
+  "basil pesto": {
+    "kcal": 140,
+    "protein": 3,
+    "carbs": 2,
+    "fat": 14,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "beef birria": {
+    "kcal": 300,
+    "protein": 26,
+    "carbs": 5,
+    "fat": 19,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "beef ropa vieja with green olives": {
+    "kcal": 280,
+    "protein": 26,
+    "carbs": 9,
+    "fat": 15,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "braised collard greens with smoked turkey": {
+    "kcal": 110,
+    "protein": 9,
+    "carbs": 8,
+    "fat": 5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "char siu pork stir fry": {
+    "kcal": 320,
+    "protein": 22,
+    "carbs": 22,
+    "fat": 15,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "cheese pizza": {
+    "kcal": 285,
+    "protein": 12,
+    "carbs": 36,
+    "fat": 10,
+    "unit": "slice",
+    "unitPlural": "slices",
+    "role": "carb",
+    "source": "override"
+  },
+  "chicken andouille sausage and peppers pizza": {
+    "kcal": 300,
+    "protein": 15,
+    "carbs": 32,
+    "fat": 12,
+    "unit": "slice",
+    "unitPlural": "slices",
+    "role": "carb",
+    "source": "ai"
+  },
+  "chicken sausage link": {
+    "kcal": 140,
+    "protein": 12,
+    "carbs": 2,
+    "fat": 9,
+    "unit": "link",
+    "unitPlural": "links",
+    "role": "protein",
+    "source": "ai"
+  },
+  "chopped bacon": {
+    "kcal": 45,
+    "protein": 3,
+    "carbs": 0.1,
+    "fat": 3.5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "chopped bell peppers": {
+    "kcal": 8,
+    "protein": 0.3,
+    "carbs": 2,
+    "fat": 0,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "chopped tomatoes": {
+    "kcal": 8,
+    "protein": 0.4,
+    "carbs": 2,
+    "fat": 0.1,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "cocoa chia overnight oats": {
+    "kcal": 300,
+    "protein": 9,
+    "carbs": 45,
+    "fat": 10,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "creamy lime cilantro mustard dressing": {
+    "kcal": 120,
+    "protein": 0.3,
+    "carbs": 3,
+    "fat": 12,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "creamy plant based potato salad": {
+    "kcal": 250,
+    "protein": 3,
+    "carbs": 25,
+    "fat": 15,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "crispy fried hash brown patties": {
+    "kcal": 140,
+    "protein": 1.5,
+    "carbs": 15,
+    "fat": 8,
+    "unit": "patty",
+    "unitPlural": "patties",
+    "role": "carb",
+    "source": "ai"
+  },
+  "crumbled oreo cookies": {
+    "kcal": 70,
+    "protein": 0.5,
+    "carbs": 11,
+    "fat": 3,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "cuban style braised chipotle pork": {
+    "kcal": 300,
+    "protein": 28,
+    "carbs": 6,
+    "fat": 18,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "enoki mushroom, edamame, and gochujang fried rice": {
+    "kcal": 280,
+    "protein": 9,
+    "carbs": 45,
+    "fat": 7,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "fried bbq potato chips": {
+    "kcal": 160,
+    "protein": 2,
+    "carbs": 15,
+    "fat": 10,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "fried bbq spiced cottage potatoes": {
+    "kcal": 230,
+    "protein": 3,
+    "carbs": 30,
+    "fat": 11,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "fried catfish nuggets": {
+    "kcal": 290,
+    "protein": 20,
+    "carbs": 13,
+    "fat": 17,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "fried potatoes o'brien": {
+    "kcal": 220,
+    "protein": 3,
+    "carbs": 28,
+    "fat": 11,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "harissa aioli": {
+    "kcal": 90,
+    "protein": 0,
+    "carbs": 1,
+    "fat": 10,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "italian veggie sausage hash": {
+    "kcal": 260,
+    "protein": 14,
+    "carbs": 24,
+    "fat": 12,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "jamaican style coconut collard greens": {
+    "kcal": 150,
+    "protein": 4,
+    "carbs": 9,
+    "fat": 11,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "jerk seared shrimp": {
+    "kcal": 140,
+    "protein": 23,
+    "carbs": 3,
+    "fat": 4,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "jerk spiced grilled veggies": {
+    "kcal": 90,
+    "protein": 2,
+    "carbs": 11,
+    "fat": 5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "korean style beef short ribs": {
+    "kcal": 380,
+    "protein": 24,
+    "carbs": 10,
+    "fat": 27,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "kung pao tofu": {
+    "kcal": 280,
+    "protein": 15,
+    "carbs": 16,
+    "fat": 18,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "lime wedges": {
+    "kcal": 2,
+    "protein": 0,
+    "carbs": 0.7,
+    "fat": 0,
+    "unit": "wedge",
+    "unitPlural": "wedges",
+    "role": "extra",
+    "source": "ai"
+  },
+  "med bar beef": {
+    "kcal": 260,
+    "protein": 25,
+    "carbs": 3,
+    "fat": 16,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "med bar fried falafel": {
+    "kcal": 60,
+    "protein": 2.3,
+    "carbs": 5.4,
+    "fat": 3.2,
+    "unit": "falafel",
+    "unitPlural": "falafels",
+    "role": "protein",
+    "source": "ai"
+  },
+  "med bar honey harissa chicken": {
+    "kcal": 220,
+    "protein": 27,
+    "carbs": 9,
+    "fat": 8,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "mojo marinated grilled cajun chicken": {
+    "kcal": 200,
+    "protein": 30,
+    "carbs": 2,
+    "fat": 8,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "mongolian grilled beef": {
+    "kcal": 300,
+    "protein": 24,
+    "carbs": 16,
+    "fat": 15,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "nashville baked tofu": {
+    "kcal": 200,
+    "protein": 14,
+    "carbs": 10,
+    "fat": 12,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "oat n' honey granola": {
+    "kcal": 200,
+    "protein": 5,
+    "carbs": 32,
+    "fat": 7,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "olive/canola oil blend": {
+    "kcal": 120,
+    "protein": 0,
+    "carbs": 0,
+    "fat": 14,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "oregano, dijon and red wine vinaigrette": {
+    "kcal": 110,
+    "protein": 0,
+    "carbs": 2,
+    "fat": 11,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "pepperoni antipasto salad wrap": {
+    "kcal": 520,
+    "protein": 20,
+    "carbs": 45,
+    "fat": 29,
+    "unit": "wrap",
+    "unitPlural": "wraps",
+    "role": "carb",
+    "source": "ai"
+  },
+  "pickle chips": {
+    "kcal": 5,
+    "protein": 0.2,
+    "carbs": 1,
+    "fat": 0,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "pickled jalapenos": {
+    "kcal": 5,
+    "protein": 0.2,
+    "carbs": 1,
+    "fat": 0.1,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "pickled red onions": {
+    "kcal": 15,
+    "protein": 0.2,
+    "carbs": 3.5,
+    "fat": 0,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "plain pasta": {
+    "kcal": 220,
+    "protein": 8,
+    "carbs": 43,
+    "fat": 1.3,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "plant based \"steak\" bulgogi": {
+    "kcal": 260,
+    "protein": 20,
+    "carbs": 18,
+    "fat": 12,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "plant based kimchi": {
+    "kcal": 15,
+    "protein": 1,
+    "carbs": 2.5,
+    "fat": 0.4,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "plant based mayo": {
+    "kcal": 90,
+    "protein": 0,
+    "carbs": 0,
+    "fat": 10,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "pork bulgogi": {
+    "kcal": 330,
+    "protein": 24,
+    "carbs": 14,
+    "fat": 20,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "pork sausage link": {
+    "kcal": 85,
+    "protein": 4.5,
+    "carbs": 0.5,
+    "fat": 7,
+    "unit": "link",
+    "unitPlural": "links",
+    "role": "protein",
+    "source": "ai"
+  },
+  "pork sausage patty": {
+    "kcal": 130,
+    "protein": 7,
+    "carbs": 0.5,
+    "fat": 11,
+    "unit": "patty",
+    "unitPlural": "patties",
+    "role": "protein",
+    "source": "ai"
+  },
+  "purple sweet potato noodles": {
+    "kcal": 230,
+    "protein": 2,
+    "carbs": 45,
+    "fat": 5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "roasted butternut squash": {
+    "kcal": 110,
+    "protein": 2,
+    "carbs": 22,
+    "fat": 3,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "roasted butternut squash soup": {
+    "kcal": 150,
+    "protein": 2,
+    "carbs": 22,
+    "fat": 6,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "roasted eggplant and garlic tahini wrap": {
+    "kcal": 420,
+    "protein": 11,
+    "carbs": 50,
+    "fat": 20,
+    "unit": "wrap",
+    "unitPlural": "wraps",
+    "role": "carb",
+    "source": "ai"
+  },
+  "roasted root vegetable medley": {
+    "kcal": 130,
+    "protein": 2,
+    "carbs": 22,
+    "fat": 4.5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "roasted salmon with jalapeno cilantro puree": {
+    "kcal": 270,
+    "protein": 25,
+    "carbs": 2,
+    "fat": 17,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "roasted sweet potato wedges": {
+    "kcal": 160,
+    "protein": 2,
+    "carbs": 27,
+    "fat": 5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "roasted vegetable medley": {
+    "kcal": 100,
+    "protein": 3,
+    "carbs": 12,
+    "fat": 5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "sauteed garlic edamame": {
+    "kcal": 140,
+    "protein": 11,
+    "carbs": 9,
+    "fat": 7,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "sesame garlic bean sprout salad": {
+    "kcal": 50,
+    "protein": 3,
+    "carbs": 4,
+    "fat": 3,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "sesame soy stir fried veggies": {
+    "kcal": 100,
+    "protein": 3,
+    "carbs": 11,
+    "fat": 5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "shredded monterey jack and cheddar cheese blend": {
+    "kcal": 110,
+    "protein": 7,
+    "carbs": 0.5,
+    "fat": 9,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "sliced honey multi grain bread": {
+    "kcal": 100,
+    "protein": 4,
+    "carbs": 18,
+    "fat": 1.5,
+    "unit": "slice",
+    "unitPlural": "slices",
+    "role": "carb",
+    "source": "ai"
+  },
+  "sliced sourdough bread": {
+    "kcal": 120,
+    "protein": 4,
+    "carbs": 23,
+    "fat": 1,
+    "unit": "slice",
+    "unitPlural": "slices",
+    "role": "carb",
+    "source": "ai"
+  },
+  "spiced carrot and coconut soup": {
+    "kcal": 170,
+    "protein": 2,
+    "carbs": 15,
+    "fat": 12,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "spicy caribbean chickpeas": {
+    "kcal": 270,
+    "protein": 12,
+    "carbs": 38,
+    "fat": 8,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "spicy salsa molcajete": {
+    "kcal": 10,
+    "protein": 0.3,
+    "carbs": 2,
+    "fat": 0.1,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "ssamjang dipping sauce": {
+    "kcal": 40,
+    "protein": 1.5,
+    "carbs": 5,
+    "fat": 1.5,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "steamed broccoli": {
+    "kcal": 55,
+    "protein": 4,
+    "carbs": 11,
+    "fat": 0.6,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "steamed jasmine rice": {
+    "kcal": 205,
+    "protein": 4,
+    "carbs": 45,
+    "fat": 0.4,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "steamed mixed vegetables": {
+    "kcal": 60,
+    "protein": 2.5,
+    "carbs": 12,
+    "fat": 0.3,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "veg",
+    "source": "ai"
+  },
+  "sticky sesame soy roasted chicken": {
+    "kcal": 280,
+    "protein": 26,
+    "carbs": 14,
+    "fat": 13,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "sunflower seed butter": {
+    "kcal": 95,
+    "protein": 3,
+    "carbs": 4,
+    "fat": 8,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "extra",
+    "source": "ai"
+  },
+  "sweet potato and beyond crumble hash": {
+    "kcal": 280,
+    "protein": 14,
+    "carbs": 30,
+    "fat": 12,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "sweet potato mash": {
+    "kcal": 230,
+    "protein": 4,
+    "carbs": 45,
+    "fat": 4,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "three cheese pizza": {
+    "kcal": 285,
+    "protein": 12,
+    "carbs": 36,
+    "fat": 10,
+    "unit": "slice",
+    "unitPlural": "slices",
+    "role": "carb",
+    "source": "override"
+  },
+  "turkey sausage patty": {
+    "kcal": 90,
+    "protein": 9,
+    "carbs": 1,
+    "fat": 5.5,
+    "unit": "patty",
+    "unitPlural": "patties",
+    "role": "protein",
+    "source": "ai"
+  },
+  "turkey sausage, egg and cheese biscuit": {
+    "kcal": 450,
+    "protein": 21,
+    "carbs": 30,
+    "fat": 27,
+    "unit": "biscuit",
+    "unitPlural": "biscuits",
+    "role": "protein",
+    "source": "ai"
+  },
+  "turmeric and saffron basmati rice": {
+    "kcal": 230,
+    "protein": 4,
+    "carbs": 45,
+    "fat": 4,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  },
+  "veggie chorizo": {
+    "kcal": 150,
+    "protein": 10,
+    "carbs": 8,
+    "fat": 9,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "veggie chorizo, potato, and plant based cheese burrito": {
+    "kcal": 550,
+    "protein": 18,
+    "carbs": 70,
+    "fat": 22,
+    "unit": "burrito",
+    "unitPlural": "burritos",
+    "role": "carb",
+    "source": "ai"
+  },
+  "veggie cuban picadillo": {
+    "kcal": 230,
+    "protein": 15,
+    "carbs": 20,
+    "fat": 10,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "protein",
+    "source": "ai"
+  },
+  "veggie, lentil and coconut mulligatawny soup": {
+    "kcal": 200,
+    "protein": 8,
+    "carbs": 24,
+    "fat": 8,
+    "unit": "serving",
+    "unitPlural": "servings",
+    "role": "carb",
+    "source": "ai"
+  }
+}

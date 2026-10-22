@@ -34,7 +34,9 @@ describe("cleanup rules", () => {
     ]) {
       expect(itemKind(c), c).toBe("component");
     }
+    for (const c of ["Harissa Aioli", "Lime Wedges"]) expect(itemKind(c), c).toBe("component");
     for (const d of [
+      "Roasted Sweet Potato Wedges",
       "Garlic Mashed Potatoes",
       "Jamaican Jerk Grilled Chicken",
       "Cheese Pizza",
