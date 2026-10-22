@@ -12,17 +12,6 @@ export function availableItems(
   );
 }
 
-function pick<T>(arr: T[], seed: number): T | undefined {
-  if (!arr.length) return undefined;
-  return arr[seed % arr.length];
-}
-
-function qtyFor(item: MenuItem, targetGrams: number, macro: "protein" | "carbs" | "kcal") {
-  const per = macro === "kcal" ? item.kcal : item[macro];
-  if (per <= 0) return 1;
-  return Math.min(4, Math.max(1, Math.round(targetGrams / per)));
-}
-
 export function totals(plate: PlateItem[]): MacroTargets {
   return plate.reduce(
     (acc, p) => ({
@@ -35,7 +24,47 @@ export function totals(plate: PlateItem[]): MacroTargets {
   );
 }
 
-/** Build a balanced plate: protein anchor, carb, veg, optional extra. */
+/** Recommender tuning. A plate aims to land inside these bands around the meal's budget. */
+export const PLATE_KCAL_TOLERANCE = 0.1;
+export const PLATE_FAT_TOLERANCE = 0.25;
+/** Veg sides and fruit (extras) top out at this many servings each. */
+export const MAX_SIDE_SERVINGS = 1.5;
+
+const MAIN_QTYS = [1, 2, 3, 4];
+const SECOND_PROTEIN_QTYS = [1, 2];
+const SIDE_QTYS = [1, MAX_SIDE_SERVINGS];
+
+const rel = (value: number, goal: number) => (goal > 0 ? (value - goal) / goal : 0);
+
+/** Inside its band a miss costs little; outside, it costs a lot more for every extra percent. */
+const band = (miss: number, tolerance: number, weight: number) => {
+  const m = Math.abs(miss);
+  return m <= tolerance ? (m / tolerance) * weight * 0.2 : weight * (0.2 + (m - tolerance) * 10);
+};
+
+/** How far a plate is from a meal's budget. Lower is better. */
+export function plateScore(t: MacroTargets, target: MacroTargets, rows: number) {
+  return (
+    band(rel(t.kcal, target.kcal), PLATE_KCAL_TOLERANCE, 3) +
+    band(rel(t.fat, target.fat), PLATE_FAT_TOLERANCE, 2) +
+    Math.abs(rel(t.protein, target.protein)) * 1.5 +
+    Math.abs(rel(t.carbs, target.carbs)) * 0.5 +
+    // A small cost per row keeps plates simple, with no filler.
+    rows * 0.03
+  );
+}
+
+type Portion = { item: MenuItem; qty: number };
+
+/** Each option for one slot of the plate: every item at every allowed quantity. */
+const options = (items: readonly MenuItem[], qtys: number[]): Portion[] =>
+  items.flatMap((item) => qtys.map((qty) => ({ item, qty })));
+
+/**
+ * Build a balanced plate: a protein, a carb and a veg (whichever the hall serves), with an
+ * optional second protein and piece of fruit. Every combination is scored on calories, fat,
+ * protein and carbs together, and the seed rotates between the near-best plates.
+ */
 export function buildPlate(
   menu: readonly MenuItem[],
   hall: HallId,
@@ -45,40 +74,63 @@ export function buildPlate(
   seed = 0,
 ): PlateItem[] {
   const pool = availableItems(menu, hall, meal, diets);
-  const proteins = pool.filter((i) => i.role === "protein").sort((a, b) => b.protein - a.protein);
-  const carbs = pool.filter((i) => i.role === "carb");
-  const vegs = pool.filter((i) => i.role === "veg");
-  const extras = pool.filter((i) => i.role === "extra");
+  if (!pool.length) return [];
+  const byRole = (role: MenuItem["role"]) => pool.filter((i) => i.role === role);
+  const proteins = byRole("protein");
 
-  const plate: PlateItem[] = [];
-  const add = (item: MenuItem, qty: number) => plate.push({ id: `row-${plate.length}`, item, qty });
+  // A slot the hall can't fill is simply skipped. Optional slots include "nothing".
+  const slot = (
+    items: readonly MenuItem[],
+    qtys: number[],
+    optional = false,
+  ): (Portion | null)[] => {
+    const opts = options(items, qtys);
+    return opts.length ? (optional ? [null, ...opts] : opts) : [null];
+  };
+  const mains = slot(proteins, MAIN_QTYS);
+  const carbs = slot(byRole("carb"), MAIN_QTYS);
+  const vegs = slot(byRole("veg"), SIDE_QTYS);
+  const extras = slot(byRole("extra"), SIDE_QTYS, true);
 
-  const p1 = pick(proteins, seed);
-  if (p1) add(p1, qtyFor(p1, target.protein * 0.65, "protein"));
-
-  const c1 = pick(carbs, seed + 1);
-  if (c1) add(c1, qtyFor(c1, target.carbs * 0.6, "carbs"));
-
-  const v1 = pick(vegs, seed + 2);
-  if (v1) add(v1, 2);
-
-  // top up protein if short
-  let t = totals(plate);
-  if (t.protein < target.protein * 0.85 && proteins.length > 1) {
-    const p2 = pick(
-      proteins.filter((i) => i.id !== p1?.id),
-      seed + 3,
+  const scored: { picks: Portion[]; score: number }[] = [];
+  for (const p1 of mains) {
+    const seconds = slot(
+      proteins.filter((i) => i.id !== p1?.item.id),
+      SECOND_PROTEIN_QTYS,
+      true,
     );
-    if (p2) add(p2, qtyFor(p2, target.protein - t.protein, "protein"));
+    for (const p2 of p1 ? seconds : [null]) {
+      for (const c of carbs) {
+        for (const v of vegs) {
+          for (const e of extras) {
+            const picks = [p1, p2, c, v, e].filter((x): x is Portion => x !== null);
+            if (!picks.length) continue;
+            const t = totals(picks.map((x, n) => ({ id: String(n), ...x })));
+            scored.push({ picks, score: plateScore(t, target, picks.length) });
+          }
+        }
+      }
+    }
   }
+  if (!scored.length) return [];
 
-  t = totals(plate);
-  if (t.kcal < target.kcal * 0.85) {
-    const e1 = pick(extras, seed + 4);
-    if (e1) add(e1, qtyFor(e1, target.kcal - t.kcal, "kcal"));
-  }
+  scored.sort((a, b) => a.score - b.score);
+  // Near-best plates with different foods, so the seed (swipe) shows real alternatives.
+  const best = scored[0]!.score;
+  const seen = new Set<string>();
+  const choices = scored.filter(({ picks, score }) => {
+    if (score > best * 1.25 + 0.1) return false;
+    const key = picks
+      .map((x) => x.item.id)
+      .sort()
+      .join();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
-  return plate;
+  const chosen = choices[seed % choices.length]!;
+  return chosen.picks.map((x, n) => ({ id: `row-${n}`, item: x.item, qty: x.qty }));
 }
 
 export const MAX_QTY = 6;
