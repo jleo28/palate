@@ -1,6 +1,7 @@
 /** Mapping between app types and the Supabase tables (see supabase/migrations). */
 import type { Seedling } from "./seedling";
 import type { Wellbeing } from "./wellbeing";
+import type { CardSpend } from "./streak";
 import type {
   Allergen,
   DietTag,
@@ -32,6 +33,7 @@ export interface ProfileRow {
   hall: HallId;
   seedling: Seedling | null;
   wellbeing: Wellbeing;
+  card_spends: CardSpend[];
 }
 
 export interface MealLogRow {
@@ -67,6 +69,7 @@ export function profileToRow(userId: string, p: Profile): ProfileRow {
     hall: p.hall,
     seedling: p.seedling ?? null,
     wellbeing: p.wellbeing ?? {},
+    card_spends: p.cardSpends ?? [],
   };
 }
 
@@ -88,6 +91,7 @@ export function profileFromRow(r: ProfileRow): Profile {
     hall: r.hall,
     ...(r.seedling ? { seedling: r.seedling } : {}),
     wellbeing: r.wellbeing ?? {},
+    cardSpends: r.card_spends ?? [],
   };
 }
 
