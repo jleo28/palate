@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_QTY, alternatives, removeRow, replaceRow, setQty, totals } from "./plate";
+import { MAX_QTY, alternatives, removeRow, replaceRow, restoreRow, setQty, totals } from "./plate";
 import { logItems } from "./logs";
 import { withoutSkipped } from "./preferences";
 import { item, menu } from "./fixtures";
@@ -73,6 +73,15 @@ describe("setQty", () => {
 describe("removeRow", () => {
   it("removes only that row", () => {
     expect(removeRow(plate, "a").map((r) => r.id)).toEqual(["b"]);
+  });
+
+  it("can be undone, back in the same place with the same portion", () => {
+    const removed = plate[0]!;
+    expect(restoreRow(removeRow(plate, "a"), removed, 0)).toEqual(plate);
+  });
+
+  it("doesn't restore a row twice", () => {
+    expect(restoreRow(plate, plate[0]!, 0)).toEqual(plate);
   });
 });
 

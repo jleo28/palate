@@ -253,6 +253,17 @@ export function removeRow(plate: readonly PlateItem[], rowId: string): PlateItem
   return plate.filter((row) => row.id !== rowId);
 }
 
+/** Undo a removal: put the row back where it was, with its portion. No-op if it's already there. */
+export function restoreRow(
+  plate: readonly PlateItem[],
+  row: PlateItem,
+  index: number,
+): PlateItem[] {
+  if (plate.some((r) => r.id === row.id)) return [...plate];
+  const at = Math.min(Math.max(0, index), plate.length);
+  return [...plate.slice(0, at), row, ...plate.slice(at)];
+}
+
 /** Station names (ours and USC's) where food is easy to grab and carry out. */
 const GRAB_AND_GO = /fruit|salad|breakfast|deli|expo|grab|yogurt|sweet/i;
 
