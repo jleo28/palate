@@ -120,6 +120,8 @@ interface Ctx {
   /** Slots logged today, in log order. */
   loggedToday: Slot[];
   removeLog: (id: string) => void;
+  /** Undo a removal: puts the same entry (same id) back. */
+  restoreLog: (m: LoggedMeal) => void;
   /** Save an edited logged meal (portions, items or totals). */
   updateLog: (m: LoggedMeal) => void;
   /** Delete the profile and log (the account stays) and per-device state. */
@@ -308,6 +310,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [userId],
   );
 
+  const restoreLog = useCallback((m: LoggedMeal) => {
+    setLog((prev) => (prev.some((l) => l.id === m.id) ? prev : [m, ...prev]));
+    void supabase
+      .from("meal_logs")
+      .insert(logToRow(m))
+      .then(({ error }) => {
+        if (!error) return;
+        console.error(error);
+        setLog((prev) => prev.filter((l) => l.id !== m.id));
+        toast.error("Couldn't bring that meal back. Try again.");
+      });
+  }, []);
+
   const updateLog = useCallback(
     (next: LoggedMeal) => {
       const before = log.find((l) => l.id === next.id);
@@ -444,6 +459,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     dismissLogged,
     rateItem,
     attachPhoto,
+    restoreLog,
     updateLog,
     resetAll,
     signOut,
