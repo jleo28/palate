@@ -61,7 +61,10 @@ export interface PlateItem {
   /** Stable row id within a plate. Survives swaps, so two rows never share an identity. */
   id: string;
   item: MenuItem;
+  /** Portions on the plate. 0 keeps the row (greyed out) so + can bring it back. */
   qty: number;
+  /** The portion the recommender suggested ("Your portion"). Missing for rows the user added. */
+  suggested?: number;
 }
 
 export interface Profile {

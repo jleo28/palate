@@ -40,7 +40,7 @@ import { currentMeal } from "./halls";
 // Imported into Supabase once, on the first sign-in, then removed.
 const KEY_PROFILE = "palate.profile.v1";
 const KEY_LOG = "palate.log.v1";
-const DEVICE_KEYS = ["palate.hints.v1", "palate.cardPeek.v1"];
+const DEVICE_KEYS = ["palate.hints.v1", "palate.cardPeek.v1", "palate.portionTip.v1"];
 
 function readLocal<T>(key: string): T | null {
   try {
