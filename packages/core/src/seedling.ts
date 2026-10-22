@@ -141,19 +141,6 @@ export function daysTogether(createdOn: string | undefined, today: string) {
   return Math.max(1, Math.round((day(today) - day(createdOn)) / 86_400_000) + 1);
 }
 
-/**
- * Calendar days since the account started, counting the first day as 1: "1 day together" on
- * sign-up day. Missing or future dates count as day one.
- */
-export function daysTogether(createdOn: string | undefined, today: string) {
-  if (!createdOn) return 1;
-  const day = (d: string) => {
-    const [y, m, dd] = d.slice(0, 10).split("-").map(Number) as [number, number, number];
-    return Date.UTC(y, m - 1, dd);
-  };
-  return Math.max(1, Math.round((day(today) - day(createdOn)) / 86_400_000) + 1);
-}
-
 /** Distinct days with at least one logged meal. Gaps never undo growth. */
 export function daysShowedUp(log: readonly { date: string }[]) {
   return new Set(log.map((entry) => entry.date)).size;
