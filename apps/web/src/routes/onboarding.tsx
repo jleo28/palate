@@ -104,10 +104,11 @@ function Onboarding() {
   // New users finish by creating an account; signed-in users without a profile skip that step.
   const steps = session ? 3 : 4;
 
-  // Once signed in with a profile (straight after sign-up, or after the import), go to the plate.
+  // Once signed in with a profile (straight after sign-up, after the import, or a returning user
+  // who lands here), go to the plate. Onboarding is only for people who haven't finished it.
   useEffect(() => {
-    if (ready && session && profile && step === 3) void navigate({ to: "/" });
-  }, [ready, session, profile, step, navigate]);
+    if (ready && session && profile) void navigate({ to: "/" });
+  }, [ready, session, profile, navigate]);
 
   const [name, setName] = useState(profile?.name ?? "");
   // New users start with blank fields: no preset name, age, gender or body numbers.

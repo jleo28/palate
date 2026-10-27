@@ -103,6 +103,8 @@ async function loadUser(userId: string) {
 interface Ctx {
   /** Auth and the user's data have loaded. */
   ready: boolean;
+  /** The signed-in user's data couldn't be loaded, so a missing profile means nothing. */
+  loadFailed: boolean;
   session: Session | null;
   profile: Profile | null;
   /** Signed in: saves to Supabase. Signed out: keeps an onboarding draft in this browser. */
@@ -156,7 +158,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [log, setLog] = useState<LoggedMeal[]>([]);
   const [meal, setMeal] = useState<Slot>("Lunch");
   const [hall, setHall] = useState<HallId>("village");
+  const [loadFailed, setLoadFailed] = useState(false);
   const loadedFor = useRef<string | null>(null);
+  // True while a user's data is loading. Supabase reports the restored session more than once
+  // (getSession, INITIAL_SESSION, TOKEN_REFRESHED); a repeat must not mark the store ready
+  // before the profile arrives, or screens see "signed in, no profile" and send people to
+  // onboarding.
+  const loading = useRef(false);
   const userId = session?.user.id ?? null;
 
   useEffect(() => {
@@ -166,17 +174,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSession(next);
       const id = next?.user.id ?? null;
       if (id === loadedFor.current) {
-        setReady(true);
+        if (!loading.current) setReady(true);
         return;
       }
       loadedFor.current = id;
+      setLoadFailed(false);
       if (!id) {
+        loading.current = false;
         setProfile(null);
         setLog([]);
         setReady(true);
         return;
       }
       setReady(false);
+      loading.current = true;
       loadUser(id)
         .then(({ profile: p, log: l }) => {
           if (loadedFor.current !== id) return;
@@ -185,10 +196,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setLog(l);
         })
         .catch((error: unknown) => {
+          if (loadedFor.current !== id) return;
           console.error(error);
+          setLoadFailed(true);
           toast.error("Couldn't load your data. Check your connection and refresh.");
         })
-        .finally(() => setReady(true));
+        .finally(() => {
+          if (loadedFor.current !== id) return;
+          loading.current = false;
+          setReady(true);
+        });
     };
 
     void supabase.auth.getSession().then(({ data }) => apply(data.session));
@@ -457,6 +474,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const value: Ctx = {
     ready,
+    loadFailed,
     session,
     profile,
     saveProfile,
