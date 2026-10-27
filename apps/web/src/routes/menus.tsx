@@ -1,25 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
-import { MacroText } from "@/components/palate/MacroText";
 import { AllergenNotice } from "@/components/palate/AllergenNotice";
-import { useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
-import { Button } from "@/components/ui/button";
+import { HallMenuList } from "@/components/palate/HallMenuList";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import { useHallMenu } from "@/lib/palate/use-menu";
-import {
-  CONFIRM_WITH_STAFF,
-  logItems,
-  menuPeriod,
-  allergenConflicts,
-  allergenLabel,
-  customAllergyMatches,
-  dislikedMatches,
-  type MenuItem,
-} from "@palate/core";
+import { menuPeriod, type MenuItem } from "@palate/core";
 import { useStore } from "@/lib/palate/store";
 import { cn } from "@/lib/utils";
 
@@ -59,8 +49,11 @@ function Menus() {
   const navigate = useNavigate();
   // Menus are per hall meal; a selected snack shows the meal it's planned from.
   const period = menuPeriod(meal);
-  const allergies = profile?.allergies ?? [];
   const [filters, setFilters] = useState<FilterId[]>([]);
+  const matchesFilters = useCallback(
+    (i: MenuItem) => filters.every((f) => FILTERS.find((x) => x.id === f)?.test(i) ?? true),
+    [filters],
+  );
 
   const { items: hallItems, loading, sample, date } = useHallMenu(hall);
   const dayLabel = new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
@@ -68,22 +61,6 @@ function Menus() {
     month: "short",
     day: "numeric",
   });
-
-  const stations = useMemo(() => {
-    const items = hallItems.filter(
-      (i) =>
-        i.hall === hall &&
-        i.meals.includes(period) &&
-        filters.every((f) => FILTERS.find((x) => x.id === f)?.test(i) ?? true),
-    );
-    const map = new Map<string, MenuItem[]>();
-    for (const i of items) {
-      const list = map.get(i.station) ?? [];
-      list.push(i);
-      map.set(i.station, list);
-    }
-    return [...map.entries()];
-  }, [hallItems, hall, period, filters]);
 
   return (
     <AppShell>
@@ -153,86 +130,24 @@ function Menus() {
         ))}
       </div>
 
-      <div className="space-y-5">
-        {stations.length === 0 && (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            {loading
-              ? "Loading today's menu…"
-              : filters.length
-                ? "Nothing on this line matches those filters. Try loosening one."
-                : `${period} isn't on today's menu here.`}
-          </p>
-        )}
-        {stations.map(([station, items]) => (
-          <section key={station}>
-            <h2 className="label-caps mb-2 text-olive">{station}</h2>
-            <div className="space-y-2">
-              {items.map((i) => {
-                const hits = allergenConflicts(i, allergies);
-                const possible = customAllergyMatches(i, profile?.customAllergies);
-                const dislikes = dislikedMatches(i, profile?.dislikes);
-                return (
-                  <div
-                    key={i.id}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-foreground/15 bg-card px-3.5 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="flex items-center gap-1.5 font-display text-[0.95rem] font-bold">
-                        {(hits.length > 0 || possible.length > 0) && (
-                          <span
-                            className="size-2 shrink-0 rounded-full bg-destructive"
-                            title={`Contains ${hits.map(allergenLabel).join(", ")}`}
-                            aria-label={`Allergen warning: contains ${hits.map(allergenLabel).join(", ")}`}
-                          />
-                        )}
-                        {dislikes.length > 0 && (
-                          <span
-                            className="shrink-0 text-base leading-none text-muted-foreground"
-                            aria-label={`Not preferred: ${dislikes.map((item) => item.label).join(", ")}`}
-                            title="Not preferred"
-                          >
-                            ~
-                          </span>
-                        )}
-                        <span className="truncate">{i.name}</span>
-                      </p>
-                      <p className="mt-0.5 text-[0.72rem] text-muted-foreground">
-                        per {i.unit}
-                        <MacroText m={i} prefix=" · " />
-                      </p>
-                      {hits.length > 0 && (
-                        <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
-                          Contains {hits.map(allergenLabel).join(", ")}
-                        </p>
-                      )}
-                      {possible.length > 0 && (
-                        <p className="mt-0.5 text-[0.7rem] font-semibold text-destructive">
-                          May contain {possible.join(", ")} · {CONFIRM_WITH_STAFF}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        addToPlate(i);
-                        toast.success(`${i.name} added to your plate`, {
-                          action: { label: "View", onClick: () => void navigate({ to: "/" }) },
-                        });
-                      }}
-                      className="size-10 shrink-0 rounded-full"
-                      aria-label={`Add ${i.name} to your plate`}
-                    >
-                      <Plus className="size-4" />
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
+      <HallMenuList
+        items={hallItems}
+        hall={hall}
+        period={period}
+        loading={loading}
+        filter={matchesFilters}
+        emptyText={
+          filters.length
+            ? "Nothing on this line matches those filters. Try loosening one."
+            : undefined
+        }
+        onAdd={(i) => {
+          addToPlate(i);
+          toast.success(`${i.name} added to your plate`, {
+            action: { label: "View", onClick: () => void navigate({ to: "/" }) },
+          });
+        }}
+      />
     </AppShell>
   );
 }
