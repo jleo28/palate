@@ -13,7 +13,7 @@ export const Route = createFileRoute("/sign-in")({
 
 function SignIn() {
   const navigate = useNavigate();
-  const { ready, session, profile } = useStore();
+  const { ready, loadFailed, session, profile } = useStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -21,8 +21,9 @@ function SignIn() {
 
   // Returning users go straight to their plate; anyone without a profile finishes setup first.
   useEffect(() => {
-    if (ready && session) void navigate({ to: profile ? "/" : "/onboarding" });
-  }, [ready, session, profile, navigate]);
+    if (ready && session && (profile || !loadFailed))
+      void navigate({ to: profile ? "/" : "/onboarding" });
+  }, [ready, loadFailed, session, profile, navigate]);
 
   const resetPassword = async () => {
     if (!email.trim()) return setMessage("Enter your email above first.");

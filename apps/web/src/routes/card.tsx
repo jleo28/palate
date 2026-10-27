@@ -11,6 +11,7 @@ import { CardSettings } from "@/components/palate/CardSettings";
 import { PalateCard } from "@/components/palate/PalateCard";
 import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
 import { EditLogDialog } from "@/components/palate/EditLogDialog";
+import { FeedbackDialog } from "@/components/palate/FeedbackDialog";
 import { ProgressRing } from "@/components/palate/ProgressRing";
 import {
   GOALS,
@@ -38,9 +39,6 @@ const refillDate = (today: string) => {
     timeZone: "UTC",
   });
 };
-
-// Placeholder until the team's form is ready.
-const FEEDBACK_URL = "https://forms.gle/palate-feedback";
 
 export const Route = createFileRoute("/card")({
   head: () => ({
@@ -86,6 +84,7 @@ function CardScreen() {
   const [outsideOpen, setOutsideOpen] = useState(false);
   const [earlierOpen, setEarlierOpen] = useState(false);
   const [editing, setEditing] = useState<LoggedMeal | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useRequireProfile();
 
@@ -379,20 +378,24 @@ function CardScreen() {
       >
         FAQs & support <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
       </Link>
-      <a
-        href={FEEDBACK_URL}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-2 flex items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-sm font-bold"
+      <button
+        type="button"
+        onClick={() => setFeedbackOpen(true)}
+        className="mt-2 flex min-h-14 w-full items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-left text-sm font-bold"
       >
         <span>
           Give feedback
           <span className="block text-xs font-medium text-muted-foreground">
-            Or join a 15-min interview with the team
+            Tell the team what's working and what isn't
           </span>
         </span>
         <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-      </a>
+      </button>
+      <FeedbackDialog
+        open={feedbackOpen}
+        onOpenChange={setFeedbackOpen}
+        email={session?.user.email}
+      />
     </AppShell>
   );
 }
