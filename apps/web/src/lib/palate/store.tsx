@@ -38,12 +38,12 @@ import {
 import { supabase } from "@/lib/supabase";
 import { today } from "./dates";
 import { VERIFIED_PATH } from "./paths";
+import { PHOTO_BUCKET, compressPhoto } from "./photos";
 import { currentMeal } from "./halls";
 
 // Browser-only data: a signed-out onboarding draft, plus anything saved before accounts existed.
 // Imported into Supabase once, on the first sign-in, then removed.
 const KEY_PROFILE = "palate.profile.v1";
-const PHOTO_BUCKET = "meal-photos";
 const KEY_LOG = "palate.log.v1";
 const DEVICE_KEYS = ["palate.hints.v1", "palate.cardPeek.v1", "palate.portionTip.v1"];
 
@@ -320,11 +320,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const attachPhoto = useCallback(
     async (mealId: string, file: File) => {
       if (!userId) return false;
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-      const path = `${userId}/${mealId}-${Date.now()}.${ext || "jpg"}`;
+      const photo = await compressPhoto(file);
+      const type = photo.type || "image/jpeg";
+      const ext = type === "image/jpeg" ? "jpg" : (type.split("/")[1] ?? "jpg");
+      const path = `${userId}/${mealId}-${Date.now()}.${ext}`;
       const upload = await supabase.storage
         .from(PHOTO_BUCKET)
-        .upload(path, file, { contentType: file.type || "image/jpeg" });
+        .upload(path, photo, { contentType: type });
       if (upload.error) {
         console.error(upload.error);
         toast.error("Couldn't upload that photo. Try a smaller one.");
