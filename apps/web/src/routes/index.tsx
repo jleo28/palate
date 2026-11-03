@@ -1,15 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Camera,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Shuffle,
-  UtensilsCrossed,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, ChevronLeft, ChevronRight, Plus, Shuffle, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
@@ -118,7 +110,6 @@ function Plate() {
     plateBuiltFor,
     setPlateBuiltFor,
     addToPlate,
-    attachPhoto,
     favorites,
     loggedToday,
     log,
@@ -135,8 +126,6 @@ function Plate() {
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [elseOpen, setElseOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
-  const photoInput = useRef<HTMLInputElement>(null);
   // One-time tip on the first plate someone sees. Marked seen as soon as it shows.
   const [showPortionTip, setShowPortionTip] = useState(false);
   useEffect(() => {
@@ -248,11 +237,6 @@ function Plate() {
     });
     if (!logged) return;
     setAnotherFor(null);
-    // A photo taken before logging goes onto this meal.
-    if (pendingPhoto) {
-      void attachPhoto(logged.id, pendingPhoto);
-      setPendingPhoto(null);
-    }
   };
 
   return (
@@ -481,37 +465,13 @@ function Plate() {
             </p>
           </div>
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4">
             <button
               onClick={logMeal}
               disabled={!plate.some((r) => r.qty > 0)}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground text-base font-bold text-primary-foreground active:translate-y-px disabled:opacity-40"
             >
               <Check className="size-5" /> Ate This Meal
-            </button>
-            <input
-              ref={photoInput}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => {
-                setPendingPhoto(e.target.files?.[0] ?? null);
-                e.target.value = "";
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => photoInput.current?.click()}
-              aria-label={pendingPhoto ? "Photo ready. Tap to retake" : "Take a photo of this meal"}
-              className={cn(
-                "grid size-12 shrink-0 place-items-center rounded-full border",
-                pendingPhoto
-                  ? "border-olive bg-olive text-primary-foreground"
-                  : "border-foreground/25",
-              )}
-            >
-              {pendingPhoto ? <Check className="size-5" /> : <Camera className="size-5" />}
             </button>
           </div>
         </section>

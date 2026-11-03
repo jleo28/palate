@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Award, Camera, Check, Flame, ThumbsDown, ThumbsUp, Undo2 } from "lucide-react";
+import { Award, Check, Flame, ThumbsDown, ThumbsUp, Undo2 } from "lucide-react";
 import { BADGES, isRestDay, newBadges, nextOpenSlot, streak, SNACKS, isSnack } from "@palate/core";
 import { useStore } from "@/lib/palate/store";
 import { today as localToday } from "@/lib/palate/dates";
@@ -9,7 +9,7 @@ import { SeedlingAvatar } from "./SeedlingAvatar";
 
 /**
  * The "logged" pop-up, shown after any meal is logged. Seedling hops, the streak ticks up, and
- * there's room to rate the food, add a photo, undo, or jump to the next meal. Tap outside to close.
+ * there's room to rate the food, undo, or jump to the next meal. Tap outside to close.
  */
 export function MealLoggedSheet() {
   const { justLogged, profile } = useStore();
@@ -19,21 +19,10 @@ export function MealLoggedSheet() {
 }
 
 function Sheet() {
-  const {
-    justLogged,
-    dismissLogged,
-    log,
-    profile,
-    slots,
-    removeLog,
-    rateItem,
-    attachPhoto,
-    setMeal,
-  } = useStore();
+  const { justLogged, dismissLogged, log, profile, slots, removeLog, rateItem, setMeal } =
+    useStore();
   const navigate = useNavigate();
   const [ratings, setRatings] = useState<Record<string, 1 | -1>>({});
-  const [uploading, setUploading] = useState(false);
-  const photoInput = useRef<HTMLInputElement>(null);
 
   if (!justLogged || !profile) return null;
 
@@ -141,45 +130,14 @@ function Sheet() {
           </div>
         )}
 
-        <input
-          ref={photoInput}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            if (!file) return;
-            setUploading(true);
-            await attachPhoto(entry.id, file);
-            setUploading(false);
-          }}
-        />
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => photoInput.current?.click()}
-            disabled={uploading || !!entry.photoPath}
-            className="flex h-12 items-center justify-center gap-1.5 rounded-full border border-foreground/25 text-sm font-bold disabled:opacity-60"
-          >
-            {entry.photoPath ? (
-              <>
-                <Check className="size-4" /> Photo added
-              </>
-            ) : (
-              <>
-                <Camera className="size-4" /> {uploading ? "Uploading…" : "Add photo"}
-              </>
-            )}
-          </button>
+        <div className="mt-5">
           <button
             type="button"
             onClick={() => {
               removeLog(entry.id);
               dismissLogged();
             }}
-            className="flex h-12 items-center justify-center gap-1.5 rounded-full border border-foreground/25 text-sm font-bold"
+            className="flex h-12 w-full items-center justify-center gap-1.5 rounded-full border border-foreground/25 text-sm font-bold"
           >
             <Undo2 className="size-4" /> Undo
           </button>

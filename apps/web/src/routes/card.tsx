@@ -12,7 +12,6 @@ import { PalateCard } from "@/components/palate/PalateCard";
 import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
 import { EditLogDialog } from "@/components/palate/EditLogDialog";
 import { FeedbackDialog } from "@/components/palate/FeedbackDialog";
-import { MealThumb } from "@/components/palate/MealThumb";
 import { ProgressRing } from "@/components/palate/ProgressRing";
 import {
   GOALS,
@@ -340,7 +339,6 @@ function CardScreen() {
                 className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-foreground/15 bg-card px-3.5 py-3"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <MealThumb path={l.photoPath} alt={`Photo of ${l.meal.toLowerCase()}`} />
                   <div className="min-w-0">
                     <p className="font-display text-sm font-bold">
                       {l.source === "outside"

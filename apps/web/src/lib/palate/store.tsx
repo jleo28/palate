@@ -38,7 +38,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { today } from "./dates";
 import { VERIFIED_PATH } from "./paths";
-import { PHOTO_BUCKET, compressPhoto } from "./photos";
+import { PHOTO_BUCKET } from "./photos";
 import { currentMeal } from "./halls";
 
 // Browser-only data: a signed-out onboarding draft, plus anything saved before accounts existed.
@@ -135,8 +135,6 @@ interface Ctx {
   rateItem: (mealId: string, itemName: string, rating: 1 | -1 | null) => void;
   /** Item names the user rated thumbs-up, for taste-first plates. */
   favorites: string[];
-  /** Upload a photo and attach it to a logged meal. True on success. */
-  attachPhoto: (mealId: string, file: File) => Promise<boolean>;
   /** Slots logged today, in log order. */
   loggedToday: Slot[];
   removeLog: (id: string) => void;
@@ -330,37 +328,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (rating === 1) setFavorites((f) => (f.includes(itemName) ? f : [...f, itemName]));
   }, []);
 
-  const attachPhoto = useCallback(
-    async (mealId: string, file: File) => {
-      if (!userId) return false;
-      const photo = await compressPhoto(file);
-      const type = photo.type || "image/jpeg";
-      const ext = type === "image/jpeg" ? "jpg" : (type.split("/")[1] ?? "jpg");
-      const path = `${userId}/${mealId}-${Date.now()}.${ext}`;
-      const upload = await supabase.storage
-        .from(PHOTO_BUCKET)
-        .upload(path, photo, { contentType: type });
-      if (upload.error) {
-        console.error(upload.error);
-        toast.error("Couldn't upload that photo. Try a smaller one.");
-        return false;
-      }
-      const { error } = await supabase
-        .from("meal_logs")
-        .update({ photo_path: path })
-        .eq("id", mealId);
-      if (error) {
-        console.error(error);
-        void supabase.storage.from(PHOTO_BUCKET).remove([path]);
-        toast.error("Couldn't attach that photo. Try again.");
-        return false;
-      }
-      setLog((prev) => prev.map((l) => (l.id === mealId ? { ...l, photoPath: path } : l)));
-      return true;
-    },
-    [userId],
-  );
-
   const restoreLog = useCallback((m: LoggedMeal) => {
     setLog((prev) => (prev.some((l) => l.id === m.id) ? prev : [m, ...prev]));
     void supabase
@@ -517,7 +484,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setPlateBuiltFor,
     rateItem,
     favorites,
-    attachPhoto,
     restoreLog,
     updateLog,
     resetAll,
