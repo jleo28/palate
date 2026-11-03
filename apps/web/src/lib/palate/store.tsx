@@ -30,6 +30,10 @@ import {
   type Slot,
   type Profile,
   type ProfileRow,
+  type PlateHistory,
+  addItem,
+  editCurrent,
+  startHistory,
 } from "@palate/core";
 import { supabase } from "@/lib/supabase";
 import { today } from "./dates";
@@ -112,11 +116,14 @@ interface Ctx {
   log: LoggedMeal[];
   /** Log a meal for today, or for `date` (an earlier day, via a card). The new entry, or null. */
   addLog: (m: Omit<LoggedMeal, "id" | "date">, date?: string) => LoggedMeal | null;
-  /** Queue a Hall Menus item for The Plate, which adds it to the plate you're on. */
+  /** The plate being built (and its shuffle options). Kept here so it survives tab switches. */
+  plateHistory: PlateHistory;
+  setPlateHistory: (fn: (h: PlateHistory) => PlateHistory) => void;
+  /** What the plate was built for: "<hall>|<meal>|…". Matches `plateFor(hall, meal)` while current. */
+  plateBuiltFor: string | null;
+  setPlateBuiltFor: (key: string) => void;
+  /** Add a Hall Menus item to the plate you're on (or start a plate with it). */
   addToPlate: (item: MenuItem) => void;
-  /** Items waiting to be added to the plate; The Plate adds them, then clears the queue. */
-  plateAdds: MenuItem[];
-  clearPlateAdds: () => void;
   /** The meal just logged, for the "logged" pop-up. Null once it's dismissed. */
   justLogged: LoggedMeal | null;
   dismissLogged: () => void;
@@ -265,13 +272,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setJustLogged(entry);
       return entry;
     },
-    [log, loggedToday, slots],
+    [loggedToday, slots],
   );
 
   const [justLogged, setJustLogged] = useState<LoggedMeal | null>(null);
-  const [plateAdds, setPlateAdds] = useState<MenuItem[]>([]);
-  const addToPlate = useCallback((item: MenuItem) => setPlateAdds((q) => [...q, item]), []);
-  const clearPlateAdds = useCallback(() => setPlateAdds([]), []);
+  const [plateHistory, setPlateHistory] = useState<PlateHistory>(() => startHistory([]));
+  const [plateBuiltFor, setPlateBuiltFor] = useState<string | null>(null);
+  const addToPlate = useCallback(
+    (item: MenuItem) => {
+      if (plateBuiltFor?.startsWith(plateFor(hall, meal))) {
+        setPlateHistory((h) => editCurrent(h, (p) => addItem(p, item)));
+        return;
+      }
+      // No plate yet for this hall and meal: start one by hand. The Plate keeps it.
+      setPlateHistory(startHistory(addItem([], item)));
+      setPlateBuiltFor(`${plateFor(hall, meal)}manual`);
+    },
+    [plateBuiltFor, hall, meal],
+  );
   const dismissLogged = useCallback(() => setJustLogged(null), []);
 
   const rateItem = useCallback((mealId: string, itemName: string, rating: 1 | -1 | null) => {
@@ -476,8 +494,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     justLogged,
     dismissLogged,
     addToPlate,
-    plateAdds,
-    clearPlateAdds,
+    plateHistory,
+    setPlateHistory,
+    plateBuiltFor,
+    setPlateBuiltFor,
     rateItem,
     favorites,
     attachPhoto,
@@ -498,6 +518,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
+
+/** The start of a plate key for a hall and meal. */
+export const plateFor = (hall: HallId, meal: Slot) => `${hall}|${meal}|`;
 
 export function useStore() {
   const ctx = useContext(StoreContext);

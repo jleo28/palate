@@ -55,7 +55,7 @@ import {
 import { portionLabel } from "@/lib/palate/menu";
 import { useHallMenu } from "@/lib/palate/use-menu";
 import { today as localToday } from "@/lib/palate/dates";
-import { useStore } from "@/lib/palate/store";
+import { plateFor, useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
 
@@ -97,8 +97,10 @@ function Plate() {
     daily,
     consumedToday,
     addLog,
-    plateAdds,
-    clearPlateAdds,
+    plateHistory: history,
+    setPlateHistory: setHistory,
+    plateBuiltFor,
+    setPlateBuiltFor,
     attachPhoto,
     favorites,
     loggedToday,
@@ -113,7 +115,6 @@ function Plate() {
   // "Log another meal" shows the builder again for a slot that's already logged.
   const [anotherFor, setAnotherFor] = useState<string | null>(null);
   const showLogged = loggedEntries.length > 0 && anotherFor !== meal;
-  const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [elseOpen, setElseOpen] = useState(false);
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
@@ -180,20 +181,19 @@ function Plate() {
     return capPlate(build(menu, hall, period, diets, mealTarget, seed), left);
   };
 
-  // A new hall, meal or budget builds a fresh set of up to 3 different plates.
+  // A new hall, meal or budget builds a fresh set of up to 3 different plates. Coming back to
+  // this tab keeps the plate you were building, and so does one started by hand on Hall Menus.
+  const plateKey = `${plateFor(hall, meal)}${menu.length}|${dietKey}|${mealTarget?.kcal}|${daily?.kcal}|${consumedToday.kcal}|${favKey}`;
   useEffect(() => {
-    setHistory(optionsHistory(distinctPlates(freshPlate)));
+    if (!menu.length || !mealTarget || plateBuiltFor === plateKey) return;
+    if (plateBuiltFor === `${plateFor(hall, meal)}manual`) {
+      setPlateBuiltFor(plateKey);
+      return;
+    }
+    setHistory(() => optionsHistory(distinctPlates(freshPlate)));
+    setPlateBuiltFor(plateKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menu, hall, meal, dietKey, mealTarget?.kcal, daily?.kcal, consumedToday.kcal, favKey]);
-
-  // Items tapped on Hall Menus join the plate you're on, once today's menu has loaded (a menu
-  // change rebuilds the plates). Declared after the rebuild so they're added on top of it.
-  useEffect(() => {
-    if (!plateAdds.length || !menu.length) return;
-    edit((prev) => plateAdds.reduce((p, item) => addItem(p, item), prev));
-    clearPlateAdds();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plateAdds, menu.length]);
+  }, [plateKey]);
 
   const nextPlate = () => {
     setDirection("next");
