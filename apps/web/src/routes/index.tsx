@@ -107,9 +107,12 @@ function Plate() {
   // Snacks draw on a nearby hall meal's menu.
   const period = menuPeriod(meal);
   // A hall meal logged today shows what was eaten instead of a new plate.
-  const loggedEntry = !isSnack(meal)
-    ? log.find((l) => l.date === localToday() && l.meal === meal)
-    : undefined;
+  const loggedEntries = !isSnack(meal)
+    ? log.filter((l) => l.date === localToday() && l.meal === meal)
+    : [];
+  // "Log another meal" shows the builder again for a slot that's already logged.
+  const [anotherFor, setAnotherFor] = useState<string | null>(null);
+  const showLogged = loggedEntries.length > 0 && anotherFor !== meal;
   const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [elseOpen, setElseOpen] = useState(false);
@@ -226,6 +229,7 @@ function Plate() {
       items: logItems(plate),
     });
     if (!logged) return;
+    setAnotherFor(null);
     // A photo taken before logging goes onto this meal.
     if (pendingPhoto) {
       void attachPhoto(logged.id, pendingPhoto);
@@ -288,8 +292,8 @@ function Plate() {
         )}
       </section>
 
-      {loggedEntry ? (
-        <LoggedSlot entry={loggedEntry} />
+      {showLogged ? (
+        <LoggedSlot entries={loggedEntries} onLogAnother={() => setAnotherFor(meal)} />
       ) : (
         <section className="card-edge rounded-3xl bg-card p-4">
           <div className="mb-3 flex items-start justify-between gap-3">

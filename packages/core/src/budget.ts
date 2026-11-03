@@ -148,20 +148,23 @@ export function tastePlate(
     .map((item, n) => ({ id: `row-${n}`, item, qty: 1 }));
 }
 
-/** Hall meals can be logged once a day; snacks as often as you like. */
-export function canLogSlot(slot: Slot, loggedToday: readonly Slot[]) {
+/**
+ * A slot still waiting on its first log today: a hall meal not logged yet, or any snack. Used to
+ * pick which slot to show next. Every slot can always be logged again ("Log another meal").
+ */
+export function isOpenSlot(slot: Slot, loggedToday: readonly Slot[]) {
   return isSnack(slot) || !loggedToday.includes(slot);
 }
 
 /** The first slot, from `from` onwards, that can still be logged today. Null when the day's done. */
 export function firstOpenSlot(slots: readonly Slot[], from: Slot, loggedToday: readonly Slot[]) {
   const start = Math.max(0, slots.indexOf(from));
-  return slots.slice(start).find((s) => canLogSlot(s, loggedToday)) ?? null;
+  return slots.slice(start).find((s) => isOpenSlot(s, loggedToday)) ?? null;
 }
 
 /** Where to go after logging `slot`: the next slot that can still be logged. */
 export function nextOpenSlot(slots: readonly Slot[], slot: Slot, loggedToday: readonly Slot[]) {
-  return slots.slice(slots.indexOf(slot) + 1).find((s) => canLogSlot(s, loggedToday)) ?? null;
+  return slots.slice(slots.indexOf(slot) + 1).find((s) => isOpenSlot(s, loggedToday)) ?? null;
 }
 
 /**

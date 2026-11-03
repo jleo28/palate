@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { canLogSlot, daySlots, firstOpenSlot, nextOpenSlot } from "./budget";
+import { isOpenSlot, daySlots, firstOpenSlot, nextOpenSlot } from "./budget";
 
 const meals = daySlots();
 const withSnacks = daySlots(["Afternoon snack", "Late-night snack"]);
 
-describe("canLogSlot", () => {
+describe("isOpenSlot", () => {
   it("allows each hall meal once a day", () => {
-    expect(canLogSlot("Breakfast", [])).toBe(true);
-    expect(canLogSlot("Breakfast", ["Breakfast"])).toBe(false);
+    expect(isOpenSlot("Breakfast", [])).toBe(true);
+    expect(isOpenSlot("Breakfast", ["Breakfast"])).toBe(false);
   });
 
   it("allows snacks any number of times", () => {
-    expect(canLogSlot("Afternoon snack", ["Afternoon snack", "Afternoon snack"])).toBe(true);
+    expect(isOpenSlot("Afternoon snack", ["Afternoon snack", "Afternoon snack"])).toBe(true);
   });
 });
 

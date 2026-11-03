@@ -112,3 +112,9 @@ describe("card pool", () => {
     expect(backfillDays("2026-11-01")).toEqual(["2026-10-31", "2026-10-30", "2026-10-29"]);
   });
 });
+
+describe("several logs in one day", () => {
+  it("counts the day once", () => {
+    expect(streak(["2026-11-02", "2026-11-02", "2026-11-01"], "2026-11-02").days).toBe(2);
+  });
+});

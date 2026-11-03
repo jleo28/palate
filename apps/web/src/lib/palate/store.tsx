@@ -15,7 +15,6 @@ import {
   dailyTargets,
   logFromRow,
   logToRow,
-  canLogSlot,
   daySlots,
   firstOpenSlot,
   nextOpenSlot,
@@ -111,7 +110,6 @@ interface Ctx {
   /** Signed in: saves to Supabase. Signed out: keeps an onboarding draft in this browser. */
   saveProfile: (p: Profile) => Promise<void>;
   log: LoggedMeal[];
-  /** Returns false when the slot can't be logged again today. */
   /** Log a meal for today, or for `date` (an earlier day, via a card). The new entry, or null. */
   addLog: (m: Omit<LoggedMeal, "id" | "date">, date?: string) => LoggedMeal | null;
   /** Queue a Hall Menus item for The Plate, which adds it to the plate you're on. */
@@ -243,12 +241,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const addLog = useCallback(
     (m: Omit<LoggedMeal, "id" | "date">, date = today()) => {
-      // Breakfast, lunch and dinner once a day; change a logged meal from the macro bank.
-      const loggedThatDay = log.filter((l) => l.date === date).map((l) => l.meal);
-      if (!canLogSlot(m.meal, loggedThatDay)) {
-        toast.error(`${m.meal} is already logged that day. Edit it in your macro bank.`);
-        return null;
-      }
+      // Any slot can be logged as many times as needed; daily totals sum every log.
       const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date };
       setLog((prev) => [entry, ...prev]);
       // Move on to the next slot that can still be logged.

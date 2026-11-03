@@ -3,7 +3,6 @@ import { Minus, Plus, Search } from "lucide-react";
 import {
   MAX_QTY,
   SNACKS,
-  canLogSlot,
   firstOpenSlot,
   isSnack,
   logItems,
@@ -117,7 +116,6 @@ export function AteSomethingElseDialog({
       return next > 0 ? [...rest, { id: item.id, item, qty: next }] : rest;
     });
 
-  const canLog = canLogSlot(meal, loggedToday);
   const n = (v: string) => Math.max(0, Number(v) || 0);
   const manualReady = n(macros.kcal) > 0;
 
@@ -239,7 +237,6 @@ export function AteSomethingElseDialog({
               type="button"
               role="radio"
               aria-checked={meal === m}
-              disabled={!canLogSlot(m, loggedToday)}
               onClick={() => {
                 setMeal(m);
                 setPicked([]);
@@ -318,7 +315,7 @@ export function AteSomethingElseDialog({
             <button
               type="button"
               onClick={logPicked}
-              disabled={!picked.length || !canLog}
+              disabled={!picked.length}
               className="h-12 w-full shrink-0 rounded-full bg-foreground font-bold text-primary-foreground disabled:opacity-40"
             >
               {picked.length
@@ -357,7 +354,7 @@ export function AteSomethingElseDialog({
             <button
               type="button"
               onClick={logManual}
-              disabled={!manualReady || !canLog}
+              disabled={!manualReady}
               className="h-12 w-full rounded-full bg-foreground font-bold text-primary-foreground disabled:opacity-40"
             >
               Add to today
