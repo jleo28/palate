@@ -1,6 +1,6 @@
 import type { MacroTargets } from "./macros";
 import { totals } from "./plate";
-import type { MealPeriod, PlateItem, Slot, SnackSlot } from "./types";
+import type { MealPeriod, MenuItem, PlateItem, Slot, SnackSlot } from "./types";
 
 export const MEALS: MealPeriod[] = ["Breakfast", "Lunch", "Dinner"];
 const MEAL_SHARE: Record<MealPeriod, number> = { Breakfast: 0.28, Lunch: 0.36, Dinner: 0.36 };
@@ -117,20 +117,35 @@ export function fitCheck(
   };
 }
 
-/** Shown whenever a plate (as built or as edited) runs past the plan. Guidance, never a verdict. */
-export const PAST_PLAN = "You can always add more. It just goes a bit past today's plan.";
+/** Shown once today's calories are reached. Celebrates it, never limits what comes next. */
+export const GOALS_REACHED = "Today's goals are reached. Here's a plate of things you like.";
 
 /**
- * One plain-language line about the plate, in Seedling's voice. It never criticises the plate
- * or names a macro that's "too high": it offers portion guidance instead.
+ * One plain-language line about the plate, in Seedling's voice. Targets are goals to reach:
+ * it never mentions going past one or names a macro that's "too high".
  */
 export function fitSummary(fit: Fit, meal: Slot): string {
-  if (fit.capReached) {
-    return "You've reached today's plan. If you're still hungry, this is a lighter option.";
-  }
-  if (fit.dayOverCap || fit.over.length > 0) return PAST_PLAN;
+  if (fit.capReached) return GOALS_REACHED;
   if (fit.lowProtein) return "Want more protein? Tap + on any protein.";
   return `This plate fits your ${meal.toLowerCase()} nicely.`;
+}
+
+/**
+ * A plate picked for taste alone, for when the day's goals are already met: up to four
+ * favorites (items rated thumbs-up) on today's menu, one portion each, no macro targeting.
+ * Empty when none of the favorites are being served.
+ */
+export function tastePlate(
+  pool: readonly MenuItem[],
+  favorites: readonly string[],
+  seed = 0,
+): PlateItem[] {
+  const liked = new Set(favorites.map((n) => n.toLowerCase()));
+  const picks = pool.filter((i) => liked.has(i.name.toLowerCase()));
+  const start = picks.length ? seed % picks.length : 0;
+  return [...picks.slice(start), ...picks.slice(0, start)]
+    .slice(0, 4)
+    .map((item, n) => ({ id: `row-${n}`, item, qty: 1 }));
 }
 
 /** Hall meals can be logged once a day; snacks as often as you like. */

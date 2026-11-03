@@ -17,7 +17,10 @@ interface FeedbackRow {
 }
 
 const escape = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+  s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
 
 Deno.serve(async (req) => {
   const secret = Deno.env.get("WEBHOOK_SECRET");

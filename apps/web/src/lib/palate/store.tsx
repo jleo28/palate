@@ -59,19 +59,22 @@ const withSeedling = (p: Profile): Profile =>
 
 /** Load a user's data, importing any browser-only profile and log the first time. */
 async function loadUser(userId: string) {
-  const [profileRes, logRes] = await Promise.all([
+  const [profileRes, logRes, ratingRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle<ProfileRow>(),
     supabase.from("meal_logs").select("*").order("date", { ascending: false }).limit(1000),
+    supabase.from("taste_ratings").select("item_name").eq("rating", 1).limit(1000),
   ]);
   if (profileRes.error) throw profileRes.error;
   if (logRes.error) throw logRes.error;
 
   let profile = profileRes.data ? profileFromRow(profileRes.data) : null;
   let log = ((logRes.data ?? []) as MealLogRow[]).map(logFromRow);
+  // Ratings only shape suggestions, so a failed load just means no favorites yet.
+  const favorites = [...new Set((ratingRes.data ?? []).map((r) => r.item_name as string))];
 
   // The email-confirmation tab only says thanks. The tab that signed up imports its own draft,
   // so two tabs never both create the account.
-  if (window.location.pathname.startsWith(VERIFIED_PATH)) return { profile, log };
+  if (window.location.pathname.startsWith(VERIFIED_PATH)) return { profile, log, favorites };
 
   const localProfile = readLocal<Profile>(KEY_PROFILE);
   const localLog = readLocal<LoggedMeal[]>(KEY_LOG) ?? [];
@@ -97,7 +100,7 @@ async function loadUser(userId: string) {
 
   localStorage.removeItem(KEY_PROFILE);
   localStorage.removeItem(KEY_LOG);
-  return { profile, log };
+  return { profile, log, favorites };
 }
 
 interface Ctx {
@@ -121,6 +124,8 @@ interface Ctx {
   dismissLogged: () => void;
   /** Thumbs up (1) or down (-1) on one item of a logged meal; null clears it. */
   rateItem: (mealId: string, itemName: string, rating: 1 | -1 | null) => void;
+  /** Item names the user rated thumbs-up, for taste-first plates. */
+  favorites: string[];
   /** Upload a photo and attach it to a logged meal. True on success. */
   attachPhoto: (mealId: string, file: File) => Promise<boolean>;
   /** Slots logged today, in log order. */
@@ -154,6 +159,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [log, setLog] = useState<LoggedMeal[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [meal, setMeal] = useState<Slot>("Lunch");
   const [hall, setHall] = useState<HallId>("village");
   const loadedFor = useRef<string | null>(null);
@@ -182,9 +188,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setReady(false);
       loading.current = true;
       loadUser(id)
-        .then(({ profile: p, log: l }) => {
+        .then(({ profile: p, log: l, favorites: f }) => {
           if (loadedFor.current !== id) return;
           setProfile(p);
+          setFavorites(f);
           if (p) setHall(p.hall);
           setLog(l);
         })
@@ -296,6 +303,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         { onConflict: "meal_log_id,item_name" },
       )
       .then(done);
+    if (rating === 1) setFavorites((f) => (f.includes(itemName) ? f : [...f, itemName]));
   }, []);
 
   const attachPhoto = useCallback(
@@ -478,6 +486,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     plateAdds,
     clearPlateAdds,
     rateItem,
+    favorites,
     attachPhoto,
     restoreLog,
     updateLog,

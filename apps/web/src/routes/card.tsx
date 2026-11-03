@@ -40,7 +40,6 @@ const refillDate = (today: string) => {
   });
 };
 
-
 export const Route = createFileRoute("/card")({
   head: () => ({
     meta: [

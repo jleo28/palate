@@ -43,7 +43,6 @@ export function PlateRow({
   const hidden = useHideNumbers();
   const { item, qty, suggested } = row;
   const off = qty === 0;
-  const over = suggested !== undefined && qty > suggested ? qty - suggested : 0;
   const hits = allergenConflicts(item, allergies);
   const possible = customAllergyMatches(item, customAllergies);
 
@@ -146,9 +145,7 @@ export function PlateRow({
         </button>
         {suggested !== undefined && (
           <p className="basis-full text-[0.7rem] text-muted-foreground">
-            {over > 0
-              ? `${portionLabel(item, qty)} · ${over} over your portion`
-              : `Your portion: ${portionLabel(item, suggested)}`}
+            {`Your portion: ${portionLabel(item, suggested)}`}
           </p>
         )}
         {alternatives.length > 0 && (

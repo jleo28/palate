@@ -23,6 +23,9 @@ import {
   logItems,
   menuPeriod,
   capPlate,
+  availableItems,
+  mealTargets,
+  tastePlate,
   effectiveGoal,
   fitCheck,
   fitSummary,
@@ -97,6 +100,7 @@ function Plate() {
     plateAdds,
     clearPlateAdds,
     attachPhoto,
+    favorites,
     loggedToday,
     log,
   } = useStore();
@@ -154,11 +158,22 @@ function Plate() {
     [hallItems, skipKey, allergyKey],
   );
 
+  const goalsReached = !!daily && consumedToday.kcal >= daily.kcal;
+  const favKey = favorites.join(",");
+
   const freshPlate = (seed: number) => {
     if (!mealTarget || !daily) return [];
-    // The day's calorie target is a hard cap: the plate never plans past what's left of it.
-    const left = remainingToday(daily, consumedToday).kcal;
     const build = isSnack(meal) ? buildSnack : buildPlate;
+    // Goals met: still build a plate, picked for taste. Favorites first, otherwise a regular
+    // meal-sized plate from the menu, with no macro framing either way.
+    if (goalsReached) {
+      const liked = tastePlate(availableItems(menu, hall, period, diets), favorites, seed);
+      return liked.length
+        ? liked
+        : build(menu, hall, period, diets, mealTargets(daily, period), seed);
+    }
+    // Plans within what's left of today's calories. Adding more by hand is always fine.
+    const left = remainingToday(daily, consumedToday).kcal;
     return capPlate(build(menu, hall, period, diets, mealTarget, seed), left);
   };
 
@@ -166,7 +181,7 @@ function Plate() {
   useEffect(() => {
     setHistory(optionsHistory(distinctPlates(freshPlate)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menu, hall, meal, dietKey, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
+  }, [menu, hall, meal, dietKey, mealTarget?.kcal, daily?.kcal, consumedToday.kcal, favKey]);
 
   // Items tapped on Hall Menus join the plate you're on, once today's menu has loaded (a menu
   // change rebuilds the plates). Declared after the rebuild so they're added on top of it.
@@ -264,11 +279,12 @@ function Plate() {
             {profile.highProtein ? "high protein · " : ""}what's left of today
           </p>
         </div>
-        <MacroRow t={mealTarget} />
-        {fit.capReached && (
-          <p className="mt-2 rounded-xl bg-clay-soft px-3 py-2 text-[0.78rem] font-semibold">
-            Today's calorie target is reached.
+        {goalsReached ? (
+          <p className="rounded-xl bg-olive-soft px-3 py-2 text-[0.78rem] font-semibold text-olive">
+            Today's goals are reached · {Math.round(consumedToday.kcal)} cal today
           </p>
+        ) : (
+          <MacroRow t={mealTarget} />
         )}
       </section>
 
@@ -406,15 +422,10 @@ function Plate() {
           />
 
           <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
-            <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />
+            <MacroRow t={t} target={goalsReached ? undefined : mealTarget} />
           </div>
 
-          <div
-            className={cn(
-              "mt-3 flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm",
-              fit.dayOverCap ? "bg-clay-soft" : fit.over.length ? "bg-amber-soft" : "bg-olive-soft",
-            )}
-          >
+          <div className="mt-3 flex items-center gap-2.5 rounded-2xl bg-olive-soft px-3 py-2.5 text-sm">
             {profile.seedling && (
               <SeedlingAvatar seedling={profile.seedling} className="size-9 shrink-0" />
             )}
