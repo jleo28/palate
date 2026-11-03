@@ -109,6 +109,11 @@ function Onboarding() {
     if (ready && session && profile && step === 3) void navigate({ to: "/" });
   }, [ready, session, profile, step, navigate]);
 
+  // A returning user who already finished setup never sees it again.
+  useEffect(() => {
+    if (ready && session && profile && step === 0) void navigate({ to: "/" });
+  }, [ready, session, profile, step, navigate]);
+
   const [name, setName] = useState(profile?.name ?? "");
   // New users start with blank fields: no preset name, age, gender or body numbers.
   const [age, setAge] = useState(profile ? String(profile.age) : "");

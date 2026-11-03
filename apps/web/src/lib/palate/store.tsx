@@ -157,6 +157,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [meal, setMeal] = useState<Slot>("Lunch");
   const [hall, setHall] = useState<HallId>("village");
   const loadedFor = useRef<string | null>(null);
+  // True while a user's data is loading. A second auth event for the same user (getSession and
+  // INITIAL_SESSION both fire on load) must not mark the store ready before the profile arrives.
+  const loading = useRef(false);
   const userId = session?.user.id ?? null;
 
   useEffect(() => {
@@ -166,7 +169,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSession(next);
       const id = next?.user.id ?? null;
       if (id === loadedFor.current) {
-        setReady(true);
+        if (!loading.current) setReady(true);
         return;
       }
       loadedFor.current = id;
@@ -177,6 +180,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return;
       }
       setReady(false);
+      loading.current = true;
       loadUser(id)
         .then(({ profile: p, log: l }) => {
           if (loadedFor.current !== id) return;
@@ -188,7 +192,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           console.error(error);
           toast.error("Couldn't load your data. Check your connection and refresh.");
         })
-        .finally(() => setReady(true));
+        .finally(() => {
+          if (loadedFor.current !== id) return;
+          loading.current = false;
+          setReady(true);
+        });
     };
 
     void supabase.auth.getSession().then(({ data }) => apply(data.session));
