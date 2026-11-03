@@ -1,4 +1,5 @@
-import type { ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
+import { useStore } from "@/lib/palate/store";
 import { TONES, seedlingDetails, type Seedling, type SpeciesId } from "@palate/core";
 import { cn } from "@/lib/utils";
 
@@ -157,14 +158,43 @@ interface Props {
   celebrate?: boolean;
 }
 
+/** How long after a log a Seedling that comes into view still cheers. */
+const CHEER_WINDOW_MS = 4000;
+const CHEER_MS = 1300;
+
+/** Plays the cheer once whenever a meal is logged while (or just before) this Seedling shows. */
+function useCheer() {
+  const { cheerAt } = useStore();
+  const [cheering, setCheering] = useState<number | null>(null);
+  useEffect(() => {
+    if (!cheerAt || Date.now() - cheerAt > CHEER_WINDOW_MS) return;
+    setCheering(cheerAt);
+    const t = setTimeout(() => setCheering(null), CHEER_MS);
+    return () => clearTimeout(t);
+  }, [cheerAt]);
+  return cheering;
+}
+
+// Little leaves and sparkles that burst out above the Seedling's head.
+const BURST = [
+  { x: 22, y: 30, r: -30, leaf: true },
+  { x: 118, y: 28, r: 30, leaf: true },
+  { x: 40, y: 8, r: 0, leaf: false },
+  { x: 102, y: 6, r: 0, leaf: false },
+  { x: 70, y: -6, r: 0, leaf: false },
+];
+
 export function SeedlingAvatar({ seedling, stage = 4, className, celebrate, sleepy }: Props) {
   const d = seedlingDetails(seedling.seed);
   const tone = TONES[seedling.tone] ?? TONES[0];
+  const cheering = useCheer();
 
   return (
     <svg
+      key={cheering ?? "still"}
       viewBox="0 0 140 140"
-      className={cn(celebrate && "pet-celebrate", className)}
+      overflow="visible"
+      className={cn(celebrate && "pet-celebrate", cheering && "seedling-cheer", className)}
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -211,6 +241,32 @@ export function SeedlingAvatar({ seedling, stage = 4, className, celebrate, slee
         )}
         {d.freckle && <circle className="fill-foreground/40" cx="88" cy="74" r="1.8" />}
       </g>
+      {cheering && (
+        <g aria-hidden>
+          {BURST.map((b, i) => (
+            <g
+              key={i}
+              className="seedling-burst"
+              style={{ animationDelay: `${120 + i * 50}ms` }}
+              transform={`translate(${b.x} ${b.y}) rotate(${b.r})`}
+            >
+              {b.leaf ? (
+                <path
+                  className="fill-food-veg stroke-foreground"
+                  strokeWidth="2.5"
+                  d="M0 6C-3-2 3-8 8-6 7 1 3 6 0 6Z"
+                />
+              ) : (
+                <path
+                  className="fill-food-yolk stroke-foreground"
+                  strokeWidth="2"
+                  d="M0-7 2-2 7 0 2 2 0 7-2 2-7 0-2-2Z"
+                />
+              )}
+            </g>
+          ))}
+        </g>
+      )}
     </svg>
   );
 }

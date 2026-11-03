@@ -340,3 +340,67 @@
     animation: none;
   }
 }
+
+/* Every logged meal: a happy bounce with a little leaf-and-sparkle burst, about 1.2s. */
+@keyframes seedling-cheer {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  15% {
+    transform: translateY(3px) scale(1.06, 0.92);
+  }
+  40% {
+    transform: translateY(-14px) rotate(-5deg);
+  }
+  60% {
+    transform: translateY(0) scale(1.04, 0.96);
+  }
+  75% {
+    transform: translateY(-5px) rotate(3deg);
+  }
+}
+@keyframes seedling-burst {
+  0% {
+    opacity: 0;
+    scale: 0.2;
+  }
+  35% {
+    opacity: 1;
+    scale: 1.15;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.9;
+    translate: 0 -10px;
+  }
+}
+@keyframes seedling-glow {
+  0%,
+  100% {
+    filter: none;
+  }
+  50% {
+    filter: drop-shadow(0 0 6px oklch(0.85 0.12 120));
+  }
+}
+
+.seedling-cheer {
+  transform-origin: 50% 95%;
+  animation: seedling-cheer 1.2s ease-out 1;
+}
+.seedling-burst {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: seedling-burst 900ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seedling-cheer {
+    animation: seedling-glow 1.2s ease-in-out 1;
+  }
+  .seedling-burst {
+    display: none;
+  }
+}

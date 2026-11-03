@@ -124,6 +124,8 @@ interface Ctx {
   setPlateBuiltFor: (key: string) => void;
   /** Add a Hall Menus item to the plate you're on (or start a plate with it). */
   addToPlate: (item: MenuItem) => void;
+  /** When the latest meal was logged (ms), so any visible Seedling can cheer once. */
+  cheerAt: number | null;
   /** The meal just logged, for the "logged" pop-up. Null once it's dismissed. */
   justLogged: LoggedMeal | null;
   dismissLogged: () => void;
@@ -270,12 +272,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           toast.error("Couldn't log that meal. Try again.");
         });
       setJustLogged(entry);
+      setCheerAt(Date.now());
       return entry;
     },
     [loggedToday, slots],
   );
 
   const [justLogged, setJustLogged] = useState<LoggedMeal | null>(null);
+  const [cheerAt, setCheerAt] = useState<number | null>(null);
   const [plateHistory, setPlateHistory] = useState<PlateHistory>(() => startHistory([]));
   const [plateBuiltFor, setPlateBuiltFor] = useState<string | null>(null);
   const addToPlate = useCallback(
@@ -494,6 +498,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     loggedToday,
     removeLog,
     justLogged,
+    cheerAt,
     dismissLogged,
     addToPlate,
     plateHistory,
