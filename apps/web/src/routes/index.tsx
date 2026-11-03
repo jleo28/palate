@@ -1,10 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, Camera, Check, ChevronLeft, ChevronRight, Plus, Shuffle } from "lucide-react";
+import {
+  Camera,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Shuffle,
+  UtensilsCrossed,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
+import { HallMenuList } from "@/components/palate/HallMenuList";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { AllergenNotice } from "@/components/palate/AllergenNotice";
 import { MacroRow } from "@/components/palate/MacroBits";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
@@ -101,6 +117,7 @@ function Plate() {
     setPlateHistory: setHistory,
     plateBuiltFor,
     setPlateBuiltFor,
+    addToPlate,
     attachPhoto,
     favorites,
     loggedToday,
@@ -117,6 +134,7 @@ function Plate() {
   const showLogged = loggedEntries.length > 0 && anotherFor !== meal;
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [elseOpen, setElseOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
   // One-time tip on the first plate someone sees. Marked seen as soon as it shows.
@@ -149,7 +167,7 @@ function Plate() {
   const dietKey = diets.join(",");
   const skipKey = (profile?.dislikes ?? []).join(",");
   const allergyKey = [...(profile?.allergies ?? []), ...(profile?.customAllergies ?? [])].join(",");
-  const { items: hallItems } = useHallMenu(hall);
+  const { items: hallItems, loading: menuLoading } = useHallMenu(hall);
   // Skipped foods and anything flagged for the user's allergies never go on a generated plate.
   const menu = useMemo(
     () =>
@@ -394,13 +412,37 @@ function Plate() {
             </ul>
           )}
 
-          {/* Same flow as Hall Menus: tap + on any item there and it lands on this plate. */}
-          <Link
-            to="/menus"
-            className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-dashed border-foreground/30 text-sm font-bold text-muted-foreground"
+          {/* Same flow as Hall Menus' + buttons: items join the plate you're on. */}
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-foreground/25 text-sm font-bold"
           >
-            <BookOpen className="size-4" aria-hidden /> Add items from Hall Menus
-          </Link>
+            <UtensilsCrossed className="size-4" aria-hidden /> Add items from the menu
+          </button>
+          <Sheet open={addOpen} onOpenChange={setAddOpen}>
+            <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl">
+              <SheetHeader className="text-left">
+                <SheetTitle>Add to your plate</SheetTitle>
+                <SheetDescription>
+                  {HALLS.find((h) => h.id === hall)?.short} · {period}. Tap + on anything you want.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="mt-4 pb-6">
+                <HallMenuList
+                  items={hallItems}
+                  hall={hall}
+                  period={period}
+                  loading={menuLoading}
+                  onAdd={(item) => {
+                    addToPlate(item);
+                    toast.success(`${item.name} added to your plate`);
+                  }}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+
           <button
             type="button"
             onClick={() => setElseOpen(true)}

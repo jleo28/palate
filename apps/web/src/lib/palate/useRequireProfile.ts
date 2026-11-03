@@ -5,10 +5,11 @@ import { useStore } from "./store";
 /** Screens that need a set-up account: signed out → Welcome, signed in without a profile → onboarding. */
 export function useRequireProfile() {
   const navigate = useNavigate();
-  const { ready, session, profile } = useStore();
+  const { ready, loadFailed, session, profile } = useStore();
   useEffect(() => {
     if (!ready) return;
     if (!session) void navigate({ to: "/welcome" });
-    else if (!profile) void navigate({ to: "/onboarding" });
-  }, [ready, session, profile, navigate]);
+    // Only a profile that's really missing (not one that failed to load) means onboarding.
+    else if (!profile && !loadFailed) void navigate({ to: "/onboarding" });
+  }, [ready, loadFailed, session, profile, navigate]);
 }

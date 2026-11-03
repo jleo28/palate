@@ -85,9 +85,9 @@ function CardScreen() {
   const [outsideOpen, setOutsideOpen] = useState(false);
   const [earlierOpen, setEarlierOpen] = useState(false);
   const [editing, setEditing] = useState<LoggedMeal | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useRequireProfile();
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   if (!ready || !profile || !daily) {
     return (
@@ -385,12 +385,12 @@ function CardScreen() {
       <button
         type="button"
         onClick={() => setFeedbackOpen(true)}
-        className="mt-2 flex w-full text-left items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-sm font-bold"
+        className="mt-2 flex min-h-14 w-full items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-left text-sm font-bold"
       >
         <span>
           Give feedback
           <span className="block text-xs font-medium text-muted-foreground">
-            Or join a 15-min interview with the team
+            Tell the team what's working and what isn't
           </span>
         </span>
         <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
