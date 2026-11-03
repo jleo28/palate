@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Minus, Plus, Search } from "lucide-react";
 import {
   MAX_QTY,
+  PORTION_STEP,
   SNACKS,
   firstOpenSlot,
   isSnack,
@@ -288,8 +289,8 @@ export function AteSomethingElseDialog({
                     {qty > 0 && (
                       <button
                         type="button"
-                        onClick={() => setPick(item, qty - 1)}
-                        aria-label={`One ${item.unit} less of ${item.name}`}
+                        onClick={() => setPick(item, qty - PORTION_STEP)}
+                        aria-label={`Half a ${item.unit} less of ${item.name}`}
                         className="grid size-10 place-items-center rounded-full border border-foreground/25"
                       >
                         <Minus className="size-3.5" />
@@ -297,8 +298,8 @@ export function AteSomethingElseDialog({
                     )}
                     <button
                       type="button"
-                      onClick={() => setPick(item, qty + 1)}
-                      aria-label={`Add a ${item.unit} of ${item.name}`}
+                      onClick={() => setPick(item, qty + PORTION_STEP)}
+                      aria-label={`Half a ${item.unit} more of ${item.name}`}
                       className="grid size-10 place-items-center rounded-full border border-foreground/25"
                     >
                       <Plus className="size-3.5" />

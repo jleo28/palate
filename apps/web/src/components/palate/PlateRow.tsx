@@ -1,8 +1,7 @@
-import { Minus, Plus, RefreshCw, X } from "lucide-react";
+import { RefreshCw, X } from "lucide-react";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { macroLine } from "@/lib/palate/macro-text";
 import {
-  MAX_QTY,
   allergenConflicts,
   allergenLabel,
   customAllergyMatches,
@@ -12,6 +11,7 @@ import {
   type PlateItem,
 } from "@palate/core";
 import { portionLabel } from "@/lib/palate/menu";
+import { PortionStepper } from "./PortionStepper";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -96,38 +96,7 @@ export function PlateRow({
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <div
-          className="flex items-center gap-1.5"
-          role="group"
-          aria-label={`${item.name} portions`}
-        >
-          <button
-            type="button"
-            onClick={() => onQty(qty - 1)}
-            disabled={qty <= 0}
-            aria-label="One portion less"
-            className={iconButton}
-          >
-            <Minus className="size-3.5" />
-          </button>
-          <span
-            className={cn(
-              "min-w-24 rounded-full px-3 py-1.5 text-center text-[0.75rem] font-bold whitespace-nowrap tabular-nums",
-              off ? "bg-foreground/5 text-muted-foreground" : "bg-olive-soft text-olive",
-            )}
-          >
-            {portionLabel(item, qty)}
-          </span>
-          <button
-            type="button"
-            onClick={() => onQty(qty + 1)}
-            disabled={qty >= MAX_QTY}
-            aria-label="One portion more"
-            className={iconButton}
-          >
-            <Plus className="size-3.5" />
-          </button>
-        </div>
+        <PortionStepper item={item} qty={qty} onQty={onQty} />
 
         {/* Always takes its space, so rows don't shift when Swap isn't available. */}
         <button

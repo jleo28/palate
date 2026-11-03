@@ -4,6 +4,7 @@ import { macroLine } from "@/lib/palate/macro-text";
 import { Minus, Plus, Trash2, X } from "lucide-react";
 import {
   MAX_QTY,
+  PORTION_STEP,
   portionsEditable,
   removeLoggedItem,
   setLoggedQty,
@@ -19,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 
 const iconButton =
-  "grid size-8 shrink-0 place-items-center rounded-full border border-foreground/25 disabled:opacity-35";
+  "grid size-10 shrink-0 place-items-center rounded-full border border-foreground/25 disabled:opacity-35";
 const field =
   "mt-1 w-full rounded-xl border border-foreground/20 bg-background px-3 py-2.5 font-medium outline-none focus:border-olive";
 
@@ -91,18 +92,18 @@ function EditForm({
               </span>
               <button
                 type="button"
-                aria-label={`One portion less of ${i.name}`}
-                disabled={(i.qty ?? 1) <= 1}
-                onClick={() => setDraft((d) => setLoggedQty(d, n, (i.qty ?? 1) - 1))}
+                aria-label={`Half a portion less of ${i.name}`}
+                disabled={(i.qty ?? 1) <= PORTION_STEP}
+                onClick={() => setDraft((d) => setLoggedQty(d, n, (i.qty ?? 1) - PORTION_STEP))}
                 className={iconButton}
               >
                 <Minus className="size-3.5" />
               </button>
               <button
                 type="button"
-                aria-label={`One portion more of ${i.name}`}
+                aria-label={`Half a portion more of ${i.name}`}
                 disabled={(i.qty ?? 1) >= MAX_QTY}
-                onClick={() => setDraft((d) => setLoggedQty(d, n, (i.qty ?? 1) + 1))}
+                onClick={() => setDraft((d) => setLoggedQty(d, n, (i.qty ?? 1) + PORTION_STEP))}
                 className={iconButton}
               >
                 <Plus className="size-3.5" />

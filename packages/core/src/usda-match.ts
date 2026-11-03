@@ -21,6 +21,8 @@ export interface NutritionEstimate {
   fat: number;
   unit: string;
   unitPlural: string;
+  /** Grams in one unit, when known. */
+  grams?: number;
   role: ItemRole;
   source: "usda" | "ai" | "override";
   fdcId?: number;
@@ -183,6 +185,7 @@ export function estimateFromFdc(food: FdcFood): NutritionEstimate {
     fat,
     unit: serving.unit,
     unitPlural: serving.unitPlural,
+    grams: Math.round(serving.grams),
     role: roleFor(food.foodCategory, kcal, protein, carbs),
     source: "usda",
     fdcId: food.fdcId,

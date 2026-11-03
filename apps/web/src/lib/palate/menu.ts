@@ -1,4 +1,4 @@
-import type { Allergen, MenuItem } from "@palate/core";
+import { withUtensil, type Allergen, type MenuItem } from "@palate/core";
 
 const ALL: MealPeriod[] = ["Breakfast", "Lunch", "Dinner"];
 type MealPeriod = "Breakfast" | "Lunch" | "Dinner";
@@ -685,11 +685,8 @@ const ITEM_ALLERGENS: Record<string, Allergen[]> = {
   "p-hard-egg": ["egg"],
 };
 
-export const MENU: MenuItem[] = ITEMS.map((item) => ({
-  ...item,
-  allergens: ITEM_ALLERGENS[item.id] ?? [],
-}));
+export const MENU: MenuItem[] = ITEMS.map((item) =>
+  withUtensil({ ...item, allergens: ITEM_ALLERGENS[item.id] ?? [] }),
+);
 
-export function portionLabel(item: MenuItem, qty: number) {
-  return `${qty} ${qty === 1 ? item.unit : item.unitPlural}`;
-}
+export { portionLabel } from "@palate/core";

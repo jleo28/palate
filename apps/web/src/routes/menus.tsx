@@ -198,6 +198,7 @@ function Menus() {
                       </p>
                       <p className="mt-0.5 text-[0.72rem] text-muted-foreground">
                         per {i.unit}
+                        {i.grams ? ` · ~${i.grams}g` : ""}
                         <MacroText m={i} prefix=" · " />
                       </p>
                       {hits.length > 0 && (
