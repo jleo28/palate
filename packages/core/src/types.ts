@@ -49,6 +49,8 @@ export interface MenuItem {
   /** macros for one serving unit */
   unit: string; // e.g. "tong", "ladle", "spoonful", "piece", "cup"
   unitPlural: string;
+  /** Estimated grams (or ml) in one unit. Shown as "~170g"; macros stay per unit. */
+  grams?: number;
   kcal: number;
   protein: number;
   carbs: number;

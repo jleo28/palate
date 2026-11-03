@@ -39,6 +39,9 @@ import {
   logItems,
   menuPeriod,
   capPlate,
+  availableItems,
+  mealTargets,
+  tastePlate,
   effectiveGoal,
   fitCheck,
   fitSummary,
@@ -68,7 +71,7 @@ import {
 import { portionLabel } from "@/lib/palate/menu";
 import { useHallMenu } from "@/lib/palate/use-menu";
 import { today as localToday } from "@/lib/palate/dates";
-import { useStore } from "@/lib/palate/store";
+import { plateFor, useStore } from "@/lib/palate/store";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
 
@@ -110,20 +113,25 @@ function Plate() {
     daily,
     consumedToday,
     addLog,
+    plateHistory: history,
+    setPlateHistory: setHistory,
+    plateBuiltFor,
+    setPlateBuiltFor,
     addToPlate,
-    plateAdds,
-    clearPlateAdds,
     attachPhoto,
+    favorites,
     loggedToday,
     log,
   } = useStore();
   // Snacks draw on a nearby hall meal's menu.
   const period = menuPeriod(meal);
   // A hall meal logged today shows what was eaten instead of a new plate.
-  const loggedEntry = !isSnack(meal)
-    ? log.find((l) => l.date === localToday() && l.meal === meal)
-    : undefined;
-  const [history, setHistory] = useState<PlateHistory>(() => startHistory([]));
+  const loggedEntries = !isSnack(meal)
+    ? log.filter((l) => l.date === localToday() && l.meal === meal)
+    : [];
+  // "Log another meal" shows the builder again for a slot that's already logged.
+  const [anotherFor, setAnotherFor] = useState<string | null>(null);
+  const showLogged = loggedEntries.length > 0 && anotherFor !== meal;
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [elseOpen, setElseOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -172,28 +180,38 @@ function Plate() {
     [hallItems, skipKey, allergyKey],
   );
 
+  const goalsReached = !!daily && consumedToday.kcal >= daily.kcal;
+  const favKey = favorites.join(",");
+
   const freshPlate = (seed: number) => {
     if (!mealTarget || !daily) return [];
-    // The day's calorie target is a hard cap: the plate never plans past what's left of it.
-    const left = remainingToday(daily, consumedToday).kcal;
     const build = isSnack(meal) ? buildSnack : buildPlate;
+    // Goals met: still build a plate, picked for taste. Favorites first, otherwise a regular
+    // meal-sized plate from the menu, with no macro framing either way.
+    if (goalsReached) {
+      const liked = tastePlate(availableItems(menu, hall, period, diets), favorites, seed);
+      return liked.length
+        ? liked
+        : build(menu, hall, period, diets, mealTargets(daily, period), seed);
+    }
+    // Plans within what's left of today's calories. Adding more by hand is always fine.
+    const left = remainingToday(daily, consumedToday).kcal;
     return capPlate(build(menu, hall, period, diets, mealTarget, seed), left);
   };
 
-  // A new hall, meal or budget builds a fresh set of up to 3 different plates.
+  // A new hall, meal or budget builds a fresh set of up to 3 different plates. Coming back to
+  // this tab keeps the plate you were building, and so does one started by hand on Hall Menus.
+  const plateKey = `${plateFor(hall, meal)}${menu.length}|${dietKey}|${mealTarget?.kcal}|${daily?.kcal}|${consumedToday.kcal}|${favKey}`;
   useEffect(() => {
-    setHistory(optionsHistory(distinctPlates(freshPlate)));
+    if (!menu.length || !mealTarget || plateBuiltFor === plateKey) return;
+    if (plateBuiltFor === `${plateFor(hall, meal)}manual`) {
+      setPlateBuiltFor(plateKey);
+      return;
+    }
+    setHistory(() => optionsHistory(distinctPlates(freshPlate)));
+    setPlateBuiltFor(plateKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menu, hall, meal, dietKey, mealTarget?.kcal, daily?.kcal, consumedToday.kcal]);
-
-  // Items tapped on Hall Menus join the plate you're on, once today's menu has loaded (a menu
-  // change rebuilds the plates). Declared after the rebuild so they're added on top of it.
-  useEffect(() => {
-    if (!plateAdds.length || !menu.length) return;
-    edit((prev) => plateAdds.reduce((p, item) => addItem(p, item), prev));
-    clearPlateAdds();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plateAdds, menu.length]);
+  }, [plateKey]);
 
   const nextPlate = () => {
     setDirection("next");
@@ -229,6 +247,7 @@ function Plate() {
       items: logItems(plate),
     });
     if (!logged) return;
+    setAnotherFor(null);
     // A photo taken before logging goes onto this meal.
     if (pendingPhoto) {
       void attachPhoto(logged.id, pendingPhoto);
@@ -282,16 +301,17 @@ function Plate() {
             {profile.highProtein ? "high protein · " : ""}what's left of today
           </p>
         </div>
-        <MacroRow t={mealTarget} />
-        {fit.capReached && (
-          <p className="mt-2 rounded-xl bg-clay-soft px-3 py-2 text-[0.78rem] font-semibold">
-            Today's calorie target is reached.
+        {goalsReached ? (
+          <p className="rounded-xl bg-olive-soft px-3 py-2 text-[0.78rem] font-semibold text-olive">
+            Today's goals are reached · {Math.round(consumedToday.kcal)} cal today
           </p>
+        ) : (
+          <MacroRow t={mealTarget} />
         )}
       </section>
 
-      {loggedEntry ? (
-        <LoggedSlot entry={loggedEntry} />
+      {showLogged ? (
+        <LoggedSlot entries={loggedEntries} onLogAnother={() => setAnotherFor(meal)} />
       ) : (
         <section className="card-edge rounded-3xl bg-card p-4">
           <div className="mb-3 flex items-start justify-between gap-3">
@@ -448,15 +468,10 @@ function Plate() {
           />
 
           <div className="mt-4 rounded-2xl bg-foreground/5 p-2.5">
-            <MacroRow t={t} target={mealTarget} over={fit.over.map((o) => o.macro)} />
+            <MacroRow t={t} target={goalsReached ? undefined : mealTarget} />
           </div>
 
-          <div
-            className={cn(
-              "mt-3 flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm",
-              fit.dayOverCap ? "bg-clay-soft" : fit.over.length ? "bg-amber-soft" : "bg-olive-soft",
-            )}
-          >
+          <div className="mt-3 flex items-center gap-2.5 rounded-2xl bg-olive-soft px-3 py-2.5 text-sm">
             {profile.seedling && (
               <SeedlingAvatar seedling={profile.seedling} className="size-9 shrink-0" />
             )}

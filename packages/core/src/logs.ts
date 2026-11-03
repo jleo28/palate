@@ -1,8 +1,8 @@
 import { MAX_QTY } from "./plate";
+import { PORTION_STEP, portionText } from "./portions";
 import type { LoggedItem, LoggedMeal, PlateItem } from "./types";
 
-const label = (qty: number, unit: string, unitPlural: string) =>
-  `${qty} ${qty === 1 ? unit : unitPlural}`;
+const label = portionText;
 
 /** Snapshot plate rows for the log, keeping per-portion macros so the meal can be edited. */
 export function logItems(rows: readonly PlateItem[]): LoggedItem[] {
@@ -36,10 +36,13 @@ function retotal(m: LoggedMeal, items: LoggedItem[]): LoggedMeal {
   };
 }
 
-/** Change one item's portions (1–MAX_QTY) and recompute the meal's totals. */
+/** Change one item's portions (½–MAX_QTY, in half steps) and recompute the meal's totals. */
 export function setLoggedQty(m: LoggedMeal, index: number, qty: number): LoggedMeal {
   if (!portionsEditable(m)) return m;
-  const q = Math.min(MAX_QTY, Math.max(1, Math.round(qty)));
+  const q = Math.min(
+    MAX_QTY,
+    Math.max(PORTION_STEP, Math.round(qty / PORTION_STEP) * PORTION_STEP),
+  );
   const items = m.items.map((i, n) =>
     n === index ? { ...i, qty: q, portion: label(q, i.unit!, i.unitPlural!) } : i,
   );

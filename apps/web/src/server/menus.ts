@@ -8,6 +8,7 @@ import {
   type NutritionEstimate,
   type ParsedItem,
   type UscDay,
+  withUtensil,
 } from "@palate/core";
 import saved from "./nutrition-estimates.json";
 import { searchFnnds } from "./usda";
@@ -89,6 +90,7 @@ export async function hallMenu(hall: HallId, date: string): Promise<MenuItem[]> 
       meals: item.meals,
       unit: estimate.unit,
       unitPlural: estimate.unitPlural,
+      ...(estimate.grams ? { grams: estimate.grams } : {}),
       kcal: estimate.kcal,
       protein: estimate.protein,
       carbs: estimate.carbs,
@@ -98,7 +100,7 @@ export async function hallMenu(hall: HallId, date: string): Promise<MenuItem[]> 
       kind: item.kind,
       ...(item.allergensUnknown ? { allergensUnknown: true } : {}),
     };
-    return menuItem;
+    return withUtensil(menuItem);
   });
   return results;
 }

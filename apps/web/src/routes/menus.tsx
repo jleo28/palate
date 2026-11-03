@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { HallMenuList } from "@/components/palate/HallMenuList";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
+import { PlateTray } from "@/components/palate/PlateTray";
 import { HALLS, MEALS } from "@/lib/palate/halls";
 import { useHallMenu } from "@/lib/palate/use-menu";
 import { menuPeriod, type MenuItem } from "@palate/core";
@@ -73,7 +74,7 @@ function Menus() {
       {profile?.seedling && <SeedlingHint screen="menus" seedling={profile.seedling} />}
       <p className="mb-3 text-sm text-muted-foreground">
         Want something else? Tap <Plus className="inline size-3.5 align-[-2px]" aria-label="plus" />{" "}
-        on anything to add it to your plate, then log it from The Plate.
+        on anything to add it to your plate. Your plate stays at the bottom of the screen.
       </p>
       <AllergenNotice className="mb-3" />
 
@@ -148,6 +149,7 @@ function Menus() {
           });
         }}
       />
+      <PlateTray />
     </AppShell>
   );
 }

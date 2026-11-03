@@ -1,10 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ArrowRight, Check } from "lucide-react";
 import type { PlateItem } from "@palate/core";
 import { Wordmark } from "@/components/palate/AppShell";
 import { Olive } from "@/components/palate/Olive";
 import { PlateIllustration } from "@/components/palate/PlateIllustration";
 import { MENU } from "@/lib/palate/menu";
+import { useStore } from "@/lib/palate/store";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -33,6 +35,13 @@ const HERO_PLATE: PlateItem[] = ["v-salmon", "v-cilantro-rice", "v-green-salad",
   .map((item) => ({ id: item.id, item, qty: 1 }));
 
 function Welcome() {
+  const navigate = useNavigate();
+  const { ready, session, profile } = useStore();
+  // Signed-in users with a finished profile go straight to their plate.
+  useEffect(() => {
+    if (ready && session && profile) void navigate({ to: "/" });
+  }, [ready, session, profile, navigate]);
+
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col px-5 pt-8 pb-10">
       <PlateIllustration items={HERO_PLATE} />

@@ -80,7 +80,7 @@ function Sheet() {
       >
         <div className="flex items-center gap-4">
           {profile.seedling && (
-            <SeedlingAvatar seedling={profile.seedling} className="pet-hop size-20 shrink-0" />
+            <SeedlingAvatar seedling={profile.seedling} className="size-20 shrink-0" />
           )}
           <div className="min-w-0">
             <p className="font-display text-xl font-extrabold">
