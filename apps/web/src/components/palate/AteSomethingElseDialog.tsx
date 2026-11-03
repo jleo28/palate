@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { Minus, Plus, Search } from "lucide-react";
 import {
   MAX_QTY,
+  PORTION_STEP,
   SNACKS,
-  canLogSlot,
   firstOpenSlot,
   isSnack,
   logItems,
@@ -117,7 +117,6 @@ export function AteSomethingElseDialog({
       return next > 0 ? [...rest, { id: item.id, item, qty: next }] : rest;
     });
 
-  const canLog = canLogSlot(meal, loggedToday);
   const n = (v: string) => Math.max(0, Number(v) || 0);
   const manualReady = n(macros.kcal) > 0;
 
@@ -239,7 +238,6 @@ export function AteSomethingElseDialog({
               type="button"
               role="radio"
               aria-checked={meal === m}
-              disabled={!canLogSlot(m, loggedToday)}
               onClick={() => {
                 setMeal(m);
                 setPicked([]);
@@ -291,8 +289,8 @@ export function AteSomethingElseDialog({
                     {qty > 0 && (
                       <button
                         type="button"
-                        onClick={() => setPick(item, qty - 1)}
-                        aria-label={`One ${item.unit} less of ${item.name}`}
+                        onClick={() => setPick(item, qty - PORTION_STEP)}
+                        aria-label={`Half a ${item.unit} less of ${item.name}`}
                         className="grid size-10 place-items-center rounded-full border border-foreground/25"
                       >
                         <Minus className="size-3.5" />
@@ -300,8 +298,8 @@ export function AteSomethingElseDialog({
                     )}
                     <button
                       type="button"
-                      onClick={() => setPick(item, qty + 1)}
-                      aria-label={`Add a ${item.unit} of ${item.name}`}
+                      onClick={() => setPick(item, qty + PORTION_STEP)}
+                      aria-label={`Half a ${item.unit} more of ${item.name}`}
                       className="grid size-10 place-items-center rounded-full border border-foreground/25"
                     >
                       <Plus className="size-3.5" />
@@ -318,7 +316,7 @@ export function AteSomethingElseDialog({
             <button
               type="button"
               onClick={logPicked}
-              disabled={!picked.length || !canLog}
+              disabled={!picked.length}
               className="h-12 w-full shrink-0 rounded-full bg-foreground font-bold text-primary-foreground disabled:opacity-40"
             >
               {picked.length
@@ -357,7 +355,7 @@ export function AteSomethingElseDialog({
             <button
               type="button"
               onClick={logManual}
-              disabled={!manualReady || !canLog}
+              disabled={!manualReady}
               className="h-12 w-full rounded-full bg-foreground font-bold text-primary-foreground disabled:opacity-40"
             >
               Add to today

@@ -1,4 +1,11 @@
-import { foodKind, isCountable, type FoodKind, type PlateItem } from "@palate/core";
+import {
+  foodKind,
+  formatQty,
+  isCountable,
+  portionLabel,
+  type FoodKind,
+  type PlateItem,
+} from "@palate/core";
 
 // Placeholder drawings in the brand's sketch style, one per food kind, each in a 64×56 box.
 // Final art can replace these one kind at a time.
@@ -261,8 +268,8 @@ function Food({ entry, at, scale }: { entry: PlateItem; at: [number, number]; sc
         ? "stroke-food-fruit-ink"
         : "stroke-foreground";
   const [cx, cy] = at;
-  const pieces = isCountable(item.unit) ? Math.min(qty, 4) : 1;
-  const s = pieces > 1 ? scale * 0.72 : scale * (MOUND[Math.min(qty, 6) - 1] ?? 1);
+  const pieces = isCountable(item.unit) ? Math.min(Math.ceil(qty), 4) : 1;
+  const s = pieces > 1 ? scale * 0.72 : scale * (MOUND[Math.min(Math.ceil(qty), 6) - 1] ?? 1);
   const place = (dx: number, dy: number) =>
     `translate(${cx + dx * scale - 32 * s} ${cy + dy * scale - 28 * s}) scale(${s})`;
 
@@ -285,7 +292,7 @@ function Food({ entry, at, scale }: { entry: PlateItem; at: [number, number]; sc
             className="fill-background font-bold"
             fontSize="10"
           >
-            ×{qty}
+            ×{formatQty(qty)}
           </text>
         </g>
       )}
@@ -301,7 +308,7 @@ export function PlateIllustration({ items }: { items: PlateItem[] }) {
   const shown = items.slice(0, 6);
   const layout = LAYOUTS[shown.length] ?? LAYOUTS[1]!;
   const description = items
-    .map(({ item, qty }) => `${qty} ${qty === 1 ? item.unit : item.unitPlural} ${item.name}`)
+    .map(({ item, qty }) => `${portionLabel(item, qty)} ${item.name}`)
     .join(", ");
 
   return (

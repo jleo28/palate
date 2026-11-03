@@ -37,3 +37,27 @@ pnpm db:push
 ```
 
 Never put the secret (service-role) key in the app or in any `VITE_` variable.
+
+## Feedback emails
+
+The Give feedback form on My Palate inserts into `public.feedback`. A database webhook calls the
+`feedback-email` Edge Function, which emails the message, sender and timestamp through Resend.
+
+1. Create a Resend API key (and verify a sending domain, or use `onboarding@resend.dev` for testing).
+2. Set the secrets (pick any long random string for `WEBHOOK_SECRET`):
+
+   ```sh
+   npx supabase@2.119.0 secrets set RESEND_API_KEY=<your key> FEEDBACK_TO=<recipient> WEBHOOK_SECRET=<random>
+   # optional: FEEDBACK_FROM="Palate <feedback@yourdomain>"
+   ```
+
+3. Deploy the function. The webhook authenticates with the shared secret, not a JWT:
+
+   ```sh
+   npx supabase@2.119.0 functions deploy feedback-email --no-verify-jwt
+   ```
+
+4. Dashboard → Database → Webhooks → Create: table `public.feedback`, event `INSERT`, type
+   Supabase Edge Function `feedback-email`, method POST, and add header
+   `x-webhook-secret: <same random string>`.
+5. Send a test message from My Palate → Give feedback, then check the inbox and the function logs.

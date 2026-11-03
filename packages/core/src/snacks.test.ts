@@ -1,13 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  daySlots,
-  PAST_PLAN,
-  fitSummary,
-  isSnack,
-  mealGuide,
-  menuPeriod,
-  slotShare,
-} from "./budget";
+import { daySlots, fitSummary, isSnack, mealGuide, menuPeriod, slotShare } from "./budget";
 import { buildSnack, totals } from "./plate";
 import { item } from "./fixtures";
 
@@ -73,14 +65,14 @@ describe("guides with snacks", () => {
     expect(afterBigSnack.kcal).toBe(500);
   });
 
-  it("gives portion guidance, not a verdict, when a plate runs past the plan", () => {
+  it("never frames a plate as past the plan", () => {
     const fit = {
       over: [{ macro: "carbs" as const, by: 20 }],
       dayOverCap: false,
       capReached: false,
       lowProtein: false,
     };
-    expect(fitSummary(fit, "Lunch")).toBe(PAST_PLAN);
+    expect(fitSummary(fit, "Lunch")).not.toMatch(/over|past/i);
   });
 });
 

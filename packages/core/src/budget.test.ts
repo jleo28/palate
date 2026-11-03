@@ -3,13 +3,15 @@ import {
   capPlate,
   daySlots,
   fitCheck,
-  PAST_PLAN,
+  GOALS_REACHED,
   fitSummary,
   mealGuide,
   perMealLine,
   remainingToday,
   slotCalories,
+  tastePlate,
 } from "./budget";
+import { item as fixtureItem } from "./fixtures";
 import { totals } from "./plate";
 import { item } from "./fixtures";
 
@@ -116,16 +118,12 @@ describe("fitCheck and fitSummary", () => {
     expect(fitSummary(fit, "Lunch")).toBe("This plate fits your lunch nicely.");
   });
 
-  it("offers portion guidance, never criticism, when a plate runs past the plan", () => {
+  it("never mentions going past a target", () => {
     const fit = fitCheck({ kcal: 740, protein: 36, carbs: 105, fat: 20 }, guide, none, daily);
     expect(fit.over).toEqual([{ macro: "carbs", by: 20 }]);
-    expect(fitSummary(fit, "Lunch")).toBe(PAST_PLAN);
-    expect(fitSummary(fit, "Lunch")).not.toMatch(/heavy|too|over|carbs/i);
-  });
-
-  it("says the same when the day would go past its plan", () => {
-    const fit = fitCheck(guide, guide, { ...none, kcal: 1400 }, daily);
-    expect(fitSummary(fit, "Dinner")).toBe(PAST_PLAN);
+    expect(fitSummary(fit, "Lunch")).not.toMatch(/heavy|too|over|past|carbs/i);
+    const day = fitCheck(guide, guide, { ...none, kcal: 1400 }, daily);
+    expect(fitSummary(day, "Dinner")).not.toMatch(/over|past/i);
   });
 
   it("ignores small overshoots", () => {
@@ -142,7 +140,7 @@ describe("fitCheck and fitSummary", () => {
   it("flags when the cap is already reached, without scolding", () => {
     const fit = fitCheck(guide, guide, { ...none, kcal: 2000 }, daily);
     expect(fit.capReached).toBe(true);
-    expect(fitSummary(fit, "Dinner")).toMatch(/still hungry/);
+    expect(fitSummary(fit, "Dinner")).toBe(GOALS_REACHED);
   });
 
   it("notices a plate that's light on protein", () => {
@@ -178,5 +176,18 @@ describe("perMealLine", () => {
     expect(perMealLine(2000, daySlots(["Afternoon snack", "Late-night snack"]))).toBe(
       "Roughly 450 cal at breakfast, 580 at lunch, 570 at dinner and 200 per snack.",
     );
+  });
+});
+
+describe("tastePlate", () => {
+  const item = (name: string) => fixtureItem({ id: name, name });
+  it("picks favorites on the menu, one portion each, up to four", () => {
+    const pool = ["A", "B", "C", "D", "E", "F"].map(item);
+    const plate = tastePlate(pool, ["b", "C", "D", "E", "F", "Zed"]);
+    expect(plate.map((r) => r.item.name)).toEqual(["B", "C", "D", "E"]);
+    expect(plate.every((r) => r.qty === 1)).toBe(true);
+  });
+  it("is empty when no favorite is served", () => {
+    expect(tastePlate([item("A")], ["B"])).toEqual([]);
   });
 });

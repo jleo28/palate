@@ -63,7 +63,8 @@ describe("editing a logged meal", () => {
   });
 
   it("clamps portions", () => {
-    expect(setLoggedQty(meal, 1, 0).items[1]!.qty).toBe(1);
+    expect(setLoggedQty(meal, 1, 0).items[1]!.qty).toBe(0.5);
+    expect(setLoggedQty(meal, 1, 1.4).items[1]!.portion).toMatch(/^1½ /);
     expect(setLoggedQty(meal, 1, 99).items[1]!.qty).toBe(6);
   });
 

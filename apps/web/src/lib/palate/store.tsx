@@ -15,7 +15,6 @@ import {
   dailyTargets,
   logFromRow,
   logToRow,
-  canLogSlot,
   daySlots,
   firstOpenSlot,
   nextOpenSlot,
@@ -31,16 +30,20 @@ import {
   type Slot,
   type Profile,
   type ProfileRow,
+  type PlateHistory,
+  addItem,
+  editCurrent,
+  startHistory,
 } from "@palate/core";
 import { supabase } from "@/lib/supabase";
 import { today } from "./dates";
 import { VERIFIED_PATH } from "./paths";
+import { PHOTO_BUCKET, compressPhoto } from "./photos";
 import { currentMeal } from "./halls";
 
 // Browser-only data: a signed-out onboarding draft, plus anything saved before accounts existed.
 // Imported into Supabase once, on the first sign-in, then removed.
 const KEY_PROFILE = "palate.profile.v1";
-const PHOTO_BUCKET = "meal-photos";
 const KEY_LOG = "palate.log.v1";
 const DEVICE_KEYS = ["palate.hints.v1", "palate.cardPeek.v1", "palate.portionTip.v1"];
 
@@ -59,19 +62,22 @@ const withSeedling = (p: Profile): Profile =>
 
 /** Load a user's data, importing any browser-only profile and log the first time. */
 async function loadUser(userId: string) {
-  const [profileRes, logRes] = await Promise.all([
+  const [profileRes, logRes, ratingRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle<ProfileRow>(),
     supabase.from("meal_logs").select("*").order("date", { ascending: false }).limit(1000),
+    supabase.from("taste_ratings").select("item_name").eq("rating", 1).limit(1000),
   ]);
   if (profileRes.error) throw profileRes.error;
   if (logRes.error) throw logRes.error;
 
   let profile = profileRes.data ? profileFromRow(profileRes.data) : null;
   let log = ((logRes.data ?? []) as MealLogRow[]).map(logFromRow);
+  // Ratings only shape suggestions, so a failed load just means no favorites yet.
+  const favorites = [...new Set((ratingRes.data ?? []).map((r) => r.item_name as string))];
 
   // The email-confirmation tab only says thanks. The tab that signed up imports its own draft,
   // so two tabs never both create the account.
-  if (window.location.pathname.startsWith(VERIFIED_PATH)) return { profile, log };
+  if (window.location.pathname.startsWith(VERIFIED_PATH)) return { profile, log, favorites };
 
   const localProfile = readLocal<Profile>(KEY_PROFILE);
   const localLog = readLocal<LoggedMeal[]>(KEY_LOG) ?? [];
@@ -97,7 +103,7 @@ async function loadUser(userId: string) {
 
   localStorage.removeItem(KEY_PROFILE);
   localStorage.removeItem(KEY_LOG);
-  return { profile, log };
+  return { profile, log, favorites };
 }
 
 interface Ctx {
@@ -110,19 +116,25 @@ interface Ctx {
   /** Signed in: saves to Supabase. Signed out: keeps an onboarding draft in this browser. */
   saveProfile: (p: Profile) => Promise<void>;
   log: LoggedMeal[];
-  /** Returns false when the slot can't be logged again today. */
   /** Log a meal for today, or for `date` (an earlier day, via a card). The new entry, or null. */
   addLog: (m: Omit<LoggedMeal, "id" | "date">, date?: string) => LoggedMeal | null;
-  /** Queue a Hall Menus item for The Plate, which adds it to the plate you're on. */
+  /** The plate being built (and its shuffle options). Kept here so it survives tab switches. */
+  plateHistory: PlateHistory;
+  setPlateHistory: (fn: (h: PlateHistory) => PlateHistory) => void;
+  /** What the plate was built for: "<hall>|<meal>|…". Matches `plateFor(hall, meal)` while current. */
+  plateBuiltFor: string | null;
+  setPlateBuiltFor: (key: string) => void;
+  /** Add a Hall Menus item to the plate you're on (or start a plate with it). */
   addToPlate: (item: MenuItem) => void;
-  /** Items waiting to be added to the plate; The Plate adds them, then clears the queue. */
-  plateAdds: MenuItem[];
-  clearPlateAdds: () => void;
+  /** When the latest meal was logged (ms), so any visible Seedling can cheer once. */
+  cheerAt: number | null;
   /** The meal just logged, for the "logged" pop-up. Null once it's dismissed. */
   justLogged: LoggedMeal | null;
   dismissLogged: () => void;
   /** Thumbs up (1) or down (-1) on one item of a logged meal; null clears it. */
   rateItem: (mealId: string, itemName: string, rating: 1 | -1 | null) => void;
+  /** Item names the user rated thumbs-up, for taste-first plates. */
+  favorites: string[];
   /** Upload a photo and attach it to a logged meal. True on success. */
   attachPhoto: (mealId: string, file: File) => Promise<boolean>;
   /** Slots logged today, in log order. */
@@ -156,6 +168,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [log, setLog] = useState<LoggedMeal[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [meal, setMeal] = useState<Slot>("Lunch");
   const [hall, setHall] = useState<HallId>("village");
   const [loadFailed, setLoadFailed] = useState(false);
@@ -189,9 +202,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setReady(false);
       loading.current = true;
       loadUser(id)
-        .then(({ profile: p, log: l }) => {
+        .then(({ profile: p, log: l, favorites: f }) => {
           if (loadedFor.current !== id) return;
           setProfile(p);
+          setFavorites(f);
           if (p) setHall(p.hall);
           setLog(l);
         })
@@ -245,12 +259,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const addLog = useCallback(
     (m: Omit<LoggedMeal, "id" | "date">, date = today()) => {
-      // Breakfast, lunch and dinner once a day; change a logged meal from the macro bank.
-      const loggedThatDay = log.filter((l) => l.date === date).map((l) => l.meal);
-      if (!canLogSlot(m.meal, loggedThatDay)) {
-        toast.error(`${m.meal} is already logged that day. Edit it in your macro bank.`);
-        return null;
-      }
+      // Any slot can be logged as many times as needed; daily totals sum every log.
       const entry: LoggedMeal = { ...m, id: crypto.randomUUID(), date };
       setLog((prev) => [entry, ...prev]);
       // Move on to the next slot that can still be logged.
@@ -272,15 +281,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           toast.error("Couldn't log that meal. Try again.");
         });
       setJustLogged(entry);
+      setCheerAt(Date.now());
       return entry;
     },
-    [log, loggedToday, slots],
+    [loggedToday, slots],
   );
 
   const [justLogged, setJustLogged] = useState<LoggedMeal | null>(null);
-  const [plateAdds, setPlateAdds] = useState<MenuItem[]>([]);
-  const addToPlate = useCallback((item: MenuItem) => setPlateAdds((q) => [...q, item]), []);
-  const clearPlateAdds = useCallback(() => setPlateAdds([]), []);
+  const [cheerAt, setCheerAt] = useState<number | null>(null);
+  const [plateHistory, setPlateHistory] = useState<PlateHistory>(() => startHistory([]));
+  const [plateBuiltFor, setPlateBuiltFor] = useState<string | null>(null);
+  const addToPlate = useCallback(
+    (item: MenuItem) => {
+      if (plateBuiltFor?.startsWith(plateFor(hall, meal))) {
+        setPlateHistory((h) => editCurrent(h, (p) => addItem(p, item)));
+        return;
+      }
+      // No plate yet for this hall and meal: start one by hand. The Plate keeps it.
+      setPlateHistory(startHistory(addItem([], item)));
+      setPlateBuiltFor(`${plateFor(hall, meal)}manual`);
+    },
+    [plateBuiltFor, hall, meal],
+  );
   const dismissLogged = useCallback(() => setJustLogged(null), []);
 
   const rateItem = useCallback((mealId: string, itemName: string, rating: 1 | -1 | null) => {
@@ -305,16 +327,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         { onConflict: "meal_log_id,item_name" },
       )
       .then(done);
+    if (rating === 1) setFavorites((f) => (f.includes(itemName) ? f : [...f, itemName]));
   }, []);
 
   const attachPhoto = useCallback(
     async (mealId: string, file: File) => {
       if (!userId) return false;
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-      const path = `${userId}/${mealId}-${Date.now()}.${ext || "jpg"}`;
+      const photo = await compressPhoto(file);
+      const type = photo.type || "image/jpeg";
+      const ext = type === "image/jpeg" ? "jpg" : (type.split("/")[1] ?? "jpg");
+      const path = `${userId}/${mealId}-${Date.now()}.${ext}`;
       const upload = await supabase.storage
         .from(PHOTO_BUCKET)
-        .upload(path, file, { contentType: file.type || "image/jpeg" });
+        .upload(path, photo, { contentType: type });
       if (upload.error) {
         console.error(upload.error);
         toast.error("Couldn't upload that photo. Try a smaller one.");
@@ -483,11 +508,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     loggedToday,
     removeLog,
     justLogged,
+    cheerAt,
     dismissLogged,
     addToPlate,
-    plateAdds,
-    clearPlateAdds,
+    plateHistory,
+    setPlateHistory,
+    plateBuiltFor,
+    setPlateBuiltFor,
     rateItem,
+    favorites,
     attachPhoto,
     restoreLog,
     updateLog,
@@ -506,6 +535,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
+
+/** The start of a plate key for a hall and meal. */
+export const plateFor = (hall: HallId, meal: Slot) => `${hall}|${meal}|`;
 
 export function useStore() {
   const ctx = useContext(StoreContext);
