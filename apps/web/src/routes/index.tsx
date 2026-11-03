@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Check, ChevronLeft, ChevronRight, Plus, Shuffle } from "lucide-react";
+import { BookOpen, Camera, Check, ChevronLeft, ChevronRight, Plus, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 import { AteSomethingElseDialog } from "@/components/palate/AteSomethingElseDialog";
@@ -374,6 +374,13 @@ function Plate() {
             </ul>
           )}
 
+          {/* Same flow as Hall Menus: tap + on any item there and it lands on this plate. */}
+          <Link
+            to="/menus"
+            className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-full border border-dashed border-foreground/30 text-sm font-bold text-muted-foreground"
+          >
+            <BookOpen className="size-4" aria-hidden /> Add items from Hall Menus
+          </Link>
           <button
             type="button"
             onClick={() => setElseOpen(true)}
