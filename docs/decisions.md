@@ -46,3 +46,4 @@ One line per decision, newest last. Format: `YYYY-MM-DD: decision (why)`.
 - 2026-10-22: Release 1.4.0 to production: chunk 6 (Sprout tab with growth stages, sleepy state, badges and weekly recap; My Palate cleanup and feedback link).
 - 2026-11-02: Release 1.5.0 to production: November feedback (feedback emails via Resend, goals shown as reached never over, log another meal, utensil portions in half steps, My Plate tray on Hall Menus, compressed meal photos with thumbnails, Seedling cheer on every log), on top of the Oct 23 hotfixes.
 - 2026-11-02: Release 1.5.1 to production: meal photos paused (camera button, Add photo and history thumbnails removed) while the team stress tests the app. Bucket, column and account-deletion cleanup stay.
+- 2026-11-02: Hotfix 1.5.2: palateusc@gmail.com is the team inbox. Feedback emails always go there, the feedback form offers it as a fallback, and the FAQ links to it.

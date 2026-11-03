@@ -10,9 +10,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// TODO(email): the team inbox for the mailto fallback. Left blank until one is chosen; the
-// fallback link only shows once this is set. Submissions are stored in public.feedback.
-const FEEDBACK_EMAIL = "";
+// The team inbox, offered as an email fallback if a submission fails. Submissions are stored in
+// public.feedback and emailed here by the feedback-email function.
+const FEEDBACK_EMAIL = "palateusc@gmail.com";
 
 interface Props {
   open: boolean;

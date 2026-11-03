@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronDown, HeartHandshake } from "lucide-react";
+import { ChevronDown, HeartHandshake, Mail } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/palate/AppShell";
 
 export const Route = createFileRoute("/faq")({
@@ -79,6 +79,17 @@ function Faq() {
           </details>
         ))}
       </div>
+
+      <a
+        href="mailto:palateusc@gmail.com?subject=Palate%20question"
+        className="mt-4 flex min-h-14 items-center gap-3 rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-sm"
+      >
+        <Mail className="size-5 shrink-0 text-olive" aria-hidden />
+        <span>
+          <span className="block font-bold">Question not answered here?</span>
+          <span className="text-muted-foreground">Email us at palateusc@gmail.com</span>
+        </span>
+      </a>
 
       <section className="mt-6 rounded-2xl border border-foreground/15 bg-card p-4">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold">

@@ -3,9 +3,12 @@
 //
 // Secrets (set with `supabase secrets set`, never committed):
 //   RESEND_API_KEY      Resend API key
-//   FEEDBACK_TO         recipient address
+//   FEEDBACK_TO         optional extra recipients, comma-separated (the team inbox always gets it)
 //   FEEDBACK_FROM       optional sender, defaults to Resend's onboarding address
 //   WEBHOOK_SECRET      shared secret sent by the webhook in the x-webhook-secret header
+
+/** The team inbox. Every feedback email goes here. */
+const TEAM_INBOX = "palateusc@gmail.com";
 
 interface FeedbackRow {
   id: string;
@@ -42,7 +45,13 @@ Deno.serve(async (req) => {
     },
     body: JSON.stringify({
       from: Deno.env.get("FEEDBACK_FROM") ?? "Palate <onboarding@resend.dev>",
-      to: [Deno.env.get("FEEDBACK_TO")],
+      to: [
+        TEAM_INBOX,
+        ...(Deno.env.get("FEEDBACK_TO") ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s && s !== TEAM_INBOX),
+      ],
       reply_to: row.reply_email ?? undefined,
       subject: `Palate feedback from ${row.reply_email ?? "a user"}`,
       html: `<p>${escape(row.message).replace(/\n/g, "<br>")}</p>
