@@ -110,7 +110,6 @@ function Onboarding() {
     if (ready && session && profile) void navigate({ to: "/" });
   }, [ready, session, profile, navigate]);
 
-
   const [name, setName] = useState(profile?.name ?? "");
   // New users start with blank fields: no preset name, age, gender or body numbers.
   const [age, setAge] = useState(profile ? String(profile.age) : "");
