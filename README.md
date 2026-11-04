@@ -47,8 +47,9 @@ The Give feedback form on My Palate inserts into `public.feedback`. A database w
 2. Set the secrets (pick any long random string for `WEBHOOK_SECRET`):
 
    ```sh
-   npx supabase@2.119.0 secrets set RESEND_API_KEY=<your key> FEEDBACK_TO=<recipient> WEBHOOK_SECRET=<random>
+   npx supabase@2.119.0 secrets set RESEND_API_KEY=<your key> WEBHOOK_SECRET=<random>
    # optional: FEEDBACK_FROM="Palate <feedback@yourdomain>"
+   # optional: FEEDBACK_TO=a@x.com,b@y.com  (extra recipients; palateusc@gmail.com always gets it)
    ```
 
 3. Deploy the function. The webhook authenticates with the shared secret, not a JWT:
