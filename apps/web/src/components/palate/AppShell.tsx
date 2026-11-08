@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 import { MealLoggedSheet } from "./MealLoggedSheet";
 
 const TABS = [
-  { to: "/", label: "The Plate", icon: UtensilsCrossed },
-  { to: "/menus", label: "Hall Menus", icon: BookOpen },
-  { to: "/sprout", label: "Sprout", icon: Sprout },
-  { to: "/card", label: "My Palate", icon: IdCard },
+  { to: "/", label: "The Plate", icon: UtensilsCrossed, tour: "tab-plate" },
+  { to: "/menus", label: "Hall Menus", icon: BookOpen, tour: "tab-menus" },
+  { to: "/sprout", label: "Sprout", icon: Sprout, tour: "tab-sprout" },
+  { to: "/card", label: "My Palate", icon: IdCard, tour: "tab-card" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -28,6 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={t.to}
                 to={t.to}
+                data-tour={t.tour}
                 className={cn(
                   "flex flex-col items-center gap-1 py-3 text-[0.68rem] font-semibold transition-colors",
                   active ? "text-olive" : "text-muted-foreground",

@@ -2,9 +2,21 @@
 import { DEFAULT_SEEDLING_NAME, SPECIES, type Seedling } from "./seedling";
 import type { HallId, Profile } from "./types";
 
-export type TourStepId = "arrive" | "seedling" | "plate" | "halls" | "swipe" | "log" | "handoff";
-/** Matches a `data-tour` attribute on The Plate. */
-export type TourTarget = "plate" | "halls" | "swipe" | "log";
+export type TourStepId =
+  | "arrive"
+  | "seedling"
+  | "plate"
+  | "halls"
+  | "swipe"
+  | "log"
+  | "tab-plate"
+  | "tab-menus"
+  | "tab-sprout"
+  | "tab-card"
+  | "handoff";
+/** Matches a `data-tour` attribute on The Plate or the tab bar. */
+export type TourTarget =
+  "plate" | "halls" | "swipe" | "log" | "tab-plate" | "tab-menus" | "tab-sprout" | "tab-card";
 export type Speaker = "olive" | "seedling";
 
 export interface TourLine {
@@ -95,6 +107,49 @@ export function tourSteps({ firstName, seedlingName, hallName }: TourContext): T
         {
           speaker: "olive",
           text: "It's true. It's the only thing it eats. Besides compliments.",
+        },
+      ],
+    },
+    {
+      id: "tab-plate",
+      target: "tab-plate",
+      cta: "Next",
+      lines: [
+        {
+          speaker: "olive",
+          text: "Quick map. The Plate is home base: one tap, one plate, every meal. You're standing in it.",
+        },
+      ],
+    },
+    {
+      id: "tab-menus",
+      target: "tab-menus",
+      cta: "Next",
+      lines: [
+        {
+          speaker: "olive",
+          text: "Hall Menus has every station, unfiltered. For when you want to freestyle your own plate. Bold. I respect it.",
+        },
+      ],
+    },
+    {
+      id: "tab-sprout",
+      target: "tab-sprout",
+      cta: "Next",
+      lines: [
+        { speaker: "seedling", text: "And this one's all about me! Come visit, I get lonely." },
+        { speaker: "olive", text: "It doesn't. It's just dramatic." },
+      ],
+    },
+    {
+      id: "tab-card",
+      target: "tab-card",
+      cta: "Next",
+      lines: [
+        {
+          speaker: "olive",
+          text: "My Palate is your card: goals, today's macros, settings. There's a Replay button in there if you miss me.",
+          aside: "You will.",
         },
       ],
     },

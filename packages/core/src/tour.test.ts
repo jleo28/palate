@@ -20,11 +20,15 @@ describe("tour steps", () => {
       "halls",
       "swipe",
       "log",
+      "tab-plate",
+      "tab-menus",
+      "tab-sprout",
+      "tab-card",
       "handoff",
     ]);
     expect(steps[0]!.lines[0]!.text).toContain("Hey Jo!");
     expect(steps[2]!.lines[0]!.text).toContain("what EVK is actually serving");
-    expect(steps[6]!.lines[0]!.text).toContain("Pickles will take it from here");
+    expect(steps.at(-1)!.lines[0]!.text).toContain("Pickles will take it from here");
   });
 
   it("spotlights the plate controls", () => {
@@ -33,6 +37,10 @@ describe("tour steps", () => {
       "halls",
       "swipe",
       "log",
+      "tab-plate",
+      "tab-menus",
+      "tab-sprout",
+      "tab-card",
     ]);
   });
 });

@@ -30,8 +30,11 @@ function useReducedMotion() {
   return reduced;
 }
 
-/** Measures a `data-tour` element, following resize and scroll. */
-function useTargetRect(target: TourTarget | undefined) {
+/**
+ * Measures a `data-tour` element, following resize and scroll. Scrolls it so it sits above the
+ * tour card when the page can move; fixed targets (the tab bar) stay put and the card moves.
+ */
+function useTargetRect(target: TourTarget | undefined, cardHeight: number) {
   const [rect, setRect] = useState<DOMRect | null>(null);
   useLayoutEffect(() => {
     if (!target) {
@@ -43,7 +46,10 @@ function useTargetRect(target: TourTarget | undefined) {
       setRect(null);
       return;
     }
-    el.scrollIntoView({ block: "center", behavior: "auto" });
+    const r = el.getBoundingClientRect();
+    const room = window.innerHeight - cardHeight - 32;
+    if (r.bottom > room) window.scrollBy({ top: r.bottom - room, behavior: "instant" });
+    else if (r.top < 16) window.scrollBy({ top: r.top - 16, behavior: "instant" });
     const measure = () => setRect(el.getBoundingClientRect());
     measure();
     const ro = new ResizeObserver(measure);
@@ -55,7 +61,7 @@ function useTargetRect(target: TourTarget | undefined) {
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [target]);
+  }, [target, cardHeight]);
   return rect;
 }
 
@@ -114,9 +120,21 @@ export function OliveTour({ firstName, hall, seedling, onName, onDone }: Props) 
   const current: TourLine = step.lines[lineIndex]!;
   const typed = useTypewriter(current.text, reduced || instant);
   const allLinesOut = lineIndex === step.lines.length - 1 && typed.done;
-  const rect = useTargetRect(step.target);
+  const [cardHeight, setCardHeight] = useState(0);
+  const rect = useTargetRect(step.target, cardHeight);
+  // Target still under the card (it can't scroll): put the card at the top instead.
+  const atTop = !!rect && cardHeight > 0 && rect.bottom + PAD > window.innerHeight - cardHeight - 8;
   const ctaRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    const measure = () => setCardHeight(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Next line once this one finishes typing.
   useEffect(() => {
@@ -198,9 +216,20 @@ export function OliveTour({ firstName, hall, seedling, onName, onDone }: Props) 
         role="dialog"
         aria-modal="true"
         aria-label="Tour of Palate with Olive"
-        className="fixed inset-x-0 bottom-0 mx-auto max-w-md px-4 pb-[max(1rem,env(safe-area-inset-bottom))] outline-none"
+        className={cn(
+          "fixed inset-x-0 mx-auto flex max-w-md px-4 outline-none",
+          atTop
+            ? "top-0 flex-col-reverse pt-[max(1rem,env(safe-area-inset-top))]"
+            : "bottom-0 flex-col pb-[max(1rem,env(safe-area-inset-bottom))]",
+        )}
       >
-        <div className="relative z-10 -mb-3 flex items-end justify-between px-2" aria-hidden>
+        <div
+          className={cn(
+            "relative z-10 flex items-end justify-between px-2",
+            atTop ? "-mt-3" : "-mb-3",
+          )}
+          aria-hidden
+        >
           <div
             key={`olive-${index === 0 ? "in" : "stay"}`}
             className={cn("size-24", index === 0 && "tour-bounce-in")}
