@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { StoreProvider } from "../lib/palate/store";
+import { TourHost, TourProvider } from "../lib/palate/tour";
 import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
@@ -129,7 +130,10 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <TourProvider>
+          <Outlet />
+          <TourHost />
+        </TourProvider>
         <Toaster position="top-center" />
       </StoreProvider>
     </QueryClientProvider>

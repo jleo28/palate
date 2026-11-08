@@ -110,7 +110,7 @@ function Menus() {
         ))}
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div data-tour="filters" className="mb-5 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button
             key={f.id}
@@ -131,24 +131,26 @@ function Menus() {
         ))}
       </div>
 
-      <HallMenuList
-        items={hallItems}
-        hall={hall}
-        period={period}
-        loading={loading}
-        filter={matchesFilters}
-        emptyText={
-          filters.length
-            ? "Nothing on this line matches those filters. Try loosening one."
-            : undefined
-        }
-        onAdd={(i) => {
-          addToPlate(i);
-          toast.success(`${i.name} added to your plate`, {
-            action: { label: "View", onClick: () => void navigate({ to: "/" }) },
-          });
-        }}
-      />
+      <div data-tour="menu-list">
+        <HallMenuList
+          items={hallItems}
+          hall={hall}
+          period={period}
+          loading={loading}
+          filter={matchesFilters}
+          emptyText={
+            filters.length
+              ? "Nothing on this line matches those filters. Try loosening one."
+              : undefined
+          }
+          onAdd={(i) => {
+            addToPlate(i);
+            toast.success(`${i.name} added to your plate`, {
+              action: { label: "View", onClick: () => void navigate({ to: "/" }) },
+            });
+          }}
+        />
+      </div>
       <PlateTray />
     </AppShell>
   );

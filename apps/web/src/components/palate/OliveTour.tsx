@@ -9,6 +9,7 @@ import {
   type HallId,
   type Seedling,
   type TourLine,
+  type TourStep,
   type TourTarget,
 } from "@palate/core";
 import { Olive } from "./Olive";
@@ -41,28 +42,42 @@ function useTargetRect(target: TourTarget | undefined, cardHeight: number) {
       setRect(null);
       return;
     }
-    const el = document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
-    if (!el) {
-      setRect(null);
-      return;
-    }
-    const r = el.getBoundingClientRect();
-    const room = window.innerHeight - cardHeight - 32;
-    if (r.bottom > room) window.scrollBy({ top: r.bottom - room, behavior: "instant" });
-    else if (r.top < 16) window.scrollBy({ top: r.top - 16, behavior: "instant" });
-    const measure = () => setRect(el.getBoundingClientRect());
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
+    let cleanup = () => {};
+    let tries = 0;
+    let timer = 0;
+    setRect(null);
+    // The step's page may still be loading after the tour navigates; wait for the target.
+    const find = () => {
+      const el = document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
+      if (el) cleanup = follow(el, cardHeight, setRect);
+      else if (tries++ < 40) timer = window.setTimeout(find, 100);
+    };
+    find();
     return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
+      window.clearTimeout(timer);
+      cleanup();
     };
   }, [target, cardHeight]);
   return rect;
+}
+
+/** Scrolls `el` clear of the tour card, then reports its position until cleaned up. */
+function follow(el: HTMLElement, cardHeight: number, setRect: (r: DOMRect) => void) {
+  const r = el.getBoundingClientRect();
+  const room = window.innerHeight - cardHeight - 32;
+  if (r.bottom > room) window.scrollBy({ top: r.bottom - room, behavior: "instant" });
+  else if (r.top < 16) window.scrollBy({ top: r.top - 16, behavior: "instant" });
+  const measure = () => setRect(el.getBoundingClientRect());
+  measure();
+  const ro = new ResizeObserver(measure);
+  ro.observe(el);
+  window.addEventListener("resize", measure);
+  window.addEventListener("scroll", measure, true);
+  return () => {
+    ro.disconnect();
+    window.removeEventListener("resize", measure);
+    window.removeEventListener("scroll", measure, true);
+  };
 }
 
 /** Types a line out quickly. `complete()` jumps to the end. */
@@ -96,13 +111,15 @@ interface Props {
   firstName: string;
   hall: HallId;
   seedling: Seedling;
+  /** Called on every step, so the host can walk to that step's tab. */
+  onStep: (step: TourStep) => void;
   /** Saves the new name. */
   onName: (seedling: Seedling) => void;
   /** Finished or skipped: both count as done. */
   onDone: () => void;
 }
 
-export function OliveTour({ firstName, hall, seedling, onName, onDone }: Props) {
+export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }: Props) {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [lineIndex, setLineIndex] = useState(0);
@@ -116,6 +133,12 @@ export function OliveTour({ firstName, hall, seedling, onName, onDone }: Props) 
     hallName: TOUR_HALL_NAMES[hall],
   });
   const step = steps[index]!;
+  const onStepRef = useRef(onStep);
+  onStepRef.current = onStep;
+  useEffect(() => {
+    onStepRef.current(step);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
   const lines = step.lines.slice(0, lineIndex + 1);
   const current: TourLine = step.lines[lineIndex]!;
   const typed = useTypewriter(current.text, reduced || instant);

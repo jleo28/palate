@@ -11,37 +11,32 @@ import { DEFAULT_SEEDLING_NAME } from "./seedling";
 const ctx = { firstName: "Jo", seedlingName: "Pickles", hallName: "EVK" };
 
 describe("tour steps", () => {
-  it("runs in order and fills in names", () => {
-    const steps = tourSteps(ctx);
-    expect(steps.map((s) => s.id)).toEqual([
-      "arrive",
-      "seedling",
-      "plate",
-      "halls",
-      "swipe",
-      "log",
-      "tab-plate",
-      "tab-menus",
-      "tab-sprout",
-      "tab-card",
-      "handoff",
-    ]);
+  const steps = tourSteps(ctx);
+
+  it("fills in names", () => {
     expect(steps[0]!.lines[0]!.text).toContain("Hey Jo!");
-    expect(steps[2]!.lines[0]!.text).toContain("what EVK is actually serving");
+    expect(steps.find((s) => s.id === "plate")!.lines[0]!.text).toContain("what EVK is");
     expect(steps.at(-1)!.lines[0]!.text).toContain("Pickles will take it from here");
   });
 
-  it("spotlights the plate controls", () => {
-    expect(tourSteps(ctx).flatMap((s) => (s.target ? [s.target] : []))).toEqual([
-      "plate",
-      "halls",
-      "swipe",
-      "log",
-      "tab-plate",
-      "tab-menus",
-      "tab-sprout",
-      "tab-card",
-    ]);
+  it("walks every tab in order, without doubling back", () => {
+    const routes = steps.map((s) => s.route).filter((r, i, all) => r !== all[i - 1]);
+    expect(routes).toEqual(["/", "/menus", "/sprout", "/card"]);
+  });
+
+  it("gives each step one speaker, except the naming moment", () => {
+    for (const step of steps) {
+      const speakers = new Set(step.lines.map((l) => l.speaker));
+      expect(speakers.size, step.id).toBe(step.id === "seedling" ? 2 : 1);
+    }
+  });
+
+  it("lets both characters lead, unevenly", () => {
+    const lead = steps.map((s) => s.lines[0]!.speaker);
+    const olive = lead.filter((s) => s === "olive").length;
+    const seedling = lead.filter((s) => s === "seedling").length;
+    expect(seedling).toBeGreaterThan(0);
+    expect(olive).not.toBe(seedling);
   });
 });
 

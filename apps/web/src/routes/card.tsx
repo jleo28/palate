@@ -27,6 +27,7 @@ import {
 import { hallName } from "@/lib/palate/halls";
 import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
+import { useTour } from "@/lib/palate/tour";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
 
@@ -85,6 +86,7 @@ function CardScreen() {
   const [earlierOpen, setEarlierOpen] = useState(false);
   const [editing, setEditing] = useState<LoggedMeal | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const { start: startTour } = useTour();
 
   useRequireProfile();
 
@@ -207,7 +209,10 @@ function CardScreen() {
       />
 
       {/* Macro bank */}
-      <section className="mt-5 rounded-2xl border border-foreground/15 bg-card p-4">
+      <section
+        data-tour="macro-bank"
+        className="mt-5 rounded-2xl border border-foreground/15 bg-card p-4"
+      >
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="font-display text-lg font-bold">Today's macro bank</h2>
           <span className="text-xs font-semibold text-olive">
@@ -380,18 +385,19 @@ function CardScreen() {
       >
         FAQs & support <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
       </Link>
-      <a
-        href="/?tour=1"
+      <button
+        type="button"
+        onClick={startTour}
         className="mt-2 flex min-h-14 w-full items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-left text-sm font-bold"
       >
         <span>
           Replay the tour
           <span className="block text-xs font-medium text-muted-foreground">
-            Olive will walk you through The Plate again
+            Olive and {profile.seedling?.name ?? "your Seedling"} will show you around again
           </span>
         </span>
         <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-      </a>
+      </button>
       <button
         type="button"
         onClick={() => setFeedbackOpen(true)}

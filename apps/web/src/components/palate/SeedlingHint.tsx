@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { HINTS, type HintScreen, type Seedling } from "@palate/core";
 import { SeedlingAvatar } from "./SeedlingAvatar";
+import { useTour } from "@/lib/palate/tour";
 
 const KEY = "palate.hints.v1";
 
@@ -15,8 +16,10 @@ function seen(): HintScreen[] {
 /** A one-time hint from Seedling the first time a screen opens. */
 export function SeedlingHint({ screen, seedling }: { screen: HintScreen; seedling: Seedling }) {
   const [open, setOpen] = useState(false);
+  const { active: touring } = useTour();
 
   useEffect(() => {
+    if (touring) return;
     const already = seen();
     if (already.includes(screen)) return;
     setOpen(true);
@@ -25,7 +28,7 @@ export function SeedlingHint({ screen, seedling }: { screen: HintScreen; seedlin
     } catch {
       /* hints are a nicety; ignore storage errors */
     }
-  }, [screen]);
+  }, [screen, touring]);
 
   if (!open) return null;
 

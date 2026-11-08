@@ -9,14 +9,28 @@ export type TourStepId =
   | "halls"
   | "swipe"
   | "log"
-  | "tab-plate"
-  | "tab-menus"
-  | "tab-sprout"
-  | "tab-card"
+  | "menus"
+  | "filters"
+  | "tray"
+  | "sprout"
+  | "recap"
+  | "card"
+  | "bank"
   | "handoff";
-/** Matches a `data-tour` attribute on The Plate or the tab bar. */
+/** Matches a `data-tour` attribute on the step's page. */
 export type TourTarget =
-  "plate" | "halls" | "swipe" | "log" | "tab-plate" | "tab-menus" | "tab-sprout" | "tab-card";
+  | "plate"
+  | "halls"
+  | "swipe"
+  | "log"
+  | "menu-list"
+  | "filters"
+  | "plate-tray"
+  | "seedling-card"
+  | "recap"
+  | "palate-card"
+  | "macro-bank";
+export type TourRoute = "/" | "/menus" | "/sprout" | "/card";
 export type Speaker = "olive" | "seedling";
 
 export interface TourLine {
@@ -28,7 +42,10 @@ export interface TourLine {
 
 export interface TourStep {
   id: TourStepId;
+  /** The tab the tour walks to for this step. */
+  route: TourRoute;
   target?: TourTarget;
+  /** One speaker per step; only the naming moment is a back-and-forth. */
   lines: TourLine[];
   /** Primary button label. */
   cta: string;
@@ -46,122 +63,139 @@ export const TOUR_HALL_NAMES: Record<HallId, string> = {
   parkside: "Parkside",
 };
 
+const olive = (text: string, aside?: string): TourLine => ({
+  speaker: "olive",
+  text,
+  ...(aside ? { aside } : {}),
+});
+const seedling = (text: string): TourLine => ({ speaker: "seedling", text });
+
 export function tourSteps({ firstName, seedlingName, hallName }: TourContext): TourStep[] {
   return [
     {
       id: "arrive",
+      route: "/",
       cta: "Let's go",
       lines: [
-        {
-          speaker: "olive",
-          text: `Hey ${firstName}! I'm Olive. Technically a fruit, emotionally a vegetable, professionally your guide to the dining halls. Got 30 seconds?`,
-        },
+        olive(
+          `Hey ${firstName}! I'm Olive. Technically a fruit, emotionally a vegetable, professionally your guide to the dining halls. Got a minute?`,
+        ),
       ],
     },
     {
       id: "seedling",
+      route: "/",
       cta: "That's my name",
       lines: [
-        {
-          speaker: "olive",
-          text: "I brought a friend. This little one is yours. It grows when you eat well and it has opinions about broccoli.",
-        },
-        { speaker: "seedling", text: "Hi!! I've never had a name before." },
+        olive("I brought a friend. This little one is yours, and it has opinions about broccoli."),
+        seedling("Hi!! I've never had a name before."),
       ],
     },
     {
       id: "plate",
+      route: "/",
       target: "plate",
       cta: "Next",
       lines: [
-        {
-          speaker: "olive",
-          text: `This is your plate, built from what ${hallName} is actually serving right now and sized to your goals. I did the math, you're welcome.`,
-        },
+        olive(
+          `This is your plate, built from what ${hallName} is actually serving right now and sized to your goals. I did the math, you're welcome.`,
+        ),
       ],
     },
     {
       id: "halls",
+      route: "/",
       target: "halls",
       cta: "Next",
-      lines: [{ speaker: "olive", text: "Village, EVK, Parkside. Pick your battlefield." }],
+      lines: [olive("Village, EVK, Parkside. Pick your battlefield and the plate rebuilds.")],
     },
     {
       id: "swipe",
+      route: "/",
       target: "swipe",
       cta: "Next",
-      lines: [
-        {
-          speaker: "olive",
-          text: "Plate not speaking to you? Swipe. I won't take it personally.",
-          aside: "I will.",
-        },
-      ],
+      lines: [olive("Plate not speaking to you? Swipe. I won't take it personally.", "I will.")],
     },
     {
       id: "log",
+      route: "/",
       target: "log",
       cta: "Next",
+      lines: [seedling("Ooh, tap this after you eat! It's how I grow.")],
+    },
+    {
+      id: "menus",
+      route: "/menus",
+      target: "menu-list",
+      cta: "Next",
       lines: [
-        { speaker: "seedling", text: "Ooh, tap this after you eat! It's how I grow." },
-        {
-          speaker: "olive",
-          text: "It's true. It's the only thing it eats. Besides compliments.",
-        },
+        olive(
+          "Hall Menus: every station, everything it's serving today. Tap + on anything to add it to your plate.",
+        ),
       ],
     },
     {
-      id: "tab-plate",
-      target: "tab-plate",
+      id: "filters",
+      route: "/menus",
+      target: "filters",
+      cta: "Next",
+      lines: [seedling("These narrow it down. High protein, vegan, whatever you're feeling!")],
+    },
+    {
+      id: "tray",
+      route: "/menus",
+      target: "plate-tray",
+      cta: "Next",
+      lines: [olive("Your plate follows you down here. Tap it to check it over or log it.")],
+    },
+    {
+      id: "sprout",
+      route: "/sprout",
+      target: "seedling-card",
       cta: "Next",
       lines: [
-        {
-          speaker: "olive",
-          text: "Quick map. The Plate is home base: one tap, one plate, every meal. You're standing in it.",
-        },
+        seedling(
+          "This is my spot! I grow every day you log a meal. Skip a couple days and I just get sleepy, never sad.",
+        ),
       ],
     },
     {
-      id: "tab-menus",
-      target: "tab-menus",
+      id: "recap",
+      route: "/sprout",
+      target: "recap",
       cta: "Next",
       lines: [
-        {
-          speaker: "olive",
-          text: "Hall Menus has every station, unfiltered. For when you want to freestyle your own plate. Bold. I respect it.",
-        },
+        olive("Your week at a glance, plus badges for showing up. Shiny things, no homework."),
       ],
     },
     {
-      id: "tab-sprout",
-      target: "tab-sprout",
+      id: "card",
+      route: "/card",
+      target: "palate-card",
       cta: "Next",
       lines: [
-        { speaker: "seedling", text: "And this one's all about me! Come visit, I get lonely." },
-        { speaker: "olive", text: "It doesn't. It's just dramatic." },
+        olive(
+          "My Palate is your card. Flip it to change your goals, allergies or anything you told me.",
+        ),
       ],
     },
     {
-      id: "tab-card",
-      target: "tab-card",
+      id: "bank",
+      route: "/card",
+      target: "macro-bank",
       cta: "Next",
       lines: [
-        {
-          speaker: "olive",
-          text: "My Palate is your card: goals, today's macros, settings. There's a Replay button in there if you miss me.",
-          aside: "You will.",
-        },
+        seedling("Everything you eat today lands here. Logged the wrong thing? Tap it to fix it!"),
       ],
     },
     {
       id: "handoff",
+      route: "/card",
       cta: "Let's eat!",
       lines: [
-        {
-          speaker: "olive",
-          text: `That's the tour. ${seedlingName} will take it from here. I'll be around being correct about things.`,
-        },
-        { speaker: "seedling", text: "Let's eat!" },
+        olive(
+          `That's the tour. ${seedlingName} will take it from here. Replay me anytime from this page. I'll be around being correct about things.`,
+        ),
       ],
     },
   ];

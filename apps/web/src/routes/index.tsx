@@ -19,7 +19,6 @@ import { PlateIllustration } from "@/components/palate/PlateIllustration";
 import { SwipeArea } from "@/components/palate/SwipeArea";
 import { SeedlingAvatar } from "@/components/palate/SeedlingAvatar";
 import { SeedlingHint } from "@/components/palate/SeedlingHint";
-import { OliveTour } from "@/components/palate/OliveTour";
 import { PlateRow } from "@/components/palate/PlateRow";
 import { LoggedSlot } from "@/components/palate/LoggedSlot";
 import { HALLS } from "@/lib/palate/halls";
@@ -60,7 +59,6 @@ import {
   withoutSkipped,
   withoutAllergyConflicts,
   type PlateItem,
-  shouldShowTour,
 } from "@palate/core";
 import { portionLabel } from "@/lib/palate/menu";
 import { useHallMenu } from "@/lib/palate/use-menu";
@@ -115,25 +113,8 @@ function Plate() {
     favorites,
     loggedToday,
     log,
-    saveProfile,
   } = useStore();
-  // Olive's tour: once per profile (saved in Supabase), or on demand with ?tour=1.
-  const [tourForced, setTourForced] = useState(false);
-  const [tourClosed, setTourClosed] = useState(false);
-  useEffect(() => {
-    setTourForced(new URLSearchParams(window.location.search).get("tour") === "1");
-  }, []);
-  const showTour =
-    !tourClosed && shouldShowTour({ ready, profile, forced: tourForced }) && !!profile?.seedling;
-  const finishTour = () => {
-    setTourClosed(true);
-    if (tourForced) {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("tour");
-      window.history.replaceState(window.history.state, "", url);
-    }
-    if (profile) void saveProfile({ ...profile, tourCompletedAt: new Date().toISOString() });
-  };
+
   // Snacks draw on a nearby hall meal's menu.
   const period = menuPeriod(meal);
   // A hall meal logged today shows what was eaten instead of a new plate.
@@ -262,16 +243,7 @@ function Plate() {
   return (
     <AppShell>
       <ScreenHeader title="The Plate" sub={`Hey ${profile.name.split(" ")[0]} · USC`} />
-      {showTour && profile.seedling && (
-        <OliveTour
-          firstName={profile.name.split(" ")[0] ?? profile.name}
-          hall={hall}
-          seedling={profile.seedling}
-          onName={(seedling) => void saveProfile({ ...profile, seedling })}
-          onDone={finishTour}
-        />
-      )}
-      {!showTour && profile.seedling && <SeedlingHint screen="plate" seedling={profile.seedling} />}
+      {profile.seedling && <SeedlingHint screen="plate" seedling={profile.seedling} />}
 
       <div
         data-tour="halls"
