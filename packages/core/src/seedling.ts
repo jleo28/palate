@@ -148,10 +148,11 @@ export function daysShowedUp(log: readonly { date: string }[]) {
 
 export type HintScreen = "plate" | "menus" | "card";
 
-/** One-time hints, in Seedling's voice, the first time each screen opens. */
+/** One-time hints, spoken by the Seedling, the first time each screen opens. */
 export const HINTS: Record<HintScreen, string> = {
   plate:
-    "Here's a plate for this meal. Swipe it for another idea, or tweak any row. I'll tell you how it fits.",
-  menus: "Every station's here. Tap + on anything to build your own plate.",
-  card: "This is your card. Your day lives here, and I grow a little each day you check in.",
+    "Psst, this plate's for you! Swipe for a new idea, or poke any row. I'll tell you how it fits.",
+  menus:
+    "Every station, all in one place! Tap + on anything that looks tasty. I'm not picky. Mostly.",
+  card: "This is your card! Your day lives here, and I grow a little every day you check in. No pressure. Some pressure. Tiny pressure.",
 };

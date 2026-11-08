@@ -101,6 +101,8 @@ export interface Profile {
   createdOn?: string;
   /** Cards spent on logging earlier meals. Kept here so removing that meal never refunds one. */
   cardSpends?: CardSpend[];
+  /** ISO timestamp the first-run tour was finished or skipped. Missing means not yet. */
+  tourCompletedAt?: string;
 }
 
 /** One food in a logged meal. Per-portion macros make it editable later; older logs lack them. */

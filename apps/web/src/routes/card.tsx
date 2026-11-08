@@ -380,6 +380,18 @@ function CardScreen() {
       >
         FAQs & support <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
       </Link>
+      <a
+        href="/?tour=1"
+        className="mt-2 flex min-h-14 w-full items-center justify-between rounded-2xl border border-foreground/15 bg-card px-4 py-3 text-left text-sm font-bold"
+      >
+        <span>
+          Replay the tour
+          <span className="block text-xs font-medium text-muted-foreground">
+            Olive will walk you through The Plate again
+          </span>
+        </span>
+        <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+      </a>
       <button
         type="button"
         onClick={() => setFeedbackOpen(true)}
