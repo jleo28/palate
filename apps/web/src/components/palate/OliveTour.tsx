@@ -80,6 +80,24 @@ function follow(el: HTMLElement, cardHeight: number, setRect: (r: DOMRect) => vo
   };
 }
 
+/** The tour's own demo of a step's action, done on the real page. */
+function demo(id: TourStep["id"], el: HTMLElement | null) {
+  const click = (b: Element | null | undefined) => (b as HTMLElement | null)?.click();
+  if (id === "halls") {
+    click(
+      [...(el?.querySelectorAll("button") ?? [])].find(
+        (b) => !b.className.includes("bg-foreground"),
+      ),
+    );
+  } else if (id === "swipe") {
+    click(document.querySelector('[aria-label="Next plate"]'));
+  } else if (id === "filters") {
+    click(el?.querySelector("button"));
+  } else if (id === "card") {
+    click(el?.querySelector('button[aria-label="Edit goals and settings"]'));
+  }
+}
+
 /** Types a line out quickly. `complete()` jumps to the end. */
 function useTypewriter(text: string, instant: boolean) {
   const [shown, setShown] = useState(instant ? text.length : 0);
@@ -133,16 +151,30 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
     hallName: TOUR_HALL_NAMES[hall],
   });
   const step = steps[index]!;
+  // Action steps: has the user (or the demo) done the thing yet?
+  const [acted, setActed] = useState(false);
+  const pending = !!step.action && !acted;
+  const stepLines: TourLine[] =
+    step.action && acted
+      ? [
+          ...step.lines,
+          {
+            speaker: step.lines[0]!.speaker,
+            text: step.action.done,
+            ...(step.action.aside ? { aside: step.action.aside } : {}),
+          },
+        ]
+      : step.lines;
   const onStepRef = useRef(onStep);
   onStepRef.current = onStep;
   useEffect(() => {
     onStepRef.current(step);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
-  const lines = step.lines.slice(0, lineIndex + 1);
-  const current: TourLine = step.lines[lineIndex]!;
+  const lines = stepLines.slice(0, lineIndex + 1);
+  const current: TourLine = stepLines[lineIndex]!;
   const typed = useTypewriter(current.text, reduced || instant);
-  const allLinesOut = lineIndex === step.lines.length - 1 && typed.done;
+  const allLinesOut = lineIndex === stepLines.length - 1 && typed.done;
   const [cardHeight, setCardHeight] = useState(0);
   const rect = useTargetRect(step.target, cardHeight);
   // Target still under the card (it can't scroll): put the card at the top instead.
@@ -161,10 +193,33 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
 
   // Next line once this one finishes typing.
   useEffect(() => {
-    if (!typed.done || lineIndex >= step.lines.length - 1) return;
+    if (!typed.done || lineIndex >= stepLines.length - 1) return;
     const id = window.setTimeout(() => setLineIndex((i) => i + 1), reduced ? 0 : 450);
     return () => window.clearTimeout(id);
-  }, [typed.done, lineIndex, step.lines.length, reduced]);
+  }, [typed.done, lineIndex, stepLines.length, reduced]);
+
+  // The user tries it themselves: any tap or swipe on the spotlit target counts.
+  useEffect(() => {
+    if (!pending || !step.target || !rect) return;
+    const el = document.querySelector(`[data-tour="${step.target}"]`);
+    if (!el) return;
+    const did = () => window.setTimeout(() => setActed(true), 250);
+    el.addEventListener("pointerup", did);
+    return () => el.removeEventListener("pointerup", did);
+  }, [pending, step.target, rect]);
+
+  useEffect(() => {
+    if (acted) {
+      setInstant(false);
+      setLineIndex(step.lines.length);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [acted]);
+
+  const showMe = () => {
+    demo(step.id, step.target ? document.querySelector(`[data-tour="${step.target}"]`) : null);
+    setActed(true);
+  };
 
   useEffect(() => {
     (ctaRef.current ?? dialogRef.current)?.focus();
@@ -181,9 +236,10 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
   }, [skip]);
 
   const advance = () => {
+    if (pending) return showMe();
     if (!allLinesOut) {
       setInstant(true);
-      setLineIndex(step.lines.length - 1);
+      setLineIndex(stepLines.length - 1);
       return;
     }
     if (step.id === "seedling") {
@@ -194,20 +250,21 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
     setIndex(index + 1);
     setLineIndex(0);
     setInstant(false);
+    setActed(false);
   };
 
   // Tap the bubble: finish the line, then show the rest of the step.
   const tapBubble = () => {
     if (!typed.done) typed.complete();
-    else if (lineIndex < step.lines.length - 1) setLineIndex(lineIndex + 1);
+    else if (lineIndex < stepLines.length - 1) setLineIndex(lineIndex + 1);
   };
 
   const speaking = !typed.done ? current.speaker : null;
   const showSeedling = index >= 1;
 
   return (
-    <div className="fixed inset-0 z-50" role="presentation">
-      {/* Dim layer with a cutout around the target. Clicks never reach the page. */}
+    <div className="pointer-events-none fixed inset-0 z-50" role="presentation">
+      {/* Dim layer with a cutout around the target. Only an action step lets taps through it. */}
       {rect ? (
         <div
           aria-hidden
@@ -220,7 +277,7 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
             boxShadow: `0 0 0 9999px ${DIM}`,
           }}
         >
-          {step.id === "swipe" && (
+          {step.id === "swipe" && pending && (
             <div className="absolute inset-0 grid place-items-center">
               <span className="tour-swipe-hint flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-xs font-bold shadow">
                 <span className="size-5 rounded-full bg-olive" /> swipe
@@ -231,7 +288,30 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
       ) : (
         <div aria-hidden className="fixed inset-0 animate-in fade-in" style={{ background: DIM }} />
       )}
-      <div className="absolute inset-0" onClick={(e) => e.stopPropagation()} />
+      {pending && rect ? (
+        <>
+          {[
+            { top: 0, left: 0, right: 0, height: Math.max(0, rect.top - PAD) },
+            { top: rect.bottom + PAD, left: 0, right: 0, bottom: 0 },
+            {
+              top: rect.top - PAD,
+              left: 0,
+              width: Math.max(0, rect.left - PAD),
+              height: rect.height + PAD * 2,
+            },
+            {
+              top: rect.top - PAD,
+              left: rect.right + PAD,
+              right: 0,
+              height: rect.height + PAD * 2,
+            },
+          ].map((style, i) => (
+            <div key={i} className="pointer-events-auto fixed" style={style} />
+          ))}
+        </>
+      ) : (
+        <div className="pointer-events-auto absolute inset-0" />
+      )}
 
       <div
         ref={dialogRef}
@@ -240,7 +320,7 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
         aria-modal="true"
         aria-label="Tour of Palate with Olive"
         className={cn(
-          "fixed inset-x-0 mx-auto flex max-w-md px-4 outline-none",
+          "pointer-events-auto fixed inset-x-0 mx-auto flex max-w-md px-4 outline-none",
           atTop
             ? "top-0 flex-col-reverse pt-[max(1rem,env(safe-area-inset-top))]"
             : "bottom-0 flex-col pb-[max(1rem,env(safe-area-inset-bottom))]",
@@ -351,7 +431,7 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
               onClick={advance}
               className="h-12 rounded-full bg-foreground px-6 text-base font-bold text-primary-foreground"
             >
-              {step.cta}
+              {pending ? "Show me" : step.cta}
             </button>
           </div>
         </div>

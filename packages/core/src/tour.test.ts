@@ -31,6 +31,16 @@ describe("tour steps", () => {
     }
   });
 
+  it("lets people try the hands-on bits, but never logs a meal for them", () => {
+    expect(steps.filter((s) => s.action).map((s) => s.id)).toEqual([
+      "halls",
+      "swipe",
+      "filters",
+      "card",
+    ]);
+    expect(steps.find((s) => s.id === "log")!.action).toBeUndefined();
+  });
+
   it("lets both characters lead, unevenly", () => {
     const lead = steps.map((s) => s.lines[0]!.speaker);
     const olive = lead.filter((s) => s === "olive").length;

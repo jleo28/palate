@@ -49,6 +49,11 @@ export interface TourStep {
   lines: TourLine[];
   /** Primary button label. */
   cta: string;
+  /**
+   * The step asks the user to try something on the spotlit target. Until they do, the button
+   * reads "Show me" and the tour demos it; either way the same speaker reacts with `done`.
+   */
+  action?: { done: string; aside?: string };
 }
 
 export interface TourContext {
@@ -107,14 +112,16 @@ export function tourSteps({ firstName, seedlingName, hallName }: TourContext): T
       route: "/",
       target: "halls",
       cta: "Next",
-      lines: [olive("Village, EVK, Parkside. Pick your battlefield and the plate rebuilds.")],
+      lines: [olive("Village, EVK, Parkside. Pick your battlefield. Go on, tap one.")],
+      action: { done: "See? Whole new plate, straight from that hall's menu." },
     },
     {
       id: "swipe",
       route: "/",
       target: "swipe",
       cta: "Next",
-      lines: [olive("Plate not speaking to you? Swipe. I won't take it personally.", "I will.")],
+      lines: [olive("Plate not speaking to you? Swipe it. I won't take it personally.")],
+      action: { done: "Fresh idea, coming right up.", aside: "I took it personally." },
     },
     {
       id: "log",
@@ -139,7 +146,10 @@ export function tourSteps({ firstName, seedlingName, hallName }: TourContext): T
       route: "/menus",
       target: "filters",
       cta: "Next",
-      lines: [seedling("These narrow it down. High protein, vegan, whatever you're feeling!")],
+      lines: [
+        seedling("These narrow it down. High protein, vegan, whatever you're feeling! Tap one!"),
+      ],
+      action: { done: "Ooh, fancy. Tap it again to clear it." },
     },
     {
       id: "tray",
@@ -154,9 +164,7 @@ export function tourSteps({ firstName, seedlingName, hallName }: TourContext): T
       target: "seedling-card",
       cta: "Next",
       lines: [
-        seedling(
-          "This is my spot! I grow every day you log a meal. Skip a couple days and I just get sleepy, never sad.",
-        ),
+        seedling("This is my spot! I grow a little every day you log a meal. Tap me, I like it."),
       ],
     },
     {
@@ -175,9 +183,10 @@ export function tourSteps({ firstName, seedlingName, hallName }: TourContext): T
       cta: "Next",
       lines: [
         olive(
-          "My Palate is your card. Flip it to change your goals, allergies or anything you told me.",
+          "My Palate is your card. Tap Edit to flip it: goals, allergies, anything you told me.",
         ),
       ],
+      action: { done: "Change anything, anytime. Tap Done to flip it back." },
     },
     {
       id: "bank",
