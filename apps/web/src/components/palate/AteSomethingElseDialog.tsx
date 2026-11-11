@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { DishName } from "@/components/palate/DishName";
 import { Minus, Plus, Search } from "lucide-react";
 import {
   MAX_QTY,
@@ -281,7 +282,7 @@ export function AteSomethingElseDialog({
                 return (
                   <li key={item.id} className="flex items-center gap-2 py-2">
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold">{item.name}</p>
+                      <DishName name={item.name} className="text-sm font-bold" />
                       <p className="text-[0.7rem] text-muted-foreground">
                         {item.station} · {qty > 0 ? portionLabel(item, qty) : `per ${item.unit}`}
                       </p>

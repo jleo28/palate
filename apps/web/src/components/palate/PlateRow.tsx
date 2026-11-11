@@ -1,4 +1,5 @@
 import { RefreshCw, X } from "lucide-react";
+import { DishName } from "@/components/palate/DishName";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { macroLine } from "@/lib/palate/macro-text";
 import {
@@ -60,7 +61,7 @@ export function PlateRow({
                 aria-label={`Allergen warning: ${[...hits.map(allergenLabel), ...possible].join(", ")}`}
               />
             )}
-            <span className="truncate">{item.name}</span>
+            <DishName name={item.name} className="min-w-0 flex-1" />
           </p>
           {!hidden && (
             <p className="mt-0.5 min-h-4 text-[0.7rem] text-muted-foreground tabular-nums">

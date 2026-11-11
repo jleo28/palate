@@ -19,6 +19,7 @@ export interface NutritionEstimate {
   protein: number;
   carbs: number;
   fat: number;
+  fiber?: number;
   unit: string;
   unitPlural: string;
   /** Grams in one unit, when known. */
@@ -178,11 +179,13 @@ export function estimateFromFdc(food: FdcFood): NutritionEstimate {
   const protein = r1(nutrient(food, "203") * factor);
   const carbs = r1(nutrient(food, "205") * factor);
   const fat = r1(nutrient(food, "204") * factor);
+  const fiber = r1(nutrient(food, "291") * factor);
   return {
     kcal,
     protein,
     carbs,
     fat,
+    fiber,
     unit: serving.unit,
     unitPlural: serving.unitPlural,
     grams: Math.round(serving.grams),

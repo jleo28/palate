@@ -55,6 +55,8 @@ export interface MenuItem {
   protein: number;
   carbs: number;
   fat: number;
+  /** Grams of fiber per unit, when known. Shown, never planned around. */
+  fiber?: number;
   tags: DietTag[];
   /** Known allergens. Absent means none listed. */
   allergens?: Allergen[];
@@ -114,7 +116,7 @@ export interface LoggedItem {
   unit?: string;
   unitPlural?: string;
   /** Macros for one portion. */
-  per?: { kcal: number; protein: number; carbs: number; fat: number };
+  per?: { kcal: number; protein: number; carbs: number; fat: number; fiber?: number };
 }
 
 export interface LoggedMeal {
@@ -126,6 +128,8 @@ export interface LoggedMeal {
   protein: number;
   carbs: number;
   fat: number;
+  /** Missing on meals logged before fiber was tracked. */
+  fiber?: number;
   items: LoggedItem[];
   source?: "dining-hall" | "outside";
   /** The meal's photo in the meal-photos bucket ("<user id>/<file>"). */
