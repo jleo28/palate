@@ -66,7 +66,7 @@ export function PalateCard({ front, back }: Props) {
   };
 
   return (
-    <div style={{ perspective: 900 }}>
+    <div style={{ perspective: 900 }} data-tour="palate-card">
       <section
         onAnimationEnd={() => setPeek(false)}
         className={cn(
