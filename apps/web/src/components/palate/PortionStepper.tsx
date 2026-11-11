@@ -1,4 +1,5 @@
 import { Minus, Plus } from "lucide-react";
+import { haptic } from "@/lib/palate/haptics";
 import { MAX_QTY, PORTION_STEP, portionLabel, portionWeight, type MenuItem } from "@palate/core";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,10 @@ export function PortionStepper({
     <div className="flex items-center gap-1.5" role="group" aria-label={`${item.name} portions`}>
       <button
         type="button"
-        onClick={() => onQty(Math.max(min, qty - PORTION_STEP))}
+        onClick={() => {
+          haptic();
+          onQty(Math.max(min, qty - PORTION_STEP));
+        }}
         disabled={qty <= min}
         aria-label={`Half a ${item.unit} less`}
         className={iconButton}
@@ -41,7 +45,10 @@ export function PortionStepper({
       </span>
       <button
         type="button"
-        onClick={() => onQty(Math.min(MAX_QTY, qty + PORTION_STEP))}
+        onClick={() => {
+          haptic();
+          onQty(Math.min(MAX_QTY, qty + PORTION_STEP));
+        }}
         disabled={qty >= MAX_QTY}
         aria-label={`Half a ${item.unit} more`}
         className={iconButton}
