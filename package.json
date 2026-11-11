@@ -1,6 +1,6 @@
 {
   "name": "palate",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "private": true,
   "packageManager": "pnpm@12.8.1",
   "engines": {
