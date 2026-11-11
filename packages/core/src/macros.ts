@@ -24,7 +24,12 @@ export interface MacroTargets {
   protein: number;
   carbs: number;
   fat: number;
+  /** Shown alongside the macros; the recommender doesn't plan around it (yet). */
+  fiber?: number;
 }
+
+/** Dietary Guidelines for Americans: 14g of fiber per 1,000 calories. */
+export const FIBER_PER_1000_KCAL = 14;
 
 /** Daily calories never go below this, whatever the goal or body. Applied last. */
 export const CALORIE_FLOOR = 1500;
@@ -84,7 +89,9 @@ export function dailyTargets(p: Profile): MacroTargets {
   const fat = Math.round((kcal * (goal === "lean-bulk" ? 0.27 : 0.25)) / 9);
   const carbs = Math.max(60, Math.round((kcal - protein * 4 - fat * 9) / 4));
 
-  return { kcal, protein, carbs, fat };
+  const fiber = Math.round((kcal * FIBER_PER_1000_KCAL) / 1000);
+
+  return { kcal, protein, carbs, fat, fiber };
 }
 
 /** Lunch and dinner get 36% each, breakfast 28%. */
@@ -95,6 +102,7 @@ export function mealTargets(daily: MacroTargets, meal: string): MacroTargets {
     protein: Math.round(daily.protein * share),
     carbs: Math.round(daily.carbs * share),
     fat: Math.round(daily.fat * share),
+    ...(daily.fiber !== undefined ? { fiber: Math.round(daily.fiber * share) } : {}),
   };
 }
 

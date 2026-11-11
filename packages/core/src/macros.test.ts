@@ -14,7 +14,13 @@ import type { GoalId, Profile } from "./types";
 describe("dailyTargets", () => {
   it("applies Mifflin-St Jeor with the Moderate multiplier by default", () => {
     // BMR = 10(58.968) + 6.25(165.1) - 5(19) - 161 = 1365.6; × 1.55 = 2117 → 2120
-    expect(dailyTargets(profile())).toEqual({ kcal: 2120, protein: 104, carbs: 293, fat: 59 });
+    expect(dailyTargets(profile())).toEqual({
+      kcal: 2120,
+      protein: 104,
+      carbs: 293,
+      fat: 59,
+      fiber: 30,
+    });
   });
 
   it("scales calories with activity level", () => {
@@ -29,7 +35,13 @@ describe("dailyTargets", () => {
   it("uses the male constant and an 18% deficit on a cut", () => {
     const p = profile({ gender: "male", age: 20, heightIn: 70, weightLb: 170, goal: "cut" });
     // BMR 1787.4 × 1.55 × 0.82 = 2272 → 2270 (deficit 499, under the 500 cap)
-    expect(dailyTargets(p)).toEqual({ kcal: 2270, protein: 170, carbs: 256, fat: 63 });
+    expect(dailyTargets(p)).toEqual({
+      kcal: 2270,
+      protein: 170,
+      carbs: 256,
+      fat: 63,
+      fiber: 32,
+    });
   });
 
   it("uses the midpoint constant for other genders", () => {

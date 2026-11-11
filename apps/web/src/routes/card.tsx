@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { DishName } from "@/components/palate/DishName";
 import { useEffect, useState } from "react";
 import { ChevronRight, Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -238,6 +239,9 @@ function CardScreen() {
           <MacroBar label="Protein" value={consumedToday.protein} target={daily.protein} />
           <MacroBar label="Carbs" value={consumedToday.carbs} target={daily.carbs} />
           <MacroBar label="Fat" value={consumedToday.fat} target={daily.fat} />
+          {daily.fiber !== undefined && (
+            <MacroBar label="Fiber" value={consumedToday.fiber ?? 0} target={daily.fiber} />
+          )}
         </div>
         <Button
           type="button"
@@ -350,9 +354,10 @@ function CardScreen() {
                         ? `${l.meal} · outside the halls`
                         : `${l.meal} · ${hallName(l.hall)}`}
                     </p>
-                    <p className="truncate text-[0.72rem] text-muted-foreground">
-                      {l.items.map((i) => `${i.portion} ${i.name}`).join(", ")}
-                    </p>
+                    <DishName
+                      name={l.items.map((i) => `${i.portion} ${i.name}`).join(", ")}
+                      className="text-[0.72rem] text-muted-foreground"
+                    />
                     <p className="mt-0.5 text-[0.72rem] font-semibold text-olive">
                       {!hideNumbers &&
                         `${Math.round(l.kcal)} cal · ${Math.round(l.protein)}g protein`}
