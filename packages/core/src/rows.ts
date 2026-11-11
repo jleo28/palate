@@ -50,6 +50,8 @@ export interface MealLogRow {
   protein: number;
   carbs: number;
   fat: number;
+  /** Needs supabase/migrations/20261110000000_meal_log_fiber.sql. Null on older logs. */
+  fiber?: number | string | null;
   items: LoggedMeal["items"];
   source: NonNullable<LoggedMeal["source"]>;
   photo_path?: string | null;
@@ -116,6 +118,7 @@ export function logToRow(m: LoggedMeal): MealLogRow {
     protein: m.protein,
     carbs: m.carbs,
     fat: m.fat,
+    fiber: m.fiber ?? null,
     items: m.items,
     source: m.source ?? "dining-hall",
     photo_path: m.photoPath ?? null,
@@ -132,6 +135,7 @@ export function logFromRow(r: MealLogRow): LoggedMeal {
     protein: num(r.protein),
     carbs: num(r.carbs),
     fat: num(r.fat),
+    ...(r.fiber !== null && r.fiber !== undefined ? { fiber: num(r.fiber) } : {}),
     items: r.items,
     source: r.source,
     ...(r.photo_path ? { photoPath: r.photo_path } : {}),

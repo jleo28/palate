@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DishName } from "@/components/palate/DishName";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { macroLine } from "@/lib/palate/macro-text";
 import { Minus, Plus, Trash2, X } from "lucide-react";
@@ -87,7 +88,7 @@ function EditForm({
           {draft.items.map((i, n) => (
             <li key={n} className="flex items-center gap-2 px-3 py-2">
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{i.name}</span>
+                <DishName name={i.name} className="text-sm font-semibold" />
                 <span className="text-xs text-muted-foreground">{i.portion}</span>
               </span>
               <button

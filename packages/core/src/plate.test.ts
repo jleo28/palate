@@ -41,11 +41,22 @@ describe("totals", () => {
       protein: 54,
       carbs: 23,
       fat: 7,
+      fiber: 0,
     });
   });
 
   it("is zero for an empty plate", () => {
-    expect(totals([])).toEqual({ kcal: 0, protein: 0, carbs: 0, fat: 0 });
+    expect(totals([])).toEqual({ kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
+  });
+
+  it("adds up fiber where it's known", () => {
+    const beans = { ...menu[0]!, fiber: 6 };
+    expect(
+      totals([
+        { id: "a", item: beans, qty: 1.5 },
+        { id: "b", item: menu[2]!, qty: 1 },
+      ]).fiber,
+    ).toBe(9);
   });
 });
 

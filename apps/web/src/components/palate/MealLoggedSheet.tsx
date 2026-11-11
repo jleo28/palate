@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DishName } from "@/components/palate/DishName";
 import { useNavigate } from "@tanstack/react-router";
 import { Award, Check, Flame, ThumbsDown, ThumbsUp, Undo2 } from "lucide-react";
 import { BADGES, isRestDay, newBadges, nextOpenSlot, streak, SNACKS, isSnack } from "@palate/core";
@@ -102,7 +103,7 @@ function Sheet() {
             <ul className="space-y-1.5">
               {rateable.map((item) => (
                 <li key={item.name} className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{item.name}</span>
+                  <DishName name={item.name} className="min-w-0 flex-1 text-sm font-semibold" />
                   {([1, -1] as const).map((value) => {
                     const Icon = value === 1 ? ThumbsUp : ThumbsDown;
                     const on = ratings[item.name] === value;

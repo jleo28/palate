@@ -16,7 +16,7 @@ export const Route = createFileRoute("/faq")({
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Where do Palate’s numbers come from, and how accurate are they?",
-    a: "Menus come straight from USC Hospitality each day. USC doesn’t publish nutrition, so we estimate it. Most dishes are matched to the USDA’s FoodData Central database at a typical serving. When a dish is too unusual for a reliable USDA match, its calories and macros are estimated with AI (Claude), using the closest USDA foods as a reference. Allergen and diet labels always come from USC, never from an estimate. Portions and recipes vary, so every number is an estimate. Portions are shown in hall utensils (a ladle, a scoop, a piece from the tongs) with a rough weight. Utensil sizes are estimates too and vary by hall and server.",
+    a: "Menus come straight from USC Hospitality each day. USC doesn’t publish nutrition, so we estimate it. Most dishes are matched to the USDA’s FoodData Central database at a typical serving. When a dish is too unusual for a reliable USDA match, its calories, macros and fiber are estimated with AI (Claude), using the closest USDA foods as a reference. Allergen and diet labels always come from USC, never from an estimate. Portions and recipes vary, so every number is an estimate. Portions are shown in hall utensils (a ladle, a scoop, a piece from the tongs) with a rough weight. Utensil sizes are estimates too and vary by hall and server.",
   },
   {
     q: "Why doesn’t USC publish this information itself?",
@@ -29,6 +29,14 @@ const FAQS: { q: string; a: string }[] = [
   {
     q: "How does Palate handle allergies and dietary restrictions?",
     a: "Allergies and restrictions entered at sign-up are hard filters: excluded items never appear in a recommended plate. Palate relies on USC’s own allergen tags, so students with serious allergies should still confirm with dining staff.",
+  },
+  {
+    q: "A dish name is cut off. How do I see all of it?",
+    a: "Tap the name. Long names are kept to one line so lists stay easy to scan; tapping one shows it in full, and tapping again shortens it.",
+  },
+  {
+    q: "How is my fiber goal set?",
+    a: "Your daily fiber goal follows the Dietary Guidelines for Americans: 14 grams for every 1,000 calories in your daily target. Fiber is shown next to your macros so you can keep an eye on it. Plates aren’t built around it yet. Meals logged before fiber was added don’t count toward it.",
   },
   {
     q: "What if I don’t care about macros?",

@@ -23,8 +23,9 @@ export function totals(plate: PlateItem[]): MacroTargets {
       protein: acc.protein + p.item.protein * p.qty,
       carbs: acc.carbs + p.item.carbs * p.qty,
       fat: acc.fat + p.item.fat * p.qty,
+      fiber: (acc.fiber ?? 0) + (p.item.fiber ?? 0) * p.qty,
     }),
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+    { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
   );
 }
 
