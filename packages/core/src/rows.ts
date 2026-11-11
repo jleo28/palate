@@ -34,6 +34,8 @@ export interface ProfileRow {
   seedling: Seedling | null;
   wellbeing: Wellbeing;
   card_spends: CardSpend[];
+  /** Omitted when unset so an upsert never clears a completion saved from another device. */
+  tour_completed_at?: string | null;
   /** Set by the database; read-only. */
   created_at?: string;
 }
@@ -73,6 +75,7 @@ export function profileToRow(userId: string, p: Profile): ProfileRow {
     seedling: p.seedling ?? null,
     wellbeing: p.wellbeing ?? {},
     card_spends: p.cardSpends ?? [],
+    ...(p.tourCompletedAt ? { tour_completed_at: p.tourCompletedAt } : {}),
   };
 }
 
@@ -95,6 +98,7 @@ export function profileFromRow(r: ProfileRow): Profile {
     ...(r.seedling ? { seedling: r.seedling } : {}),
     wellbeing: r.wellbeing ?? {},
     cardSpends: r.card_spends ?? [],
+    ...(r.tour_completed_at ? { tourCompletedAt: r.tour_completed_at } : {}),
     ...(r.created_at ? { createdOn: r.created_at.slice(0, 10) } : {}),
   };
 }

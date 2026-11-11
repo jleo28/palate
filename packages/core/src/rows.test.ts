@@ -12,6 +12,7 @@ describe("profile rows", () => {
       customAllergies: ["coconut"],
       seedling: { species: "fern", tone: 4, seed: 99, name: "Fernie" },
       cardSpends: [{ spentOn: "2026-10-16", forDate: "2026-10-15" }],
+      tourCompletedAt: "2026-11-07T18:00:00.000Z",
       wellbeing: { hideNumbers: true, skipped: ["2026-10-15"], pauses: [{ from: "2026-10-01" }] },
     });
     expect(profileFromRow(profileToRow("user-1", p))).toEqual(p);
@@ -27,6 +28,13 @@ describe("profile rows", () => {
       wellbeing: {},
       card_spends: [],
     });
+    expect(row).not.toHaveProperty("tour_completed_at");
+  });
+
+  it("maps tour completion both ways", () => {
+    const row = profileToRow("user-1", profile({ tourCompletedAt: "2026-11-07T18:00:00Z" }));
+    expect(row.tour_completed_at).toBe("2026-11-07T18:00:00Z");
+    expect(profileFromRow({ ...row, tour_completed_at: null }).tourCompletedAt).toBeUndefined();
   });
 });
 

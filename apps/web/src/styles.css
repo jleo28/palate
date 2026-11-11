@@ -404,3 +404,123 @@
     display: none;
   }
 }
+
+/* Olive's first-run tour. CSS only; reduced motion swaps every move for a fade. */
+@keyframes tour-bounce-in {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.05);
+  }
+  80% {
+    transform: translateY(3px) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes tour-tilt {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-6deg);
+  }
+  70% {
+    transform: rotate(5deg);
+  }
+}
+@keyframes tour-grow {
+  0% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes tour-wave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes tour-swipe {
+  0% {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  20%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+}
+@keyframes tour-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.tour-bounce-in {
+  animation: tour-bounce-in 650ms cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+.tour-talking {
+  transform-origin: 50% 90%;
+  animation: tour-tilt 900ms ease-in-out infinite;
+}
+.tour-grow {
+  transform-origin: 50% 100%;
+  animation: tour-grow 800ms ease-out both;
+}
+.tour-wave {
+  transform-origin: 50% 100%;
+  animation: tour-wave 600ms ease-in-out 2;
+}
+.tour-hop {
+  animation: pet-hop 700ms ease-out 1;
+}
+.tour-swipe-hint {
+  animation: tour-swipe 1.4s ease-in-out infinite;
+}
+.tour-spotlight {
+  transition:
+    top 250ms ease,
+    left 250ms ease,
+    width 250ms ease,
+    height 250ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-bounce-in,
+  .tour-grow,
+  .tour-wave,
+  .tour-hop,
+  .tour-swipe-hint {
+    animation: tour-fade 300ms ease-out both;
+  }
+  .tour-talking {
+    animation: none;
+  }
+  .tour-spotlight {
+    transition: opacity 200ms ease;
+  }
+}

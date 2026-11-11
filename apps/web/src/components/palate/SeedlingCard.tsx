@@ -70,7 +70,10 @@ export function SeedlingCard({
   };
 
   return (
-    <section className="mt-5 rounded-2xl border border-foreground/15 bg-card p-4">
+    <section
+      data-tour="seedling-card"
+      className="mt-5 rounded-2xl border border-foreground/15 bg-card p-4"
+    >
       <div className="grid grid-cols-[1fr_7.5rem] items-center gap-3">
         <div className="min-w-0">
           <p className="label-caps text-olive">

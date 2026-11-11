@@ -64,8 +64,10 @@ function SproutScreen() {
         }
         onChange={(seedling) => void saveProfile({ ...profile, seedling })}
       />
-      <WeeklyRecap log={log} today={today} signedIn={!!session} />
-      <Badges log={log} />
+      <div data-tour="recap">
+        <WeeklyRecap log={log} today={today} signedIn={!!session} />
+        <Badges log={log} />
+      </div>
     </AppShell>
   );
 }

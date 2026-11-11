@@ -114,6 +114,7 @@ function Plate() {
     loggedToday,
     log,
   } = useStore();
+
   // Snacks draw on a nearby hall meal's menu.
   const period = menuPeriod(meal);
   // A hall meal logged today shows what was eaten instead of a new plate.
@@ -244,7 +245,10 @@ function Plate() {
       <ScreenHeader title="The Plate" sub={`Hey ${profile.name.split(" ")[0]} · USC`} />
       {profile.seedling && <SeedlingHint screen="plate" seedling={profile.seedling} />}
 
-      <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1">
+      <div
+        data-tour="halls"
+        className="mb-3 grid grid-cols-3 gap-1.5 rounded-full border border-foreground/15 bg-card p-1"
+      >
         {HALLS.map((h) => (
           <button
             key={h.id}
@@ -297,7 +301,7 @@ function Plate() {
       {showLogged ? (
         <LoggedSlot entries={loggedEntries} onLogAnother={() => setAnotherFor(meal)} />
       ) : (
-        <section className="card-edge rounded-3xl bg-card p-4">
+        <section data-tour="plate" className="card-edge rounded-3xl bg-card p-4">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="label-caps text-olive">The 1-Tap Plate</p>
@@ -322,17 +326,19 @@ function Plate() {
             )}
           </div>
 
-          <SwipeArea onNext={nextPlate} onPrevious={previousPlate} label="Plate variations">
-            <div
-              key={`${history.index}-${history.plates.length}`}
-              className={cn(
-                "animate-in fade-in duration-300",
-                direction === "next" ? "slide-in-from-right-8" : "slide-in-from-left-8",
-              )}
-            >
-              <PlateIllustration items={plate} />
-            </div>
-          </SwipeArea>
+          <div data-tour="swipe">
+            <SwipeArea onNext={nextPlate} onPrevious={previousPlate} label="Plate variations">
+              <div
+                key={`${history.index}-${history.plates.length}`}
+                className={cn(
+                  "animate-in fade-in duration-300",
+                  direction === "next" ? "slide-in-from-right-8" : "slide-in-from-left-8",
+                )}
+              >
+                <PlateIllustration items={plate} />
+              </div>
+            </SwipeArea>
+          </div>
 
           {/* Only one plate possible: no arrows or "1 of 1". */}
           <div
@@ -465,7 +471,7 @@ function Plate() {
             </p>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4" data-tour="log">
             <button
               onClick={logMeal}
               disabled={!plate.some((r) => r.qty > 0)}

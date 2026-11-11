@@ -28,7 +28,7 @@ export function PlateTray() {
     <>
       {/* Keeps the last menu items clear of the bar. */}
       <div className="h-16" aria-hidden />
-      <div className="fixed inset-x-0 bottom-[4.6rem] z-30 px-4">
+      <div className="fixed inset-x-0 bottom-[4.6rem] z-30 px-4" data-tour="plate-tray">
         <button
           type="button"
           onClick={() => setOpen(true)}
