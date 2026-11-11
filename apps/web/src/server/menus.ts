@@ -95,6 +95,7 @@ export async function hallMenu(hall: HallId, date: string): Promise<MenuItem[]> 
       protein: estimate.protein,
       carbs: estimate.carbs,
       fat: estimate.fat,
+      ...(estimate.fiber !== undefined ? { fiber: estimate.fiber } : {}),
       tags: item.tags,
       allergens: item.allergens,
       kind: item.kind,

@@ -14,8 +14,8 @@ export function MacroPill({
   unit?: string | undefined;
 }) {
   return (
-    <div className="rounded-xl border border-foreground/15 bg-background/60 px-2.5 py-2 text-center">
-      <p className="label-caps text-muted-foreground">{label}</p>
+    <div className="min-w-0 rounded-xl border border-foreground/15 bg-background/60 px-1 py-2 text-center">
+      <p className="label-caps truncate !tracking-[0.06em] text-muted-foreground">{label}</p>
       <p className="font-display text-base font-bold leading-tight">
         {Math.round(value)}
         {unit}
@@ -32,11 +32,12 @@ export function MacroPill({
 export function MacroRow({ t, target }: { t: MacroTargets; target?: MacroTargets | undefined }) {
   if (useHideNumbers()) return null;
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-5 gap-1.5">
       <MacroPill label="Cal" value={t.kcal} target={target?.kcal} />
       <MacroPill label="Protein" value={t.protein} target={target?.protein} unit="g" />
       <MacroPill label="Carbs" value={t.carbs} target={target?.carbs} unit="g" />
       <MacroPill label="Fat" value={t.fat} target={target?.fat} unit="g" />
+      <MacroPill label="Fiber" value={t.fiber ?? 0} target={target?.fiber} unit="g" />
     </div>
   );
 }

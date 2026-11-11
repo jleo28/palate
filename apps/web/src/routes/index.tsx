@@ -234,6 +234,7 @@ function Plate() {
       protein: t.protein,
       carbs: t.carbs,
       fat: t.fat,
+      fiber: t.fiber ?? 0,
       items: logItems(plate),
     });
     if (!logged) return;

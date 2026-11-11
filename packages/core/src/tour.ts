@@ -137,7 +137,7 @@ export function tourSteps({ firstName, seedlingName, hallName }: TourContext): T
       cta: "Next",
       lines: [
         olive(
-          "Hall Menus: every station, everything it's serving today. Tap + on anything to add it to your plate.",
+          "Hall Menus: every station, everything it's serving today. Tap + to add anything to your plate. Name cut off? Tap it to see the whole thing.",
         ),
       ],
     },

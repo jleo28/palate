@@ -15,7 +15,13 @@ export function logItems(rows: readonly PlateItem[]): LoggedItem[] {
       qty,
       unit: item.unit,
       unitPlural: item.unitPlural,
-      per: { kcal: item.kcal, protein: item.protein, carbs: item.carbs, fat: item.fat },
+      per: {
+        kcal: item.kcal,
+        protein: item.protein,
+        carbs: item.carbs,
+        fat: item.fat,
+        ...(item.fiber !== undefined ? { fiber: item.fiber } : {}),
+      },
     }));
 }
 
@@ -24,7 +30,7 @@ export const portionsEditable = (m: LoggedMeal) =>
   m.items.length > 0 && m.items.every((i) => i.per && i.qty && i.unit && i.unitPlural);
 
 function retotal(m: LoggedMeal, items: LoggedItem[]): LoggedMeal {
-  const sum = (key: "kcal" | "protein" | "carbs" | "fat") =>
+  const sum = (key: "kcal" | "protein" | "carbs" | "fat" | "fiber") =>
     items.reduce((total, i) => total + (i.per?.[key] ?? 0) * (i.qty ?? 1), 0);
   return {
     ...m,
@@ -33,6 +39,7 @@ function retotal(m: LoggedMeal, items: LoggedItem[]): LoggedMeal {
     protein: sum("protein"),
     carbs: sum("carbs"),
     fat: sum("fat"),
+    fiber: sum("fiber"),
   };
 }
 

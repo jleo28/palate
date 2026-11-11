@@ -440,8 +440,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           protein: a.protein + l.protein,
           carbs: a.carbs + l.carbs,
           fat: a.fat + l.fat,
+          fiber: (a.fiber ?? 0) + (l.fiber ?? 0),
         }),
-        { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+        { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } as MacroTargets,
       );
   }, [log]);
 

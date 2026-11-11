@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { DishName } from "@/components/palate/DishName";
 import { Plus } from "lucide-react";
 import {
   CONFIRM_WITH_STAFF,
@@ -84,7 +85,7 @@ export function HallMenuList({ items, hall, period, loading, filter, emptyText, 
                           ~
                         </span>
                       )}
-                      <span className="truncate">{i.name}</span>
+                      <DishName name={i.name} className="min-w-0 flex-1" />
                     </p>
                     <p className="mt-0.5 text-[0.72rem] text-muted-foreground">
                       per {i.unit}
