@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { haptic } from "@/lib/palate/haptics";
 import { Dices } from "lucide-react";
 import {
   nextNameIdea,
@@ -217,6 +218,7 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
   }, [acted]);
 
   const showMe = () => {
+    haptic();
     demo(step.id, step.target ? document.querySelector(`[data-tour="${step.target}"]`) : null);
     setActed(true);
   };
@@ -245,8 +247,12 @@ export function OliveTour({ firstName, hall, seedling, onStep, onName, onDone }:
     if (step.id === "seedling") {
       onName(renameSeedling(seedling, name));
       setHop((h) => h + 1);
+      haptic("success");
     }
-    if (index === steps.length - 1) return onDone();
+    if (index === steps.length - 1) {
+      haptic("success");
+      return onDone();
+    }
     setIndex(index + 1);
     setLineIndex(0);
     setInstant(false);

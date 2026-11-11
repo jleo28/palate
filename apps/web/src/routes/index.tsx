@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { haptic } from "@/lib/palate/haptics";
 import { useHideNumbers } from "@/lib/palate/hide-numbers";
 import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Plus, Shuffle, UtensilsCrossed } from "lucide-react";
@@ -204,10 +205,12 @@ function Plate() {
   }, [plateKey]);
 
   const nextPlate = () => {
+    haptic();
     setDirection("next");
     setHistory(nextOption);
   };
   const previousPlate = () => {
+    haptic();
     setDirection("prev");
     setHistory(back);
   };
@@ -238,6 +241,7 @@ function Plate() {
       items: logItems(plate),
     });
     if (!logged) return;
+    haptic("success");
     setAnotherFor(null);
   };
 
@@ -253,7 +257,10 @@ function Plate() {
         {HALLS.map((h) => (
           <button
             key={h.id}
-            onClick={() => setHall(h.id)}
+            onClick={() => {
+              if (h.id !== hall) haptic();
+              setHall(h.id);
+            }}
             className={cn(
               "rounded-full py-2 text-sm font-bold transition-colors",
               hall === h.id ? "bg-foreground text-primary-foreground" : "text-muted-foreground",
@@ -268,7 +275,10 @@ function Plate() {
         {slots.map((m) => (
           <button
             key={m}
-            onClick={() => setMeal(m)}
+            onClick={() => {
+              if (m !== meal) haptic();
+              setMeal(m);
+            }}
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-bold transition-colors",
               meal === m
@@ -449,6 +459,7 @@ function Plate() {
             loggedToday={loggedToday}
             onLog={(entry) => {
               if (!addLog(entry)) return;
+              haptic("success");
               setElseOpen(false);
             }}
           />

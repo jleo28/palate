@@ -28,6 +28,7 @@ import {
 import { hallName } from "@/lib/palate/halls";
 import { today as localToday } from "@/lib/palate/dates";
 import { useStore } from "@/lib/palate/store";
+import { hapticsEnabled, setHapticsEnabled } from "@/lib/palate/haptics";
 import { useTour } from "@/lib/palate/tour";
 import { useRequireProfile } from "@/lib/palate/useRequireProfile";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,8 @@ function CardScreen() {
   const [earlierOpen, setEarlierOpen] = useState(false);
   const [editing, setEditing] = useState<LoggedMeal | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [haptics, setHapticsState] = useState(true);
+  useEffect(() => setHapticsState(hapticsEnabled()), []);
   const { start: startTour } = useTour();
 
   useRequireProfile();
@@ -390,6 +393,16 @@ function CardScreen() {
       >
         FAQs & support <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
       </Link>
+      <Switch
+        label="Haptics"
+        hint="Little taps when you log, swipe or switch halls, on phones that support it."
+        checked={haptics}
+        onChange={(on) => {
+          setHapticsState(on);
+          setHapticsEnabled(on);
+        }}
+        className="mt-2 min-h-14 rounded-2xl border border-foreground/15 bg-card px-4 py-3"
+      />
       <button
         type="button"
         onClick={startTour}
